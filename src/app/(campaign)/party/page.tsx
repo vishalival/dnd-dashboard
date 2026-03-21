@@ -8,7 +8,9 @@ export default async function PartyPage() {
   if (!campaign) {
     return (
       <div className="flex items-center justify-center min-h-[60vh]">
-        <p className="text-zinc-500">No campaign found. Run seed script.</p>
+        <p className="text-muted-foreground dark:text-zinc-500">
+          No campaign found. Run seed script.
+        </p>
       </div>
     );
   }

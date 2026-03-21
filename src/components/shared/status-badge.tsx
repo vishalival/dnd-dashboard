@@ -18,7 +18,7 @@ export function StatusBadge({
       className={cn(
         "inline-flex items-center rounded-full px-2 py-0.5 text-xs font-medium border capitalize",
         colorFn(status),
-        className
+        className,
       )}
     >
       {status.replace(/_/g, " ")}

@@ -59,7 +59,7 @@ export async function GET() {
     if (!campaign) {
       return NextResponse.json(
         { error: "No campaign found. Please run the seed script." },
-        { status: 404 }
+        { status: 404 },
       );
     }
 
@@ -68,7 +68,7 @@ export async function GET() {
     console.error("Failed to fetch campaign:", error);
     return NextResponse.json(
       { error: "Failed to fetch campaign data" },
-      { status: 500 }
+      { status: 500 },
     );
   }
 }

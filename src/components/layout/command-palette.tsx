@@ -37,7 +37,7 @@ export function CommandPalette() {
         toggleCommandPalette();
       }
     },
-    [toggleCommandPalette]
+    [toggleCommandPalette],
   );
 
   useEffect(() => {
@@ -54,17 +54,20 @@ export function CommandPalette() {
         onClick={toggleCommandPalette}
       />
       <div className="absolute top-[20%] left-1/2 -translate-x-1/2 w-full max-w-lg">
-        <Command className="rounded-xl border border-white/[0.08] bg-zinc-900/95 backdrop-blur-xl shadow-2xl overflow-hidden">
+        <Command className="rounded-xl border border-border dark:border-white/[0.08] bg-zinc-900/95 backdrop-blur-xl shadow-2xl overflow-hidden">
           <Command.Input
             placeholder="Search pages, NPCs, storylines..."
-            className="w-full px-4 py-4 text-sm bg-transparent border-b border-white/[0.06] text-white placeholder:text-zinc-500 outline-none"
+            className="w-full px-4 py-4 text-sm bg-transparent border-b border-border dark:border-white/[0.06] text-foreground dark:text-white placeholder:text-muted-foreground dark:text-zinc-500 outline-none"
             autoFocus
           />
           <Command.List className="max-h-[300px] overflow-y-auto p-2">
-            <Command.Empty className="py-6 text-center text-sm text-zinc-500">
+            <Command.Empty className="py-6 text-center text-sm text-muted-foreground dark:text-zinc-500">
               No results found.
             </Command.Empty>
-            <Command.Group heading="Pages" className="text-xs text-zinc-500 px-2 py-1.5">
+            <Command.Group
+              heading="Pages"
+              className="text-xs text-muted-foreground dark:text-zinc-500 px-2 py-1.5"
+            >
               {pages.map((page) => (
                 <Command.Item
                   key={page.href}
@@ -73,9 +76,9 @@ export function CommandPalette() {
                     router.push(page.href);
                     toggleCommandPalette();
                   }}
-                  className="flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm text-zinc-300 cursor-pointer data-[selected=true]:bg-white/[0.06] data-[selected=true]:text-white transition-colors"
+                  className="flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm text-foreground/80 dark:text-zinc-300 cursor-pointer data-[selected=true]:bg-muted/80 dark:bg-white/[0.06] data-[selected=true]:text-foreground dark:text-white transition-colors"
                 >
-                  <page.icon className="h-4 w-4 text-zinc-500" />
+                  <page.icon className="h-4 w-4 text-muted-foreground dark:text-zinc-500" />
                   {page.name}
                 </Command.Item>
               ))}
