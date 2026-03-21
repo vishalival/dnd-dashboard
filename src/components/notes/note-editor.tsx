@@ -2,8 +2,12 @@
 
 import React, { useEffect, useRef, useCallback } from "react";
 import { useEditor, EditorContent } from "@tiptap/react";
+import { Extension } from "@tiptap/core";
 import StarterKit from "@tiptap/starter-kit";
 import Placeholder from "@tiptap/extension-placeholder";
+import { Plugin, PluginKey } from "@tiptap/pm/state";
+import { Decoration, DecorationSet } from "@tiptap/pm/view";
+import type { Node as ProseMirrorNode } from "@tiptap/pm/model";
 import {
   Bold,
   Italic,
@@ -20,12 +24,76 @@ import {
 import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
 
+const citationHighlightKey = new PluginKey("citationHighlight");
+
+function buildDecorations(
+  doc: ProseMirrorNode,
+  searchText: string | null
+): DecorationSet {
+  if (!searchText) return DecorationSet.empty;
+
+  const decorations: Decoration[] = [];
+  const searchLower = searchText.toLowerCase();
+
+  doc.descendants((node, pos) => {
+    if (!node.isText || !node.text) return;
+    const textLower = node.text.toLowerCase();
+    let index = textLower.indexOf(searchLower);
+    while (index !== -1) {
+      decorations.push(
+        Decoration.inline(pos + index, pos + index + searchText.length, {
+          class: "citation-highlight",
+        })
+      );
+      index = textLower.indexOf(searchLower, index + 1);
+    }
+  });
+
+  return DecorationSet.create(doc, decorations);
+}
+
+function createCitationHighlightExtension(
+  highlightRef: React.RefObject<string | null>
+) {
+  return Extension.create({
+    name: "citationHighlight",
+    addProseMirrorPlugins() {
+      return [
+        new Plugin({
+          key: citationHighlightKey,
+          state: {
+            init(_, state) {
+              return buildDecorations(state.doc, highlightRef.current);
+            },
+            apply(tr, old) {
+              if (tr.docChanged || tr.getMeta(citationHighlightKey)) {
+                return buildDecorations(
+                  tr.doc,
+                  highlightRef.current
+                );
+              }
+              return old;
+            },
+          },
+          props: {
+            decorations(state) {
+              return this.getState(state);
+            },
+          },
+        }),
+      ];
+    },
+  });
+}
+
 interface NoteEditorProps {
   documentId: string;
   initialContent: unknown;
   saveStatus: "saved" | "saving" | "unsaved";
   onSaveStatusChange: (status: "saved" | "saving" | "unsaved") => void;
   onContentSave?: (documentId: string, content: unknown) => void;
+  highlightText?: string | null;
+  onHighlightClear?: () => void;
 }
 
 export function NoteEditor({
@@ -34,9 +102,13 @@ export function NoteEditor({
   saveStatus,
   onSaveStatusChange,
   onContentSave,
+  highlightText,
+  onHighlightClear,
 }: NoteEditorProps) {
   const saveTimeoutRef = useRef<NodeJS.Timeout | null>(null);
   const currentDocIdRef = useRef(documentId);
+  const highlightRef = useRef<string | null>(highlightText ?? null);
+  highlightRef.current = highlightText ?? null;
 
   const saveContent = useCallback(
     async (docId: string, content: unknown) => {
@@ -67,6 +139,7 @@ export function NoteEditor({
       Placeholder.configure({
         placeholder: "Start writing...",
       }),
+      createCitationHighlightExtension(highlightRef),
     ],
     content: (initialContent as Record<string, unknown>) || undefined,
     editorProps: {
@@ -77,6 +150,10 @@ export function NoteEditor({
     },
     onUpdate: ({ editor }) => {
       onSaveStatusChange("unsaved");
+      // Clear highlight when user starts editing
+      if (highlightRef.current) {
+        onHighlightClear?.();
+      }
       if (saveTimeoutRef.current) {
         clearTimeout(saveTimeoutRef.current);
       }
@@ -85,6 +162,20 @@ export function NoteEditor({
       }, 1500);
     },
   });
+
+  // Recompute highlight decorations and scroll to match
+  useEffect(() => {
+    if (!editor) return;
+    const tr = editor.state.tr.setMeta(citationHighlightKey, true);
+    editor.view.dispatch(tr);
+
+    if (highlightText) {
+      setTimeout(() => {
+        const el = editor.view.dom.querySelector(".citation-highlight");
+        el?.scrollIntoView({ behavior: "smooth", block: "center" });
+      }, 50);
+    }
+  }, [highlightText, editor]);
 
   // Handle document switching
   useEffect(() => {

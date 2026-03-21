@@ -2,12 +2,14 @@
 
 import React, { useState, useCallback, useMemo } from "react";
 import { useSearchParams, useRouter } from "next/navigation";
-import { NotebookPen } from "lucide-react";
+import { AnimatePresence } from "framer-motion";
+import { NotebookPen, MessageSquare } from "lucide-react";
 import { CampaignData, NoteDocumentData } from "@/lib/data";
 import { PageHeader } from "@/components/shared/page-header";
 import { FileTree } from "@/components/notes/file-tree";
 import { NoteEditor } from "@/components/notes/note-editor";
 import { CreateDocDialog } from "@/components/notes/create-doc-dialog";
+import { NotesChatPanel } from "@/components/notes/notes-chat-panel";
 
 export function NotesClient({ campaign }: { campaign: CampaignData }) {
   const searchParams = useSearchParams();
@@ -36,6 +38,8 @@ export function NotesClient({ campaign }: { campaign: CampaignData }) {
   );
   const [createDialogOpen, setCreateDialogOpen] = useState(false);
   const [createFolderId, setCreateFolderId] = useState<string | null>(null);
+  const [chatOpen, setChatOpen] = useState(false);
+  const [highlightText, setHighlightText] = useState<string | null>(null);
 
 
   // Find the selected document from folders or standalone docs
@@ -50,7 +54,16 @@ export function NotesClient({ campaign }: { campaign: CampaignData }) {
 
   const handleSelectDoc = useCallback((doc: NoteDocumentData) => {
     setSelectedDocId(doc.id);
+    setHighlightText(null);
   }, []);
+
+  const handleCitationClick = useCallback(
+    (docId: string, quote: string) => {
+      setSelectedDocId(docId);
+      setHighlightText(quote);
+    },
+    []
+  );
 
   const handleAddDoc = useCallback((folderId: string) => {
     setCreateFolderId(folderId);
@@ -114,7 +127,19 @@ export function NotesClient({ campaign }: { campaign: CampaignData }) {
         title="DM Notes"
         subtitle="Campaign notes, ideas, and secrets"
         icon={<NotebookPen className="h-5 w-5 text-orange-400" />}
-        actions={null}
+        actions={
+          <button
+            onClick={() => setChatOpen((prev) => !prev)}
+            className={`p-2 rounded-lg border transition-colors ${
+              chatOpen
+                ? "bg-orange-500/20 border-orange-500/30 text-orange-400"
+                : "bg-white/[0.04] border-white/[0.06] text-zinc-400 hover:text-zinc-200 hover:bg-white/[0.06]"
+            }`}
+            title="Ask about your notes"
+          >
+            <MessageSquare className="h-4 w-4" />
+          </button>
+        }
       />
 
       <div className="flex flex-1 min-h-0 mt-6">
@@ -147,6 +172,8 @@ export function NotesClient({ campaign }: { campaign: CampaignData }) {
                   saveStatus={saveStatus}
                   onSaveStatusChange={setSaveStatus}
                   onContentSave={handleContentSave}
+                  highlightText={highlightText}
+                  onHighlightClear={() => setHighlightText(null)}
                 />
               </div>
             </div>
@@ -159,6 +186,17 @@ export function NotesClient({ campaign }: { campaign: CampaignData }) {
             </div>
           )}
         </div>
+
+        {/* Chat Panel */}
+        <AnimatePresence>
+          {chatOpen && (
+            <NotesChatPanel
+              campaignId={campaign.id}
+              onClose={() => setChatOpen(false)}
+              onCitationClick={handleCitationClick}
+            />
+          )}
+        </AnimatePresence>
       </div>
 
       <CreateDocDialog

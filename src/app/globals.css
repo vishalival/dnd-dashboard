@@ -197,6 +197,13 @@
   @apply italic;
 }
 
+.citation-highlight {
+  background-color: rgba(249, 115, 22, 0.25);
+  border-bottom: 2px solid rgba(249, 115, 22, 0.6);
+  border-radius: 2px;
+  padding: 1px 0;
+}
+
 .ProseMirror p.is-editor-empty:first-child::before {
   @apply text-zinc-600;
   content: attr(data-placeholder);
