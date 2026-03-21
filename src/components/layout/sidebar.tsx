@@ -3,7 +3,7 @@
 import React from "react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { motion, AnimatePresence } from "framer-motion";
+import { motion } from "framer-motion";
 import {
   LayoutDashboard,
   CalendarClock,
@@ -12,19 +12,16 @@ import {
   KeyRound,
   BookOpen,
   Shield,
-  Sparkles,
   NotebookPen,
   ChevronLeft,
   ChevronRight,
   Search,
   Command,
-  Moon,
-  Sun,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { useCampaignStore } from "@/stores/campaign-store";
+import { useChroniclerStore } from "@/stores/chronicler-store";
 import { Button } from "@/components/ui/button";
-import { useTheme } from "next-themes";
 
 const navItems = [
   {
@@ -70,12 +67,6 @@ const navItems = [
     color: "text-blue-400",
   },
   {
-    label: "Magic Items",
-    href: "/wishlists",
-    icon: Sparkles,
-    color: "text-amber-300",
-  },
-  {
     label: "DM Notes",
     href: "/notes",
     icon: NotebookPen,
@@ -85,15 +76,8 @@ const navItems = [
 
 export function Sidebar() {
   const pathname = usePathname();
-  const { sidebarOpen, toggleSidebar, toggleCommandPalette } =
-    useCampaignStore();
-  const { theme, setTheme } = useTheme();
-
-  const [mounted, setMounted] = React.useState(false);
-
-  React.useEffect(() => {
-    setMounted(true);
-  }, []);
+  const { toggleCommandPalette } = useCampaignStore();
+  const isRecording = useChroniclerStore((s) => s.phase === "recording");
 
   return (
     <motion.aside
@@ -142,24 +126,30 @@ export function Sidebar() {
               >
                 <item.icon
                   className={cn(
-                    "h-4 w-4 transition-colors duration-300",
+                    "h-4 w-4 transition-colors duration-300 shrink-0",
                     isActive ? item.color : "text-zinc-500 group-hover:text-zinc-300",
                   )}
                 />
-                <span className="text-sm font-medium tracking-wide truncate">
+                <span className="text-sm font-medium tracking-wide truncate flex-1">
                   {item.label}
                 </span>
+                {isRecording && item.href === "/sessions" && (
+                  <span className="relative flex h-2 w-2 shrink-0">
+                    <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-red-500 opacity-75" />
+                    <span className="relative inline-flex rounded-full h-2 w-2 bg-red-500" />
+                  </span>
+                )}
               </div>
             </Link>
           );
         })}
       </nav>
 
-      {/* Bottom Profile / Settings */}
+      {/* Bottom Profile */}
       <div className="p-4 mt-auto border-t border-[#1F1F22]">
         <div className="flex items-center gap-3 p-3 rounded-xl bg-[#141416] border border-[#1F1F22]">
           <div className="w-8 h-8 rounded-full bg-zinc-800 flex items-center justify-center shrink-0">
-             <span className="text-xs font-semibold text-white">DR</span>
+            <span className="text-xs font-semibold text-white">DR</span>
           </div>
           <div className="min-w-0 flex-1">
             <p className="text-sm font-medium text-white truncate">Dungeon Master Rachel</p>
