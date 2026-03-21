@@ -184,8 +184,9 @@ export function JournalClient({ campaign }: { campaign: CampaignData }) {
                   )}
                   {selectedEntry.session && (
                     <Badge variant="gold" className="text-xs">
-                      Session #{selectedEntry.session.sessionNumber}:{" "}
-                      {selectedEntry.session.title}
+                      {selectedEntry.session.title.toLowerCase().startsWith(`session ${selectedEntry.session.sessionNumber}`)
+                        ? selectedEntry.session.title
+                        : `Session #${selectedEntry.session.sessionNumber}: ${selectedEntry.session.title}`}
                     </Badge>
                   )}
                 </div>
@@ -198,22 +199,31 @@ export function JournalClient({ campaign }: { campaign: CampaignData }) {
                   {formatDate(selectedEntry.createdAt)}
                 </p>
 
-                {parseJsonField<string>(selectedEntry.tags).length > 0 && (
-                  <div className="flex flex-wrap gap-2 mb-6">
-                    {parseJsonField<string>(selectedEntry.tags).map(
-                      (tag, i) => (
-                        <Badge key={i} variant="secondary" className="text-xs">
-                          {tag}
-                        </Badge>
-                      ),
-                    )}
-                  </div>
-                )}
 
-                <div className="prose prose-invert prose-sm max-w-none">
-                  <div className="text-sm text-foreground/80 dark:text-zinc-300 leading-relaxed whitespace-pre-wrap">
-                    {selectedEntry.content}
-                  </div>
+
+                <div className="prose prose-sm max-w-none text-foreground/80 dark:text-zinc-300 leading-relaxed">
+                  {(() => {
+                    const text = selectedEntry.content;
+                    const match = text.match(/core\s+takeaway[s]?\s*:/i);
+                    if (match && match.index !== undefined) {
+                      const summary = text.substring(0, match.index).trim();
+                      const takeaway = text.substring(match.index + match[0].length).trim();
+                      return (
+                        <div className="space-y-4">
+                          <p className="font-medium text-foreground">{summary}</p>
+                          <div className="p-4 bg-muted/30 dark:bg-white/[0.02] border border-border dark:border-white/[0.04] rounded-lg">
+                            <h4 className="text-xs font-bold text-muted-foreground uppercase tracking-wider mb-2">Core Takeaway</h4>
+                            <ul className="list-disc pl-5 space-y-1 marker:text-muted-foreground/50 m-0">
+                              {takeaway.split(/(?:\r?\n)+/).filter(s => s.trim().length > 0).map((pt, i) => (
+                                <li key={i}>{pt.trim().replace(/^[-*]\s*/, '')}</li>
+                              ))}
+                            </ul>
+                          </div>
+                        </div>
+                      );
+                    }
+                    return <div className="whitespace-pre-wrap">{text}</div>;
+                  })()}
                 </div>
               </Card>
             </motion.div>

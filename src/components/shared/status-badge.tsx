@@ -21,7 +21,20 @@ export function StatusBadge({
         className,
       )}
     >
-      {status.replace(/_/g, " ")}
+      {(() => {
+        let display = status.replace(/_/g, " ");
+        if (type === "urgency" && ["low", "medium", "high", "critical"].includes(display)) {
+          return `${display} priority`;
+        }
+        if (display === "visible") return "known";
+        if (display === "partial") return "unknown";
+        if (display === "active" && type !== "urgency") {
+          // If the user wants to remove 'active' from secrets, we handle it where secret badges are used, 
+          // but for now we just return the label.
+          return display;
+        }
+        return display;
+      })()}
     </span>
   );
 }

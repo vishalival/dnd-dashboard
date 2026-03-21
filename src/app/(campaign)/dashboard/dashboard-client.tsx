@@ -17,6 +17,11 @@ import {
   Pin,
   ArrowRight,
   Scroll,
+  Search,
+  Bell,
+  MoreVertical,
+  TrendingDown,
+  TrendingUp,
 } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
@@ -26,6 +31,8 @@ import { PageHeader } from "@/components/shared/page-header";
 import { StatusBadge } from "@/components/shared/status-badge";
 import { Progress } from "@/components/ui/progress";
 import { formatDate, formatRelativeDate, parseJsonField } from "@/lib/utils";
+import { InteractiveMap } from "@/components/shared/interactive-map";
+import { useCampaignStore } from "@/stores/campaign-store";
 import type { CampaignData } from "@/lib/data";
 
 const container = {
@@ -42,6 +49,8 @@ const item = {
 };
 
 export function DashboardClient({ campaign }: { campaign: CampaignData }) {
+  const toggleCommandPalette = useCampaignStore((state) => state.toggleCommandPalette);
+
   const upcomingSession = campaign.sessions
     .filter((s) => s.status !== "completed")
     .sort((a, b) => a.sessionNumber - b.sessionNumber)[0];
@@ -70,25 +79,87 @@ export function DashboardClient({ campaign }: { campaign: CampaignData }) {
 
   return (
     <div>
-      <PageHeader
-        title={campaign.name}
-        subtitle={
-          campaign.currentArc
-            ? `Current Arc: ${campaign.currentArc}`
-            : "Campaign Command Center"
-        }
-        icon={<LayoutDashboard className="h-5 w-5 text-amber-600 dark:text-gold" />}
-        actions={
-          <div className="flex items-center gap-2">
-            <Badge variant="gold" className="font-heading">
-              {campaign.sessions.length} Sessions
-            </Badge>
-            <Badge variant="arcane" className="font-heading">
-              {campaign.npcs.length} NPCs
-            </Badge>
+      {/* Custom Sleek Header */}
+      <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 mb-8 bg-zinc-950/20 p-6 rounded-2xl border border-white/5">
+        <div>
+          <h1 className="text-2xl font-bold tracking-tight text-white mb-1.5 flex items-center gap-2">
+            Hello, Dungeon Master Rachel! 
+            <span className="text-xl">👋</span>
+          </h1>
+          <p className="text-xs text-zinc-400 max-w-lg">
+            Manage your campaign flow, track critical storylines, and prepare for your next epic adventure.
+          </p>
+        </div>
+        
+        <div className="flex items-center gap-3">
+          {/* Search Bar */}
+          <div className="relative group">
+            <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-3.5 w-3.5 text-zinc-500 group-focus-within:text-zinc-300 transition-colors" />
+            <input
+              type="text"
+              readOnly
+              onClick={toggleCommandPalette}
+              placeholder="Search Anything... (Cmd+K)"
+              className="w-full md:w-64 h-9 pl-9 pr-4 text-xs font-medium rounded-full bg-white/[0.02] border border-white/10 text-white placeholder:text-zinc-600 focus:outline-none focus:ring-1 focus:ring-amber-500/50 transition-all hover:bg-white/[0.04] cursor-text"
+            />
           </div>
-        }
-      />
+          
+          {/* Notifications */}
+          <Dialog>
+            <DialogTrigger asChild>
+              <button className="relative h-9 w-9 rounded-full bg-white/[0.02] border border-white/10 flex items-center justify-center text-zinc-400 hover:text-white hover:bg-white/[0.04] transition-colors">
+                <Bell className="h-4 w-4" />
+                <span className="absolute top-2 right-2 w-2 h-2 rounded-full bg-red-500 border border-zinc-950" />
+              </button>
+            </DialogTrigger>
+            <DialogContent className="sm:max-w-md">
+              <DialogHeader>
+                <DialogTitle>Notifications</DialogTitle>
+              </DialogHeader>
+              <div className="space-y-4 py-4">
+                <div className="flex items-start gap-4 p-3 rounded-lg bg-muted/50 dark:bg-white/[0.02] border border-border dark:border-white/[0.04]">
+                  <div className="w-8 h-8 rounded-full bg-blue-500/20 flex items-center justify-center shrink-0">
+                    <span className="text-blue-500">✨</span>
+                  </div>
+                  <div>
+                    <h4 className="text-sm font-medium">Session 4 Scheduled</h4>
+                    <p className="text-xs text-muted-foreground mt-1">Tomorrow at 7:00 PM. Don't forget prep materials!</p>
+                  </div>
+                </div>
+                <div className="flex items-start gap-4 p-3 rounded-lg bg-muted/50 dark:bg-white/[0.02] border border-border dark:border-white/[0.04]">
+                  <div className="w-8 h-8 rounded-full bg-amber-500/20 flex items-center justify-center shrink-0">
+                    <span className="text-amber-500">⚠️</span>
+                  </div>
+                  <div>
+                    <h4 className="text-sm font-medium">NPC missing location</h4>
+                    <p className="text-xs text-muted-foreground mt-1">Garrick is missing a primary location tag.</p>
+                  </div>
+                </div>
+              </div>
+            </DialogContent>
+          </Dialog>
+          
+          {/* User Avatar */}
+          <div className="h-9 w-9 rounded-full bg-gradient-to-br from-amber-500 to-amber-700 flex items-center justify-center border border-white/10 shrink-0 cursor-pointer shadow-lg shadow-amber-900/20">
+            <span className="text-xs font-bold text-white shadow-sm">DR</span>
+          </div>
+        </div>
+      </div>
+
+      <motion.div variants={item} className="mb-8">
+        <div className="flex items-center justify-between mb-4">
+          <h2 className="text-lg font-bold tracking-tight text-white flex items-center gap-2">
+            World Map
+            <Badge variant="secondary" className="bg-white/5 border-white/10 text-zinc-400 text-[10px] py-0 h-5">
+              Interactive
+            </Badge>
+          </h2>
+        </div>
+        <InteractiveMap 
+          src="/map.jpg" 
+          className="w-full aspect-[16/9] lg:aspect-[21/9]" 
+        />
+      </motion.div>
 
       <motion.div
         variants={container}
@@ -116,8 +187,9 @@ export function DashboardClient({ campaign }: { campaign: CampaignData }) {
                   <div className="space-y-3">
                     <div>
                       <h3 className="text-lg font-heading font-semibold text-foreground dark:text-white">
-                        Session {upcomingSession.sessionNumber}:{" "}
-                        {upcomingSession.title}
+                        {upcomingSession.title.toLowerCase().startsWith(`session ${upcomingSession.sessionNumber}`)
+                          ? upcomingSession.title
+                          : `Session ${upcomingSession.sessionNumber}: ${upcomingSession.title}`}
                       </h3>
                       {upcomingSession.date && (
                         <p className="text-sm text-muted-foreground dark:text-zinc-400 mt-1">
@@ -132,6 +204,7 @@ export function DashboardClient({ campaign }: { campaign: CampaignData }) {
                         {upcomingSession.summary}
                       </p>
                     )}
+
                     <div className="flex flex-wrap gap-2">
                       {upcomingSession.storylineLinks.map((sl) => (
                         <Badge
@@ -165,70 +238,7 @@ export function DashboardClient({ campaign }: { campaign: CampaignData }) {
           </motion.div>
         )}
 
-        {/* Campaign Stats */}
-        <motion.div variants={item}>
-          <Card className="h-full">
-            <CardHeader className="pb-3">
-              <CardTitle className="text-base text-foreground/80 dark:text-zinc-300 flex items-center gap-2">
-                <Scroll className="h-4 w-4 text-blue-600 dark:text-arcane" />
-                Campaign Status
-              </CardTitle>
-            </CardHeader>
-            <CardContent className="space-y-4">
-              <div className="space-y-3">
-                <div className="flex justify-between text-sm">
-                  <span className="text-muted-foreground dark:text-zinc-400">
-                    Sessions Completed
-                  </span>
-                  <span className="text-foreground dark:text-white font-medium">
-                    {completedSessions}/{campaign.sessions.length}
-                  </span>
-                </div>
-                <Progress
-                  value={
-                    (completedSessions /
-                      Math.max(campaign.sessions.length, 1)) *
-                    100
-                  }
-                />
-              </div>
-              <div className="grid grid-cols-2 gap-3">
-                <div className="p-3 rounded-lg bg-card hover:bg-muted/60 dark:bg-white/[0.03] border border-border dark:border-white/[0.04]">
-                  <div className="text-2xl font-heading font-bold text-blue-600 dark:text-arcane-light">
-                    {activeStorylines.length}
-                  </div>
-                  <div className="text-xs text-muted-foreground dark:text-zinc-500">
-                    Active Plots
-                  </div>
-                </div>
-                <div className="p-3 rounded-lg bg-card hover:bg-muted/60 dark:bg-white/[0.03] border border-border dark:border-white/[0.04]">
-                  <div className="text-2xl font-heading font-bold text-purple-600 dark:text-purple-400">
-                    {unresolvedSecrets.length}
-                  </div>
-                  <div className="text-xs text-muted-foreground dark:text-zinc-500">
-                    Hidden Secrets
-                  </div>
-                </div>
-                <div className="p-3 rounded-lg bg-card hover:bg-muted/60 dark:bg-white/[0.03] border border-border dark:border-white/[0.04]">
-                  <div className="text-2xl font-heading font-bold text-emerald-600 dark:text-emerald-400">
-                    {campaign.npcs.length}
-                  </div>
-                  <div className="text-xs text-muted-foreground dark:text-zinc-500">
-                    NPCs
-                  </div>
-                </div>
-                <div className="p-3 rounded-lg bg-card hover:bg-muted/60 dark:bg-white/[0.03] border border-border dark:border-white/[0.04]">
-                  <div className="text-2xl font-heading font-bold text-amber-600 dark:text-amber-400">
-                    {campaign.characters.length}
-                  </div>
-                  <div className="text-xs text-muted-foreground dark:text-zinc-500">
-                    Party Members
-                  </div>
-                </div>
-              </div>
-            </CardContent>
-          </Card>
-        </motion.div>
+
 
         {/* Active Plot Threads */}
         <motion.div variants={item}>
@@ -548,10 +558,10 @@ export function DashboardClient({ campaign }: { campaign: CampaignData }) {
                 {recentJournals.map((entry) => (
                   <Link key={entry.id} href="/journal">
                     <div className="p-3 rounded-lg bg-card hover:bg-muted/50 dark:bg-white/[0.02] border border-border dark:border-white/[0.04] hover:bg-muted dark:bg-white/[0.04] transition-colors cursor-pointer">
-                      <div className="flex items-center gap-2 mb-1">
-                        <Badge variant="secondary" className="text-[10px] h-5">
+                      <div className="flex items-center gap-2 mb-2">
+                        <span className="px-2 py-0.5 rounded-full bg-rose-500/10 border border-rose-500/20 text-rose-400 text-[10px] font-semibold capitalize tracking-wide">
                           {entry.type.replace(/_/g, " ")}
-                        </Badge>
+                        </span>
                         {entry.isPinned && (
                           <Pin className="h-3 w-3 text-amber-600 dark:text-gold" />
                         )}
@@ -614,12 +624,6 @@ export function DashboardClient({ campaign }: { campaign: CampaignData }) {
                     href: "/journal",
                     icon: BookOpen,
                     color: "text-red-600 dark:text-crimson-light",
-                  },
-                  {
-                    label: "Magic Items",
-                    href: "/wishlists",
-                    icon: Sparkles,
-                    color: "text-amber-600 dark:text-amber-300",
                   },
                 ].map((link) => (
                   <Link key={link.href} href={link.href}>

@@ -31,7 +31,7 @@ import { cn } from "@/lib/utils";
 import type { CampaignData, SessionData } from "@/lib/data";
 
 const templateIcons: Record<string, React.ReactNode> = {
-  tavern: <MessageSquare className="h-3.5 w-3.5" />,
+  tavern: <MapPin className="h-3.5 w-3.5" />,
   travel: <MapPin className="h-3.5 w-3.5" />,
   mystery: <KeyRound className="h-3.5 w-3.5" />,
   combat: <Swords className="h-3.5 w-3.5" />,
@@ -111,7 +111,9 @@ function SessionDetail({ session }: { session: SessionData }) {
       <div className="flex items-start justify-between">
         <div>
           <h2 className="text-xl font-heading font-semibold text-foreground dark:text-white">
-            Session {session.sessionNumber}: {session.title}
+            {session.title.toLowerCase().startsWith(`session ${session.sessionNumber}`)
+              ? session.title
+              : `Session ${session.sessionNumber}: ${session.title}`}
           </h2>
           <div className="flex items-center gap-3 mt-2">
             {session.date && (
@@ -131,61 +133,123 @@ function SessionDetail({ session }: { session: SessionData }) {
         </div>
       </div>
 
+      {/* Checklist (Moved to Top & Clickable) */}
+      {checklist.length > 0 && (
+        <CollapsibleSection
+          title="Pre-Session Checklist"
+          icon={<ListChecks className="h-4 w-4 text-emerald-600 dark:text-emerald-400" />}
+          defaultOpen={true}
+          count={checklist.length}
+        >
+          <div className="space-y-2">
+            {checklist.map((item, i) => (
+              <label
+                key={i}
+                className="flex items-start gap-2 text-sm text-foreground/80 dark:text-zinc-300 cursor-pointer group"
+              >
+                <input
+                  type="checkbox"
+                  className="mt-1 h-3.5 w-3.5 rounded border-gray-300 text-emerald-600 focus:ring-emerald-500"
+                />
+                <span className="group-hover:text-foreground">{item}</span>
+              </label>
+            ))}
+          </div>
+        </CollapsibleSection>
+      )}
+
+      {/* Reminders (Moved to Top) */}
+      {reminders.length > 0 && (
+        <CollapsibleSection
+          title="Important Reminders"
+          icon={<AlertCircle className="h-4 w-4 text-red-400" />}
+          defaultOpen={true}
+          count={reminders.length}
+        >
+          <div className="space-y-2">
+            {reminders.map((r, i) => (
+              <div
+                key={i}
+                className="flex items-start gap-2 text-sm text-red-300/80"
+              >
+                <AlertCircle className="h-3.5 w-3.5 text-red-400/50 mt-0.5 shrink-0" />
+                {r}
+              </div>
+            ))}
+          </div>
+        </CollapsibleSection>
+      )}
+
       {session.summary && (
         <p className="text-sm text-foreground/80 dark:text-zinc-300 leading-relaxed bg-card hover:bg-muted/50 dark:bg-white/[0.02] rounded-lg p-4 border border-border dark:border-white/[0.04]">
           {session.summary}
         </p>
       )}
 
-      {/* Connected Entities */}
-      {(session.storylineLinks.length > 0 ||
-        session.npcLinks.length > 0 ||
-        session.secretLinks.length > 0) && (
-        <div className="flex flex-wrap gap-2">
-          {session.storylineLinks.map((sl) => (
-            <Badge
-              key={sl.storylineId}
-              variant="arcane"
-              className="text-xs gap-1"
-            >
-              <GitBranch className="h-3 w-3" />
-              {sl.storyline.title}
-            </Badge>
-          ))}
-          {session.npcLinks.map((nl) => (
-            <Badge key={nl.npcId} variant="emerald" className="text-xs gap-1">
-              <Users className="h-3 w-3" />
-              {nl.npc.name}
-            </Badge>
-          ))}
-          {session.secretLinks.map((sl) => (
-            <Badge key={sl.secretId} variant="purple" className="text-xs gap-1">
-              <KeyRound className="h-3 w-3" />
-              {sl.secret.title}
-            </Badge>
-          ))}
-        </div>
-      )}
+      {/* Connected Entities (Separated & Labeled) */}
+      <div className="space-y-3 p-4 bg-muted/30 dark:bg-white/[0.01] rounded-lg border border-border dark:border-white/[0.04]">
+        {session.storylineLinks.length > 0 && (
+          <div>
+            <span className="text-xs font-semibold uppercase tracking-wider text-muted-foreground mr-3">Plot Lines</span>
+            <div className="flex flex-wrap gap-2 mt-1.5">
+              {session.storylineLinks.map((sl) => (
+                <Badge key={sl.storylineId} variant="arcane" className="text-xs gap-1">
+                  <GitBranch className="h-3 w-3" />
+                  {sl.storyline.title}
+                </Badge>
+              ))}
+            </div>
+          </div>
+        )}
+        
+        {session.npcLinks.length > 0 && (
+          <div>
+            <span className="text-xs font-semibold uppercase tracking-wider text-muted-foreground mr-3">NPCs</span>
+            <div className="flex flex-wrap gap-2 mt-1.5">
+              {session.npcLinks.map((nl) => (
+                <Badge key={nl.npcId} variant="emerald" className="text-xs gap-1">
+                  <Users className="h-3 w-3" />
+                  {nl.npc.name}
+                </Badge>
+              ))}
+            </div>
+          </div>
+        )}
+
+        {session.secretLinks.length > 0 && (
+          <div>
+            <span className="text-xs font-semibold uppercase tracking-wider text-muted-foreground mr-3">Secrets & Missions</span>
+            <div className="flex flex-wrap gap-2 mt-1.5">
+              {session.secretLinks.map((sl) => (
+                <Badge key={sl.secretId} variant="purple" className="text-xs gap-1">
+                  <KeyRound className="h-3 w-3" />
+                  {sl.secret.title}
+                </Badge>
+              ))}
+            </div>
+          </div>
+        )}
+      </div>
 
       <div className="space-y-3">
-        {/* Key Beats */}
+        {/* Key Beats -> Acts */}
         {keyBeats.length > 0 && (
           <CollapsibleSection
-            title="Key Beats"
+            title="Acts"
             icon={<Bookmark className="h-4 w-4 text-amber-600 dark:text-gold" />}
             defaultOpen={true}
             count={keyBeats.length}
           >
-            <div className="space-y-2">
+            <div className="space-y-3">
               {keyBeats.map((beat, i) => (
                 <div
                   key={i}
-                  className="flex items-start gap-3 p-2 rounded-lg bg-card hover:bg-muted/50 dark:bg-white/[0.02]"
+                  className="flex flex-col gap-1 p-3 rounded-lg bg-card border border-border dark:border-white/[0.02]"
                 >
-                  <span className="text-xs font-mono text-amber-600 dark:text-gold/60 mt-0.5 shrink-0 w-5 text-right">
-                    {i + 1}
+                  <span className="text-xs font-bold uppercase tracking-wider text-amber-600 dark:text-gold/80">
+                    Act {i + 1}
                   </span>
-                  <span className="text-sm text-foreground/80 dark:text-zinc-300">
+                  <span className="text-sm text-foreground/80 dark:text-zinc-300 whitespace-pre-wrap">
                     {beat}
                   </span>
                 </div>
@@ -310,48 +374,6 @@ function SessionDetail({ session }: { session: SessionData }) {
                   className="p-2.5 rounded-lg bg-purple-400/5 border border-purple-400/10 text-sm text-foreground/80 dark:text-zinc-300 italic"
                 >
                   &ldquo;{p}&rdquo;
-                </div>
-              ))}
-            </div>
-          </CollapsibleSection>
-        )}
-
-        {/* Reminders */}
-        {reminders.length > 0 && (
-          <CollapsibleSection
-            title="Important Reminders"
-            icon={<AlertCircle className="h-4 w-4 text-red-400" />}
-            count={reminders.length}
-          >
-            <div className="space-y-2">
-              {reminders.map((r, i) => (
-                <div
-                  key={i}
-                  className="flex items-start gap-2 text-sm text-red-300/80"
-                >
-                  <AlertCircle className="h-3.5 w-3.5 text-red-400/50 mt-0.5 shrink-0" />
-                  {r}
-                </div>
-              ))}
-            </div>
-          </CollapsibleSection>
-        )}
-
-        {/* Checklist */}
-        {checklist.length > 0 && (
-          <CollapsibleSection
-            title="Pre-Session Checklist"
-            icon={<ListChecks className="h-4 w-4 text-emerald-600 dark:text-emerald-400" />}
-            count={checklist.length}
-          >
-            <div className="space-y-2">
-              {checklist.map((item, i) => (
-                <div
-                  key={i}
-                  className="flex items-center gap-2 text-sm text-foreground/80 dark:text-zinc-300"
-                >
-                  <CheckCircle2 className="h-4 w-4 text-emerald-600 dark:text-emerald-400/50 shrink-0" />
-                  {item}
                 </div>
               ))}
             </div>

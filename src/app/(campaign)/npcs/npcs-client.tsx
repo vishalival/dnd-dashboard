@@ -81,14 +81,15 @@ function NPCDetail({ npc, onClose }: { npc: NPCData; onClose: () => void }) {
                 </Badge>
               )}
             </div>
-            <div className="flex items-center gap-2 mt-1 text-sm text-muted-foreground dark:text-zinc-400">
-              {npc.race && <span>{npc.race}</span>}
-              {npc.role && (
-                <>
-                  <span className="text-muted-foreground dark:text-zinc-600">·</span>
-                  <span>{npc.role}</span>
-                </>
-              )}
+            <div className="flex flex-col gap-1 mt-3 text-sm text-muted-foreground dark:text-zinc-400 bg-muted/30 dark:bg-white/[0.01] p-3 rounded-lg border border-border dark:border-white/[0.04]">
+              <div className="grid grid-cols-2 gap-2">
+                <div><span className="font-medium text-foreground/80 dark:text-zinc-300">Race/Species:</span> {npc.race || "—"}</div>
+                <div><span className="font-medium text-foreground/80 dark:text-zinc-300">Class:</span> {npc.role || "—"}</div>
+                <div><span className="font-medium text-foreground/80 dark:text-zinc-300">Age:</span> —</div>
+              </div>
+              <div className="mt-2 text-xs">
+                 <span className="font-medium text-foreground/80 dark:text-zinc-300">Physical Appearance:</span> —
+              </div>
             </div>
           </div>
         </div>
@@ -152,6 +153,20 @@ function NPCDetail({ npc, onClose }: { npc: NPCData; onClose: () => void }) {
           <p className="text-sm text-foreground/80 dark:text-zinc-300 p-3 rounded-lg bg-card hover:bg-muted/50 dark:bg-white/[0.02] border border-border dark:border-white/[0.04]">
             {npc.goals}
           </p>
+          <div className="grid grid-cols-2 gap-3 mt-3">
+             <div>
+               <h5 className="text-[10px] font-medium text-muted-foreground dark:text-zinc-500 uppercase tracking-wider mb-1">Leverages</h5>
+               <p className="text-sm text-foreground/80 dark:text-zinc-300 p-2.5 rounded-lg bg-card border border-border dark:border-white/[0.02]">
+                 Unknown
+               </p>
+             </div>
+             <div>
+               <h5 className="text-[10px] font-medium text-muted-foreground dark:text-zinc-500 uppercase tracking-wider mb-1">Weaknesses</h5>
+               <p className="text-sm text-foreground/80 dark:text-zinc-300 p-2.5 rounded-lg bg-card border border-border dark:border-white/[0.02]">
+                 Unknown
+               </p>
+             </div>
+          </div>
         </div>
       )}
 
@@ -233,12 +248,14 @@ function NPCDetail({ npc, onClose }: { npc: NPCData; onClose: () => void }) {
       {npc.sessionLinks.length > 0 && (
         <div>
           <h4 className="text-xs font-medium text-muted-foreground dark:text-zinc-400 uppercase tracking-wider mb-2 flex items-center gap-1">
-            <CalendarClock className="h-3 w-3 text-amber-600 dark:text-amber-400" /> Sessions
+            <CalendarClock className="h-3 w-3 text-amber-600 dark:text-amber-400" /> Session Appearances
           </h4>
           <div className="flex flex-wrap gap-2">
             {npc.sessionLinks.map((sl) => (
               <Badge key={sl.sessionId} variant="gold" className="text-xs">
-                #{sl.session.sessionNumber}: {sl.session.title}
+                {sl.session.title.toLowerCase().startsWith(`session ${sl.session.sessionNumber}`)
+                  ? sl.session.title
+                  : `Session #${sl.session.sessionNumber}: ${sl.session.title}`}
               </Badge>
             ))}
           </div>

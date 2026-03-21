@@ -24,6 +24,7 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Progress } from "@/components/ui/progress";
+import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { PageHeader } from "@/components/shared/page-header";
 import { StatusBadge } from "@/components/shared/status-badge";
 import { cn } from "@/lib/utils";
@@ -106,20 +107,7 @@ function SecretCard({
               <StatusBadge status={secret.status} />
               <StatusBadge status={secret.urgency} type="urgency" />
             </div>
-            {secret.progress > 0 && (
-              <div className="flex items-center gap-2 min-w-0">
-                <Progress value={secret.progress} className="h-1 w-16" />
-                <span className="text-[10px] text-muted-foreground dark:text-zinc-500">
-                  {secret.progress}%
-                </span>
-              </div>
-            )}
           </div>
-          {secret.owner && (
-            <p className="text-[10px] text-muted-foreground dark:text-zinc-500 mt-2">
-              Owner: {secret.owner}
-            </p>
-          )}
         </CardContent>
       </Card>
     </motion.div>
@@ -146,14 +134,14 @@ function SecretDetail({ secret }: { secret: SecretData }) {
             </Badge>
           )}
         </div>
-        <h2 className="text-xl font-heading font-semibold text-foreground dark:text-white">
-          {secret.title}
-        </h2>
         {secret.owner && (
-          <p className="text-sm text-muted-foreground dark:text-zinc-400 mt-1">
-            Owner: {secret.owner}
+          <p className="text-sm font-medium text-muted-foreground dark:text-zinc-400 mt-2 mb-1 uppercase tracking-wider">
+            {secret.owner}
           </p>
         )}
+        <h2 className={cn("text-xl font-heading font-semibold text-foreground dark:text-white", !secret.owner && "mt-2")}>
+          {secret.title}
+        </h2>
       </div>
 
       <div className="flex flex-wrap gap-2">
@@ -243,7 +231,9 @@ function SecretDetail({ secret }: { secret: SecretData }) {
           <div className="flex flex-wrap gap-2">
             {secret.sessionLinks.map((sl) => (
               <Badge key={sl.sessionId} variant="gold" className="text-xs">
-                #{sl.session.sessionNumber}: {sl.session.title}
+                {sl.session.title.toLowerCase().startsWith(`session ${sl.session.sessionNumber}`)
+                  ? sl.session.title
+                  : `Session #${sl.session.sessionNumber}: ${sl.session.title}`}
               </Badge>
             ))}
           </div>
@@ -268,11 +258,15 @@ function SecretDetail({ secret }: { secret: SecretData }) {
 export function SecretsClient({ campaign }: { campaign: CampaignData }) {
   const [selectedSecret, setSelectedSecret] = useState<SecretData | null>(null);
   const [search, setSearch] = useState("");
+  const [activeTab, setActiveTab] = useState<"secrets" | "goals">("secrets");
   const [typeFilter, setTypeFilter] = useState<string>("all");
   const [visibilityFilter, setVisibilityFilter] = useState<string>("all");
 
   const filtered = useMemo(() => {
     return campaign.secrets.filter((s) => {
+      if (activeTab === "secrets" && !s.type.endsWith("_secret")) return false;
+      if (activeTab === "goals" && !s.type.endsWith("_goal")) return false;
+
       if (search && !s.title.toLowerCase().includes(search.toLowerCase()))
         return false;
       if (typeFilter !== "all" && s.type !== typeFilter) return false;
@@ -280,7 +274,7 @@ export function SecretsClient({ campaign }: { campaign: CampaignData }) {
         return false;
       return true;
     });
-  }, [campaign.secrets, search, typeFilter, visibilityFilter]);
+  }, [campaign.secrets, search, activeTab, typeFilter, visibilityFilter]);
 
   const groupedByType = useMemo(() => {
     const groups: Record<string, SecretData[]> = {};
@@ -324,6 +318,22 @@ export function SecretsClient({ campaign }: { campaign: CampaignData }) {
         }
       />
 
+      <Tabs
+        defaultValue="secrets"
+        value={activeTab}
+        onValueChange={(val) => {
+          setActiveTab(val as "secrets" | "goals");
+          setTypeFilter("all");
+          setSelectedSecret(null);
+        }}
+        className="mb-6"
+      >
+        <TabsList>
+          <TabsTrigger value="secrets">Secrets</TabsTrigger>
+          <TabsTrigger value="goals">Goals</TabsTrigger>
+        </TabsList>
+      </Tabs>
+
       {/* Filters */}
       <div className="flex flex-wrap items-center gap-3 mb-6">
         <div className="relative flex-1 max-w-xs">
@@ -336,15 +346,18 @@ export function SecretsClient({ campaign }: { campaign: CampaignData }) {
           />
         </div>
         <div className="flex gap-1.5">
-          {[
-            "all",
-            "party_goal",
-            "player_goal",
-            "npc_goal",
-            "dm_secret",
-            "world_secret",
-            "faction_secret",
-          ].map((t) => (
+          <Button
+            variant={typeFilter === "all" ? "arcane" : "ghost"}
+            size="sm"
+            onClick={() => setTypeFilter("all")}
+            className="text-xs"
+          >
+            All
+          </Button>
+          {(activeTab === "secrets"
+            ? ["dm_secret", "world_secret", "faction_secret"]
+            : ["party_goal", "player_goal", "npc_goal"]
+          ).map((t) => (
             <Button
               key={t}
               variant={typeFilter === t ? "arcane" : "ghost"}
@@ -352,7 +365,7 @@ export function SecretsClient({ campaign }: { campaign: CampaignData }) {
               onClick={() => setTypeFilter(t)}
               className="text-xs"
             >
-              {t === "all" ? "All" : typeLabels[t]}
+              {typeLabels[t]}
             </Button>
           ))}
         </div>

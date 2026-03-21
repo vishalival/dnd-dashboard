@@ -27,40 +27,40 @@ import { useTheme } from "next-themes";
 
 const navItems = [
   {
-    label: "Command Center",
+    label: "Overview",
     href: "/dashboard",
     icon: LayoutDashboard,
-    color: "text-amber-600 dark:text-gold",
+    color: "text-indigo-400",
   },
   {
     label: "Session Planner",
     href: "/sessions",
     icon: CalendarClock,
-    color: "text-amber-600 dark:text-amber-400",
+    color: "text-sky-400",
   },
   {
     label: "Story Timeline",
     href: "/storylines",
     icon: GitBranch,
-    color: "text-blue-600 dark:text-arcane-light",
+    color: "text-purple-400",
   },
   {
     label: "NPC Tracker",
     href: "/npcs",
     icon: Users,
-    color: "text-emerald-600 dark:text-emerald-400",
+    color: "text-emerald-400",
   },
   {
     label: "Secrets & Goals",
     href: "/secrets",
     icon: KeyRound,
-    color: "text-purple-600 dark:text-purple-400",
+    color: "text-pink-400",
   },
   {
     label: "DM Journal",
     href: "/journal",
     icon: BookOpen,
-    color: "text-red-600 dark:text-crimson-light",
+    color: "text-rose-400",
   },
   {
     label: "Party Hub",
@@ -72,8 +72,8 @@ const navItems = [
     label: "Magic Items",
     href: "/wishlists",
     icon: Sparkles,
-    color: "text-amber-600 dark:text-amber-300",
-  },
+    color: "text-amber-400",
+  }
 ];
 
 export function Sidebar() {
@@ -91,157 +91,74 @@ export function Sidebar() {
   return (
     <motion.aside
       initial={false}
-      animate={{ width: sidebarOpen ? 260 : 72 }}
+      animate={{ width: 260 }}
       transition={{ duration: 0.3, ease: [0.4, 0, 0.2, 1] }}
-      className="fixed left-0 top-0 z-40 h-screen border-r border-border dark:border-white/[0.06] bg-background/95 dark:bg-zinc-950/80 backdrop-blur-xl flex flex-col"
+      className="fixed left-0 top-0 z-40 h-screen border-r border-[#1F1F22] bg-[#0A0A0B] flex flex-col"
     >
-      {/* Header */}
-      <div className="flex items-center h-16 px-4 border-b border-border dark:border-white/[0.06]">
-        <AnimatePresence mode="wait">
-          {sidebarOpen ? (
-            <motion.div
-              key="full"
-              initial={{ opacity: 0 }}
-              animate={{ opacity: 1 }}
-              exit={{ opacity: 0 }}
-              className="flex items-center gap-3 flex-1 min-w-0"
-            >
-              <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-gold to-gold-dark flex items-center justify-center shrink-0">
-                <span className="text-sm font-heading font-bold text-zinc-900">
-                  DM
-                </span>
-              </div>
-              <div className="min-w-0">
-                <h1 className="text-sm font-heading font-semibold dark:text-gold-light text-foreground truncate">
-                  Campaign HQ
-                </h1>
-                <p className="text-[10px] text-muted-foreground truncate">
-                  Dungeon Master OS
-                </p>
-              </div>
-            </motion.div>
-          ) : (
-            <motion.div
-              key="mini"
-              initial={{ opacity: 0 }}
-              animate={{ opacity: 1 }}
-              exit={{ opacity: 0 }}
-              className="flex items-center justify-center flex-1"
-            >
-              <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-gold to-gold-dark flex items-center justify-center">
-                <span className="text-sm font-heading font-bold text-zinc-900">
-                  DM
-                </span>
-              </div>
-            </motion.div>
-          )}
-        </AnimatePresence>
+      {/* Header / Logo */}
+      <div className="flex items-center gap-3 px-6 h-20 mb-4">
+        <div className="w-8 h-8 rounded-full bg-gradient-to-br from-indigo-400 to-purple-500 flex items-center justify-center shrink-0">
+          <span className="font-heading font-black text-xs text-white">DM</span>
+        </div>
+        <span className="font-heading font-semibold text-base text-white tracking-wide truncate">
+          D&D Campaign
+        </span>
       </div>
 
-      {/* Search / Command */}
-      <div className="px-3 py-3">
-        <Button
-          variant="ghost"
+      {/* Command */}
+      <div className="px-4 mb-6">
+        <button
           onClick={toggleCommandPalette}
-          className={cn(
-            "w-full justify-start gap-2 text-muted-foreground hover:text-foreground h-9",
-            !sidebarOpen && "justify-center px-0",
-          )}
+          className="w-full h-10 px-3 flex items-center gap-3 rounded-lg bg-transparent border border-[#1F1F22] text-zinc-500 hover:text-zinc-300 hover:border-[#2A2A2D] transition-all"
         >
           <Search className="h-4 w-4 shrink-0" />
-          {sidebarOpen && (
-            <>
-              <span className="text-xs flex-1 text-left">Search...</span>
-              <kbd className="pointer-events-none inline-flex h-5 select-none items-center gap-1 rounded border border-border dark:border-white/[0.06] bg-muted dark:bg-zinc-800 px-1.5 font-mono text-[10px] font-medium text-muted-foreground dark:text-zinc-400">
-                <Command className="h-3 w-3" />K
-              </kbd>
-            </>
-          )}
-        </Button>
+          <span className="text-sm font-medium flex-1 text-left">Search</span>
+          <Command className="h-3.5 w-3.5 opacity-50" />
+        </button>
       </div>
 
       {/* Navigation */}
-      <nav className="flex-1 px-3 py-2 space-y-1 overflow-y-auto scrollbar-thin">
+      <nav className="flex-1 w-full px-4 space-y-1.5 overflow-y-auto scrollbar-thin flex flex-col">
         {navItems.map((item) => {
           const isActive =
             pathname === item.href ||
             (item.href !== "/dashboard" && pathname?.startsWith(item.href));
           return (
-            <Link key={item.href} href={item.href}>
-              <motion.div
-                whileHover={{ x: 2 }}
-                whileTap={{ scale: 0.98 }}
+            <Link key={item.href} href={item.href} className="w-full">
+              <div
                 className={cn(
-                  "flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm transition-all duration-200 group relative",
+                  "flex items-center gap-3 w-full h-11 px-3 rounded-xl transition-all duration-300 group",
                   isActive
-                    ? "bg-muted/80 dark:bg-white/[0.06] text-foreground dark:text-white"
-                    : "text-muted-foreground dark:text-zinc-400 hover:text-foreground dark:text-zinc-200 hover:bg-card hover:bg-muted/60 dark:bg-white/[0.03]",
-                  !sidebarOpen && "justify-center px-0",
+                    ? "bg-gradient-to-r from-white/[0.08] to-transparent text-white border-l-2 border-indigo-400"
+                    : "text-zinc-400 hover:text-zinc-200 hover:bg-white/[0.03] border-l-2 border-transparent",
                 )}
               >
-
                 <item.icon
                   className={cn(
-                    "h-4.5 w-4.5 shrink-0 transition-colors",
-                    isActive
-                      ? item.color
-                      : "text-muted-foreground dark:text-zinc-500 group-hover:text-foreground/80 dark:text-zinc-300",
+                    "h-4 w-4 transition-colors duration-300",
+                    isActive ? item.color : "text-zinc-500 group-hover:text-zinc-300",
                   )}
-                  style={{ width: 18, height: 18 }}
                 />
-                {sidebarOpen && (
-                  <motion.span
-                    initial={{ opacity: 0 }}
-                    animate={{ opacity: 1 }}
-                    className="truncate"
-                  >
-                    {item.label}
-                  </motion.span>
-                )}
-              </motion.div>
+                <span className="text-sm font-medium tracking-wide truncate">
+                  {item.label}
+                </span>
+              </div>
             </Link>
           );
         })}
       </nav>
 
-      {/* Toggle */}
-      <div className="px-3 py-3 border-t border-border flex flex-col gap-2">
-        <Button
-          variant="ghost"
-          size="sm"
-          onClick={() => setTheme(theme === "dark" ? "light" : "dark")}
-          className={cn(
-            "w-full text-muted-foreground dark:text-zinc-500 hover:text-foreground/80 dark:text-zinc-300 h-8 dark:text-muted-foreground dark:text-zinc-500 dark:hover:text-foreground/80 dark:text-zinc-300 dark:bg-transparent text-muted-foreground dark:text-zinc-600 hover:text-zinc-900 bg-transparent",
-            !sidebarOpen && "justify-center px-0",
-          )}
-        >
-          {!mounted ? (
-            <Moon className="h-4 w-4" />
-          ) : theme === "dark" ? (
-            <Sun className="h-4 w-4" />
-          ) : (
-            <Moon className="h-4 w-4" />
-          )}
-          {sidebarOpen && <span className="text-xs ml-2">Toggle Theme</span>}
-        </Button>
-        <Button
-          variant="ghost"
-          size="sm"
-          onClick={toggleSidebar}
-          className={cn(
-            "w-full text-muted-foreground dark:text-zinc-500 hover:text-foreground/80 dark:text-zinc-300 h-8",
-            !sidebarOpen && "justify-center px-0",
-          )}
-        >
-          {sidebarOpen ? (
-            <>
-              <ChevronLeft className="h-4 w-4 mr-2" />
-              <span className="text-xs">Collapse</span>
-            </>
-          ) : (
-            <ChevronRight className="h-4 w-4" />
-          )}
-        </Button>
+      {/* Bottom Profile / Settings */}
+      <div className="p-4 mt-auto border-t border-[#1F1F22]">
+        <div className="flex items-center gap-3 p-3 rounded-xl bg-[#141416] border border-[#1F1F22]">
+          <div className="w-8 h-8 rounded-full bg-zinc-800 flex items-center justify-center shrink-0">
+             <span className="text-xs font-semibold text-white">DR</span>
+          </div>
+          <div className="min-w-0 flex-1">
+            <p className="text-sm font-medium text-white truncate">Dungeon Master Rachel</p>
+            <p className="text-[10px] text-zinc-500 truncate">rachel@dxragond.com</p>
+          </div>
+        </div>
       </div>
     </motion.aside>
   );

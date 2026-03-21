@@ -150,6 +150,17 @@ function StorylineDetail({ storyline }: { storyline: StorylineData }) {
             {storyline.summary}
           </p>
         )}
+        {/* Notes (Moved to Top) */}
+        {storyline.notes && (
+          <div className="p-4 rounded-lg bg-card hover:bg-muted/50 dark:bg-white/[0.02] border border-border dark:border-white/[0.04] mt-3">
+            <h4 className="text-sm font-medium text-foreground/80 dark:text-zinc-300 mb-2">
+              DM Notes
+            </h4>
+            <p className="text-sm text-muted-foreground dark:text-zinc-400 whitespace-pre-wrap">
+              {storyline.notes}
+            </p>
+          </div>
+        )}
       </div>
 
       {/* Tags */}
@@ -190,12 +201,6 @@ function StorylineDetail({ storyline }: { storyline: StorylineData }) {
                 <div className="absolute -left-6 top-1.5 w-[7px] h-[7px] rounded-full bg-arcane border-2 border-zinc-900" />
                 <div className="p-3 rounded-lg bg-card hover:bg-muted/50 dark:bg-white/[0.02] border border-border dark:border-white/[0.04]">
                   <div className="flex items-center gap-2 mb-1">
-                    <Badge
-                      variant="arcane"
-                      className="text-[10px] h-4 capitalize"
-                    >
-                      {event.type}
-                    </Badge>
                     {event.session && (
                       <span className="text-[10px] text-muted-foreground dark:text-zinc-500">
                         Session #{event.session}
@@ -274,7 +279,7 @@ function StorylineDetail({ storyline }: { storyline: StorylineData }) {
                   </p>
                   <div className="flex items-center gap-2">
                     <StatusBadge status={sl.secret.visibility} />
-                    <StatusBadge status={sl.secret.status} />
+                    {sl.secret.status !== "active" && <StatusBadge status={sl.secret.status} />}
                   </div>
                 </div>
               </div>
@@ -293,24 +298,15 @@ function StorylineDetail({ storyline }: { storyline: StorylineData }) {
           <div className="flex flex-wrap gap-2">
             {storyline.sessionLinks.map((sl) => (
               <Badge key={sl.sessionId} variant="gold" className="text-xs">
-                Session #{sl.session.sessionNumber}: {sl.session.title}
+                {sl.session.title.toLowerCase().startsWith(`session ${sl.session.sessionNumber}`)
+                  ? sl.session.title
+                  : `Session #${sl.session.sessionNumber}: ${sl.session.title}`}
               </Badge>
             ))}
           </div>
         </div>
       )}
 
-      {/* Notes */}
-      {storyline.notes && (
-        <div className="p-4 rounded-lg bg-card hover:bg-muted/50 dark:bg-white/[0.02] border border-border dark:border-white/[0.04]">
-          <h4 className="text-sm font-medium text-foreground/80 dark:text-zinc-300 mb-2">
-            DM Notes
-          </h4>
-          <p className="text-sm text-muted-foreground dark:text-zinc-400 whitespace-pre-wrap">
-            {storyline.notes}
-          </p>
-        </div>
-      )}
     </motion.div>
   );
 }
