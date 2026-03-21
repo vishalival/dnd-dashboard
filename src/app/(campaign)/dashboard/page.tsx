@@ -10,11 +10,15 @@ export default async function DashboardPage() {
     return (
       <div className="flex items-center justify-center min-h-[60vh]">
         <div className="text-center">
-          <h2 className="text-xl font-heading font-semibold text-zinc-300 mb-2">
+          <h2 className="text-xl font-heading font-semibold text-foreground/80 dark:text-zinc-300 mb-2">
             No Campaign Found
           </h2>
-          <p className="text-sm text-zinc-500 mb-4">
-            Run <code className="px-2 py-1 bg-zinc-800 rounded text-gold text-xs">npm run db:seed</code> to load sample data.
+          <p className="text-sm text-muted-foreground dark:text-zinc-500 mb-4">
+            Run{" "}
+            <code className="px-2 py-1 bg-muted dark:bg-zinc-800 rounded text-amber-600 dark:text-gold text-xs">
+              npm run db:seed
+            </code>{" "}
+            to load sample data.
           </p>
         </div>
       </div>

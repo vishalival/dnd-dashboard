@@ -5,25 +5,30 @@
 @layer base {
   :root {
     --background: 0 0% 100%;
-    --foreground: 0 0% 3.9%;
+    --foreground: 0 0% 10%;
     --card: 0 0% 100%;
-    --card-foreground: 0 0% 3.9%;
+    --card-foreground: 0 0% 15%;
     --popover: 0 0% 100%;
-    --popover-foreground: 0 0% 3.9%;
+    --popover-foreground: 0 0% 15%;
     --primary: 0 0% 9%;
     --primary-foreground: 0 0% 98%;
     --secondary: 0 0% 96.1%;
     --secondary-foreground: 0 0% 9%;
     --muted: 0 0% 96.1%;
-    --muted-foreground: 0 0% 45.1%;
+    --muted-foreground: 0 0% 35%;
     --accent: 0 0% 96.1%;
     --accent-foreground: 0 0% 9%;
     --destructive: 0 84.2% 60.2%;
     --destructive-foreground: 0 0% 98%;
-    --border: 0 0% 89.8%;
-    --input: 0 0% 89.8%;
+    --border: 0 0% 92%;
+    --input: 0 0% 92%;
     --ring: 0 0% 3.9%;
     --radius: 0.75rem;
+  }
+
+  /* Make Settle modern font override for headings */
+  body:not(.dark) {
+    --font-heading: var(--font-body);
   }
 
   .dark {
@@ -69,15 +74,21 @@
   }
 
   .glow-gold {
-    box-shadow: 0 0 20px rgba(201, 168, 76, 0.15), 0 0 40px rgba(201, 168, 76, 0.05);
+    box-shadow:
+      0 0 20px rgba(201, 168, 76, 0.15),
+      0 0 40px rgba(201, 168, 76, 0.05);
   }
 
   .glow-crimson {
-    box-shadow: 0 0 20px rgba(139, 26, 26, 0.15), 0 0 40px rgba(139, 26, 26, 0.05);
+    box-shadow:
+      0 0 20px rgba(139, 26, 26, 0.15),
+      0 0 40px rgba(139, 26, 26, 0.05);
   }
 
   .glow-arcane {
-    box-shadow: 0 0 20px rgba(74, 111, 165, 0.15), 0 0 40px rgba(74, 111, 165, 0.05);
+    box-shadow:
+      0 0 20px rgba(74, 111, 165, 0.15),
+      0 0 40px rgba(74, 111, 165, 0.05);
   }
 
   .text-gradient-gold {
@@ -90,7 +101,7 @@
 
   .scrollbar-thin {
     scrollbar-width: thin;
-    scrollbar-color: rgba(255,255,255,0.1) transparent;
+    scrollbar-color: rgba(255, 255, 255, 0.1) transparent;
   }
 
   .scrollbar-thin::-webkit-scrollbar {
@@ -102,7 +113,7 @@
   }
 
   .scrollbar-thin::-webkit-scrollbar-thumb {
-    background-color: rgba(255,255,255,0.1);
+    background-color: rgba(255, 255, 255, 0.1);
     border-radius: 3px;
   }
 }
@@ -120,7 +131,8 @@
 }
 
 @keyframes pulse-glow {
-  0%, 100% {
+  0%,
+  100% {
     box-shadow: 0 0 10px rgba(201, 168, 76, 0.2);
   }
   50% {
@@ -213,9 +225,21 @@
 }
 
 /* Background pattern */
-body {
+.dark body {
   background-image:
-    radial-gradient(ellipse at 20% 50%, rgba(74, 111, 165, 0.04) 0%, transparent 50%),
-    radial-gradient(ellipse at 80% 20%, rgba(201, 168, 76, 0.03) 0%, transparent 50%),
-    radial-gradient(ellipse at 50% 80%, rgba(139, 26, 26, 0.03) 0%, transparent 50%);
+    radial-gradient(
+      ellipse at 20% 50%,
+      rgba(74, 111, 165, 0.04) 0%,
+      transparent 50%
+    ),
+    radial-gradient(
+      ellipse at 80% 20%,
+      rgba(201, 168, 76, 0.03) 0%,
+      transparent 50%
+    ),
+    radial-gradient(
+      ellipse at 50% 80%,
+      rgba(139, 26, 26, 0.03) 0%,
+      transparent 50%
+    );
 }

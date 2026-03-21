@@ -28,16 +28,16 @@ export function PageHeader({
     >
       <div className="flex items-center gap-4">
         {icon && (
-          <div className="p-2.5 rounded-xl bg-gradient-to-br from-white/[0.06] to-white/[0.02] border border-white/[0.06]">
+          <div className="p-2.5 rounded-xl bg-gradient-to-br from-white/[0.06] to-white/[0.02] border border-border dark:border-white/[0.06]">
             {icon}
           </div>
         )}
         <div>
-          <h1 className="text-2xl font-heading font-semibold tracking-tight text-white">
+          <h1 className="text-2xl font-heading font-semibold tracking-tight text-foreground">
             {title}
           </h1>
           {subtitle && (
-            <p className="text-sm text-zinc-400 mt-1">{subtitle}</p>
+            <p className="text-sm text-muted-foreground mt-1">{subtitle}</p>
           )}
         </div>
       </div>

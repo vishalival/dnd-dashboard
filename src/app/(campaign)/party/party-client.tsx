@@ -44,11 +44,17 @@ function CharacterCard({
   onClick: () => void;
 }) {
   return (
-    <motion.div variants={item} whileHover={{ y: -3 }} whileTap={{ scale: 0.99 }}>
+    <motion.div
+      variants={item}
+      whileHover={{ y: -3 }}
+      whileTap={{ scale: 0.99 }}
+    >
       <Card
         className={cn(
           "cursor-pointer transition-all duration-200",
-          isSelected ? "border-blue-400/30 glow-arcane" : "hover:border-white/[0.1]"
+          isSelected
+            ? "border-blue-400/30 glow-arcane"
+            : "hover:border-border dark:border-white/[0.1]",
         )}
         onClick={onClick}
       >
@@ -60,23 +66,28 @@ function CharacterCard({
               </span>
             </div>
             <div className="min-w-0 flex-1">
-              <h3 className="text-base font-heading font-semibold text-white">
+              <h3 className="text-base font-heading font-semibold text-foreground dark:text-white">
                 {character.name}
               </h3>
-              <p className="text-sm text-zinc-400 mt-0.5">
+              <p className="text-sm text-muted-foreground dark:text-zinc-400 mt-0.5">
                 Level {character.level}{" "}
-                {[character.race, character.className].filter(Boolean).join(" ")}
+                {[character.race, character.className]
+                  .filter(Boolean)
+                  .join(" ")}
                 {character.subclass ? ` (${character.subclass})` : ""}
               </p>
               {character.playerName && (
-                <p className="text-xs text-zinc-500 mt-1">
+                <p className="text-xs text-muted-foreground dark:text-zinc-500 mt-1">
                   Player: {character.playerName}
                 </p>
               )}
               <div className="flex items-center gap-2 mt-2">
                 <StatusBadge status={character.status} />
                 {character.wishlists.length > 0 && (
-                  <Badge variant="gold" className="text-[10px] h-4 px-1.5 gap-0.5">
+                  <Badge
+                    variant="gold"
+                    className="text-[10px] h-4 px-1.5 gap-0.5"
+                  >
                     <Sparkles className="h-3 w-3" />
                     {character.wishlists.length}
                   </Badge>
@@ -108,16 +119,16 @@ function CharacterDetail({ character }: { character: CharacterData }) {
           </span>
         </div>
         <div>
-          <h2 className="text-xl font-heading font-semibold text-white">
+          <h2 className="text-xl font-heading font-semibold text-foreground dark:text-white">
             {character.name}
           </h2>
-          <p className="text-sm text-zinc-400 mt-0.5">
+          <p className="text-sm text-muted-foreground dark:text-zinc-400 mt-0.5">
             Level {character.level}{" "}
             {[character.race, character.className].filter(Boolean).join(" ")}
             {character.subclass ? ` (${character.subclass})` : ""}
           </p>
           {character.playerName && (
-            <p className="text-xs text-zinc-500 mt-1">
+            <p className="text-xs text-muted-foreground dark:text-zinc-500 mt-1">
               Player: {character.playerName}
             </p>
           )}
@@ -135,27 +146,43 @@ function CharacterDetail({ character }: { character: CharacterData }) {
       {/* Personality Traits */}
       <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
         {character.personality && (
-          <div className="p-3 rounded-lg bg-white/[0.02] border border-white/[0.04]">
-            <h4 className="text-[10px] text-zinc-500 uppercase tracking-wider mb-1">Personality</h4>
-            <p className="text-sm text-zinc-300">{character.personality}</p>
+          <div className="p-3 rounded-lg bg-card hover:bg-muted/50 dark:bg-white/[0.02] border border-border dark:border-white/[0.04]">
+            <h4 className="text-[10px] text-muted-foreground dark:text-zinc-500 uppercase tracking-wider mb-1">
+              Personality
+            </h4>
+            <p className="text-sm text-foreground/80 dark:text-zinc-300">
+              {character.personality}
+            </p>
           </div>
         )}
         {character.ideals && (
-          <div className="p-3 rounded-lg bg-white/[0.02] border border-white/[0.04]">
-            <h4 className="text-[10px] text-zinc-500 uppercase tracking-wider mb-1">Ideals</h4>
-            <p className="text-sm text-zinc-300">{character.ideals}</p>
+          <div className="p-3 rounded-lg bg-card hover:bg-muted/50 dark:bg-white/[0.02] border border-border dark:border-white/[0.04]">
+            <h4 className="text-[10px] text-muted-foreground dark:text-zinc-500 uppercase tracking-wider mb-1">
+              Ideals
+            </h4>
+            <p className="text-sm text-foreground/80 dark:text-zinc-300">
+              {character.ideals}
+            </p>
           </div>
         )}
         {character.bonds && (
-          <div className="p-3 rounded-lg bg-white/[0.02] border border-white/[0.04]">
-            <h4 className="text-[10px] text-zinc-500 uppercase tracking-wider mb-1">Bonds</h4>
-            <p className="text-sm text-zinc-300">{character.bonds}</p>
+          <div className="p-3 rounded-lg bg-card hover:bg-muted/50 dark:bg-white/[0.02] border border-border dark:border-white/[0.04]">
+            <h4 className="text-[10px] text-muted-foreground dark:text-zinc-500 uppercase tracking-wider mb-1">
+              Bonds
+            </h4>
+            <p className="text-sm text-foreground/80 dark:text-zinc-300">
+              {character.bonds}
+            </p>
           </div>
         )}
         {character.flaws && (
-          <div className="p-3 rounded-lg bg-white/[0.02] border border-white/[0.04]">
-            <h4 className="text-[10px] text-zinc-500 uppercase tracking-wider mb-1">Flaws</h4>
-            <p className="text-sm text-zinc-300">{character.flaws}</p>
+          <div className="p-3 rounded-lg bg-card hover:bg-muted/50 dark:bg-white/[0.02] border border-border dark:border-white/[0.04]">
+            <h4 className="text-[10px] text-muted-foreground dark:text-zinc-500 uppercase tracking-wider mb-1">
+              Flaws
+            </h4>
+            <p className="text-sm text-foreground/80 dark:text-zinc-300">
+              {character.flaws}
+            </p>
           </div>
         )}
       </div>
@@ -163,10 +190,10 @@ function CharacterDetail({ character }: { character: CharacterData }) {
       {/* Backstory */}
       {character.backstory && (
         <div>
-          <h4 className="text-xs font-medium text-zinc-400 uppercase tracking-wider mb-2 flex items-center gap-1">
+          <h4 className="text-xs font-medium text-muted-foreground dark:text-zinc-400 uppercase tracking-wider mb-2 flex items-center gap-1">
             <Scroll className="h-3 w-3" /> Backstory
           </h4>
-          <p className="text-sm text-zinc-300 p-4 rounded-lg bg-white/[0.02] border border-white/[0.04] leading-relaxed whitespace-pre-wrap">
+          <p className="text-sm text-foreground/80 dark:text-zinc-300 p-4 rounded-lg bg-card hover:bg-muted/50 dark:bg-white/[0.02] border border-border dark:border-white/[0.04] leading-relaxed whitespace-pre-wrap">
             {character.backstory}
           </p>
         </div>
@@ -175,10 +202,10 @@ function CharacterDetail({ character }: { character: CharacterData }) {
       {/* Current Goals */}
       {character.currentGoals && (
         <div>
-          <h4 className="text-xs font-medium text-zinc-400 uppercase tracking-wider mb-2 flex items-center gap-1">
-            <Target className="h-3 w-3 text-amber-400" /> Current Goals
+          <h4 className="text-xs font-medium text-muted-foreground dark:text-zinc-400 uppercase tracking-wider mb-2 flex items-center gap-1">
+            <Target className="h-3 w-3 text-amber-600 dark:text-amber-400" /> Current Goals
           </h4>
-          <p className="text-sm text-zinc-300 p-3 rounded-lg bg-amber-400/5 border border-amber-400/10">
+          <p className="text-sm text-foreground/80 dark:text-zinc-300 p-3 rounded-lg bg-amber-400/5 border border-amber-400/10">
             {character.currentGoals}
           </p>
         </div>
@@ -187,20 +214,26 @@ function CharacterDetail({ character }: { character: CharacterData }) {
       {/* Background Details */}
       {bg && (
         <div className="space-y-3">
-          <h4 className="text-xs font-medium text-zinc-400 uppercase tracking-wider flex items-center gap-1">
-            <BookOpen className="h-3 w-3 text-crimson-light" /> Background Details
+          <h4 className="text-xs font-medium text-muted-foreground dark:text-zinc-400 uppercase tracking-wider flex items-center gap-1">
+            <BookOpen className="h-3 w-3 text-red-600 dark:text-crimson-light" /> Background
+            Details
           </h4>
           {bg.backgroundText && (
-            <p className="text-sm text-zinc-300 p-3 rounded-lg bg-white/[0.02] border border-white/[0.04] whitespace-pre-wrap">
+            <p className="text-sm text-foreground/80 dark:text-zinc-300 p-3 rounded-lg bg-card hover:bg-muted/50 dark:bg-white/[0.02] border border-border dark:border-white/[0.04] whitespace-pre-wrap">
               {bg.backgroundText}
             </p>
           )}
           {bg.plotHooks && (
             <div>
-              <p className="text-[10px] text-zinc-500 uppercase tracking-wider mb-1">Plot Hooks</p>
+              <p className="text-[10px] text-muted-foreground dark:text-zinc-500 uppercase tracking-wider mb-1">
+                Plot Hooks
+              </p>
               <div className="space-y-1">
                 {JSON.parse(bg.plotHooks).map((hook: string, i: number) => (
-                  <div key={i} className="text-sm text-zinc-300 p-2 rounded bg-gold/5 border border-gold/10">
+                  <div
+                    key={i}
+                    className="text-sm text-foreground/80 dark:text-zinc-300 p-2 rounded bg-gold/5 border border-gold/10"
+                  >
                     {hook}
                   </div>
                 ))}
@@ -209,13 +242,20 @@ function CharacterDetail({ character }: { character: CharacterData }) {
           )}
           {bg.unresolvedThreads && (
             <div>
-              <p className="text-[10px] text-zinc-500 uppercase tracking-wider mb-1">Unresolved Threads</p>
+              <p className="text-[10px] text-muted-foreground dark:text-zinc-500 uppercase tracking-wider mb-1">
+                Unresolved Threads
+              </p>
               <div className="space-y-1">
-                {JSON.parse(bg.unresolvedThreads).map((thread: string, i: number) => (
-                  <div key={i} className="text-sm text-zinc-300 p-2 rounded bg-purple-400/5 border border-purple-400/10">
-                    {thread}
-                  </div>
-                ))}
+                {JSON.parse(bg.unresolvedThreads).map(
+                  (thread: string, i: number) => (
+                    <div
+                      key={i}
+                      className="text-sm text-foreground/80 dark:text-zinc-300 p-2 rounded bg-purple-400/5 border border-purple-400/10"
+                    >
+                      {thread}
+                    </div>
+                  ),
+                )}
               </div>
             </div>
           )}
@@ -225,31 +265,44 @@ function CharacterDetail({ character }: { character: CharacterData }) {
       {/* Magic Item Wishlists */}
       {character.wishlists.length > 0 && (
         <div>
-          <h4 className="text-xs font-medium text-zinc-400 uppercase tracking-wider mb-3 flex items-center gap-1">
-            <Sparkles className="h-3 w-3 text-amber-300" /> Magic Item Wishlist
+          <h4 className="text-xs font-medium text-muted-foreground dark:text-zinc-400 uppercase tracking-wider mb-3 flex items-center gap-1">
+            <Sparkles className="h-3 w-3 text-amber-600 dark:text-amber-300" /> Magic Item Wishlist
           </h4>
           <div className="space-y-2">
             {character.wishlists.map((wish) => (
               <div
                 key={wish.id}
-                className="p-3 rounded-lg bg-white/[0.02] border border-white/[0.04]"
+                className="p-3 rounded-lg bg-card hover:bg-muted/50 dark:bg-white/[0.02] border border-border dark:border-white/[0.04]"
               >
                 <div className="flex items-center justify-between mb-1">
-                  <h5 className={cn("text-sm font-medium", getRarityColor(wish.rarity))}>
+                  <h5
+                    className={cn(
+                      "text-sm font-medium",
+                      getRarityColor(wish.rarity),
+                    )}
+                  >
                     {wish.itemName}
                   </h5>
                   <div className="flex items-center gap-2">
-                    <Badge variant="outline" className={cn("text-[10px] capitalize", getRarityColor(wish.rarity))}>
+                    <Badge
+                      variant="outline"
+                      className={cn(
+                        "text-[10px] capitalize",
+                        getRarityColor(wish.rarity),
+                      )}
+                    >
                       {wish.rarity.replace(/_/g, " ")}
                     </Badge>
                     <StatusBadge status={wish.status} />
                   </div>
                 </div>
                 {wish.reason && (
-                  <p className="text-xs text-zinc-400 mt-1">{wish.reason}</p>
+                  <p className="text-xs text-muted-foreground dark:text-zinc-400 mt-1">
+                    {wish.reason}
+                  </p>
                 )}
                 {wish.storyHook && (
-                  <p className="text-xs text-gold/70 mt-1 italic">
+                  <p className="text-xs text-amber-600 dark:text-gold/70 mt-1 italic">
                     Story hook: {wish.storyHook}
                   </p>
                 )}
@@ -262,8 +315,10 @@ function CharacterDetail({ character }: { character: CharacterData }) {
       {/* Notes */}
       {character.notes && (
         <div>
-          <h4 className="text-xs font-medium text-zinc-400 uppercase tracking-wider mb-2">DM Notes</h4>
-          <p className="text-sm text-zinc-400 p-3 rounded-lg bg-white/[0.02] border border-white/[0.04] whitespace-pre-wrap">
+          <h4 className="text-xs font-medium text-muted-foreground dark:text-zinc-400 uppercase tracking-wider mb-2">
+            DM Notes
+          </h4>
+          <p className="text-sm text-muted-foreground dark:text-zinc-400 p-3 rounded-lg bg-card hover:bg-muted/50 dark:bg-white/[0.02] border border-border dark:border-white/[0.04] whitespace-pre-wrap">
             {character.notes}
           </p>
         </div>
@@ -273,11 +328,12 @@ function CharacterDetail({ character }: { character: CharacterData }) {
 }
 
 export function PartyClient({ campaign }: { campaign: CampaignData }) {
-  const [selectedCharacter, setSelectedCharacter] = useState<CharacterData | null>(
-    campaign.characters[0] || null
-  );
+  const [selectedCharacter, setSelectedCharacter] =
+    useState<CharacterData | null>(campaign.characters[0] || null);
 
-  const partyCharacters = campaign.characters.filter((c) => c.isPlayerCharacter);
+  const partyCharacters = campaign.characters.filter(
+    (c) => c.isPlayerCharacter,
+  );
 
   return (
     <div>
@@ -316,8 +372,8 @@ export function PartyClient({ campaign }: { campaign: CampaignData }) {
             </Card>
           ) : (
             <Card className="p-12">
-              <div className="text-center text-zinc-500">
-                <Shield className="h-8 w-8 mx-auto mb-3 text-zinc-600" />
+              <div className="text-center text-muted-foreground dark:text-zinc-500">
+                <Shield className="h-8 w-8 mx-auto mb-3 text-muted-foreground dark:text-zinc-600" />
                 <p className="text-sm">Select a character to view details</p>
               </div>
             </Card>

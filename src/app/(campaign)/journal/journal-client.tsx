@@ -23,10 +23,10 @@ import { cn } from "@/lib/utils";
 import type { CampaignData, JournalData } from "@/lib/data";
 
 const typeIcons: Record<string, React.ReactNode> = {
-  session_recap: <CalendarClock className="h-3.5 w-3.5 text-amber-400" />,
+  session_recap: <CalendarClock className="h-3.5 w-3.5 text-amber-600 dark:text-amber-400" />,
   prep_notes: <FileText className="h-3.5 w-3.5 text-blue-400" />,
-  reflection: <Lightbulb className="h-3.5 w-3.5 text-purple-400" />,
-  worldbuilding: <Globe className="h-3.5 w-3.5 text-emerald-400" />,
+  reflection: <Lightbulb className="h-3.5 w-3.5 text-purple-600 dark:text-purple-400" />,
+  worldbuilding: <Globe className="h-3.5 w-3.5 text-emerald-600 dark:text-emerald-400" />,
 };
 
 const typeLabels: Record<string, string> = {
@@ -48,7 +48,7 @@ const item = {
 
 export function JournalClient({ campaign }: { campaign: CampaignData }) {
   const [selectedEntry, setSelectedEntry] = useState<JournalData | null>(
-    campaign.journals[0] || null
+    campaign.journals[0] || null,
   );
   const [search, setSearch] = useState("");
   const [typeFilter, setTypeFilter] = useState<string>("all");
@@ -57,7 +57,10 @@ export function JournalClient({ campaign }: { campaign: CampaignData }) {
     return campaign.journals.filter((j) => {
       if (search) {
         const q = search.toLowerCase();
-        if (!j.title.toLowerCase().includes(q) && !j.content.toLowerCase().includes(q)) {
+        if (
+          !j.title.toLowerCase().includes(q) &&
+          !j.content.toLowerCase().includes(q)
+        ) {
           return false;
         }
       }
@@ -71,7 +74,7 @@ export function JournalClient({ campaign }: { campaign: CampaignData }) {
       <PageHeader
         title="DM's Campaign Journal"
         subtitle="Session recaps, prep notes, reflections, and worldbuilding"
-        icon={<BookOpen className="h-5 w-5 text-crimson-light" />}
+        icon={<BookOpen className="h-5 w-5 text-red-600 dark:text-crimson-light" />}
         actions={
           <Badge variant="gold">{campaign.journals.length} Entries</Badge>
         }
@@ -80,16 +83,22 @@ export function JournalClient({ campaign }: { campaign: CampaignData }) {
       {/* Filters */}
       <div className="flex flex-wrap items-center gap-3 mb-6">
         <div className="relative flex-1 max-w-xs">
-          <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-zinc-500" />
+          <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground dark:text-zinc-500" />
           <Input
             placeholder="Search journal entries..."
             value={search}
             onChange={(e) => setSearch(e.target.value)}
-            className="pl-9 bg-white/[0.03] border-white/[0.06]"
+            className="pl-9 bg-card hover:bg-muted/60 dark:bg-white/[0.03] border-border dark:border-white/[0.06]"
           />
         </div>
         <div className="flex gap-1.5">
-          {["all", "session_recap", "prep_notes", "reflection", "worldbuilding"].map((t) => (
+          {[
+            "all",
+            "session_recap",
+            "prep_notes",
+            "reflection",
+            "worldbuilding",
+          ].map((t) => (
             <Button
               key={t}
               variant={typeFilter === t ? "crimson" : "ghost"}
@@ -118,30 +127,33 @@ export function JournalClient({ campaign }: { campaign: CampaignData }) {
                   "cursor-pointer transition-all duration-200",
                   selectedEntry?.id === entry.id
                     ? "border-crimson/30 glow-crimson"
-                    : "hover:border-white/[0.1]"
+                    : "hover:border-border dark:border-white/[0.1]",
                 )}
                 onClick={() => setSelectedEntry(entry)}
               >
                 <CardContent className="p-4">
                   <div className="flex items-center gap-2 mb-1.5">
                     {typeIcons[entry.type]}
-                    <Badge variant="secondary" className="text-[10px] h-4 px-1.5">
+                    <Badge
+                      variant="secondary"
+                      className="text-[10px] h-4 px-1.5"
+                    >
                       {typeLabels[entry.type]}
                     </Badge>
-                    {entry.isPinned && <Pin className="h-3 w-3 text-gold" />}
+                    {entry.isPinned && <Pin className="h-3 w-3 text-amber-600 dark:text-gold" />}
                     {entry.session && (
                       <Badge variant="gold" className="text-[10px] h-4 px-1.5">
                         S#{entry.session.sessionNumber}
                       </Badge>
                     )}
                   </div>
-                  <h3 className="text-sm font-medium text-zinc-200 line-clamp-1">
+                  <h3 className="text-sm font-medium text-foreground dark:text-zinc-200 line-clamp-1">
                     {entry.title}
                   </h3>
-                  <p className="text-xs text-zinc-500 line-clamp-2 mt-1">
+                  <p className="text-xs text-muted-foreground dark:text-zinc-500 line-clamp-2 mt-1">
                     {entry.content}
                   </p>
-                  <p className="text-[10px] text-zinc-600 mt-2 flex items-center gap-1">
+                  <p className="text-[10px] text-muted-foreground dark:text-zinc-600 mt-2 flex items-center gap-1">
                     <Clock className="h-3 w-3" />
                     {formatDate(entry.createdAt)}
                   </p>
@@ -172,40 +184,53 @@ export function JournalClient({ campaign }: { campaign: CampaignData }) {
                   )}
                   {selectedEntry.session && (
                     <Badge variant="gold" className="text-xs">
-                      Session #{selectedEntry.session.sessionNumber}: {selectedEntry.session.title}
+                      {selectedEntry.session.title.toLowerCase().startsWith(`session ${selectedEntry.session.sessionNumber}`)
+                        ? selectedEntry.session.title
+                        : `Session #${selectedEntry.session.sessionNumber}: ${selectedEntry.session.title}`}
                     </Badge>
                   )}
                 </div>
 
-                <h2 className="text-xl font-heading font-semibold text-white mb-2">
+                <h2 className="text-xl font-heading font-semibold text-foreground dark:text-white mb-2">
                   {selectedEntry.title}
                 </h2>
 
-                <p className="text-xs text-zinc-500 mb-6">
+                <p className="text-xs text-muted-foreground dark:text-zinc-500 mb-6">
                   {formatDate(selectedEntry.createdAt)}
                 </p>
 
-                {parseJsonField<string>(selectedEntry.tags).length > 0 && (
-                  <div className="flex flex-wrap gap-2 mb-6">
-                    {parseJsonField<string>(selectedEntry.tags).map((tag, i) => (
-                      <Badge key={i} variant="secondary" className="text-xs">
-                        {tag}
-                      </Badge>
-                    ))}
-                  </div>
-                )}
 
-                <div className="prose prose-invert prose-sm max-w-none">
-                  <div className="text-sm text-zinc-300 leading-relaxed whitespace-pre-wrap">
-                    {selectedEntry.content}
-                  </div>
+
+                <div className="prose prose-sm max-w-none text-foreground/80 dark:text-zinc-300 leading-relaxed">
+                  {(() => {
+                    const text = selectedEntry.content;
+                    const match = text.match(/core\s+takeaway[s]?\s*:/i);
+                    if (match && match.index !== undefined) {
+                      const summary = text.substring(0, match.index).trim();
+                      const takeaway = text.substring(match.index + match[0].length).trim();
+                      return (
+                        <div className="space-y-4">
+                          <p className="font-medium text-foreground">{summary}</p>
+                          <div className="p-4 bg-muted/30 dark:bg-white/[0.02] border border-border dark:border-white/[0.04] rounded-lg">
+                            <h4 className="text-xs font-bold text-muted-foreground uppercase tracking-wider mb-2">Core Takeaway</h4>
+                            <ul className="list-disc pl-5 space-y-1 marker:text-muted-foreground/50 m-0">
+                              {takeaway.split(/(?:\r?\n)+/).filter(s => s.trim().length > 0).map((pt, i) => (
+                                <li key={i}>{pt.trim().replace(/^[-*]\s*/, '')}</li>
+                              ))}
+                            </ul>
+                          </div>
+                        </div>
+                      );
+                    }
+                    return <div className="whitespace-pre-wrap">{text}</div>;
+                  })()}
                 </div>
               </Card>
             </motion.div>
           ) : (
             <Card className="p-12">
-              <div className="text-center text-zinc-500">
-                <PenLine className="h-8 w-8 mx-auto mb-3 text-zinc-600" />
+              <div className="text-center text-muted-foreground dark:text-zinc-500">
+                <PenLine className="h-8 w-8 mx-auto mb-3 text-muted-foreground dark:text-zinc-600" />
                 <p className="text-sm">Select a journal entry to read</p>
               </div>
             </Card>

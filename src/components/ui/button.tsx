@@ -9,14 +9,19 @@ const buttonVariants = cva(
     variants: {
       variant: {
         default: "bg-primary text-primary-foreground hover:bg-primary/90",
-        destructive: "bg-destructive text-destructive-foreground hover:bg-destructive/90",
-        outline: "border border-input bg-background hover:bg-accent hover:text-accent-foreground",
-        secondary: "bg-secondary text-secondary-foreground hover:bg-secondary/80",
+        destructive:
+          "bg-destructive text-destructive-foreground hover:bg-destructive/90",
+        outline:
+          "border border-input bg-background hover:bg-accent hover:text-accent-foreground",
+        secondary:
+          "bg-secondary text-secondary-foreground hover:bg-secondary/80",
         ghost: "hover:bg-accent hover:text-accent-foreground",
         link: "text-primary underline-offset-4 hover:underline",
-        gold: "bg-gold/20 text-gold-light border border-gold/30 hover:bg-gold/30",
-        crimson: "bg-crimson/20 text-crimson-light border border-crimson/30 hover:bg-crimson/30",
-        arcane: "bg-arcane/20 text-arcane-light border border-arcane/30 hover:bg-arcane/30",
+        gold: "bg-gold/20 text-amber-600 dark:text-gold-light border border-gold/30 hover:bg-gold/30",
+        crimson:
+          "bg-crimson/20 text-red-600 dark:text-crimson-light border border-crimson/30 hover:bg-crimson/30",
+        arcane:
+          "bg-arcane/20 text-blue-600 dark:text-arcane-light border border-arcane/30 hover:bg-arcane/30",
       },
       size: {
         default: "h-10 px-4 py-2",
@@ -29,11 +34,12 @@ const buttonVariants = cva(
       variant: "default",
       size: "default",
     },
-  }
+  },
 );
 
 export interface ButtonProps
-  extends React.ButtonHTMLAttributes<HTMLButtonElement>,
+  extends
+    React.ButtonHTMLAttributes<HTMLButtonElement>,
     VariantProps<typeof buttonVariants> {
   asChild?: boolean;
 }
@@ -48,7 +54,7 @@ const Button = React.forwardRef<HTMLButtonElement, ButtonProps>(
         {...props}
       />
     );
-  }
+  },
 );
 Button.displayName = "Button";
 

@@ -18,10 +18,23 @@ export function StatusBadge({
       className={cn(
         "inline-flex items-center rounded-full px-2 py-0.5 text-xs font-medium border capitalize",
         colorFn(status),
-        className
+        className,
       )}
     >
-      {status.replace(/_/g, " ")}
+      {(() => {
+        let display = status.replace(/_/g, " ");
+        if (type === "urgency" && ["low", "medium", "high", "critical"].includes(display)) {
+          return display;
+        }
+        if (display === "visible") return "known";
+        if (display === "partial") return "unknown";
+        if (display === "active" && type !== "urgency") {
+          // If the user wants to remove 'active' from secrets, we handle it where secret badges are used, 
+          // but for now we just return the label.
+          return display;
+        }
+        return display;
+      })()}
     </span>
   );
 }
