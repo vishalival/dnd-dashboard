@@ -1,12 +1,13 @@
 import type { Metadata } from "next";
-import { Inter, Cinzel } from "next/font/google";
+import { Lora, Cinzel } from "next/font/google";
 import "./globals.css";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { ThemeProvider } from "@/components/theme-provider";
 
-const inter = Inter({
+const lora = Lora({
   subsets: ["latin"],
   variable: "--font-body",
+  style: ["normal", "italic"],
 });
 
 const cinzel = Cinzel({
@@ -29,7 +30,7 @@ export default function RootLayout({
   return (
     <html lang="en" suppressHydrationWarning>
       <body
-        className={`${inter.variable} ${cinzel.variable} font-body antialiased min-h-screen bg-background text-foreground`}
+        className={`${lora.variable} ${cinzel.variable} font-body antialiased min-h-screen bg-background text-foreground`}
       >
         <ThemeProvider
           attribute="class"

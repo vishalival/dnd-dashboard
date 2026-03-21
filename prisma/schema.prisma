@@ -9,7 +9,6 @@ datasource db {
   directUrl = env("POSTGRES_URL_NON_POOLING")
 }
 
-
 model Campaign {
   id          String   @id @default(cuid())
   name        String
@@ -28,9 +27,9 @@ model Campaign {
   locations   Location[]
   factions    Faction[]
   wishlists     MagicItemWishlist[]
+  agentLogs     AgentLog[]
   noteFolders   NoteFolder[]
   noteDocuments NoteDocument[]
-
 }
 
 model SessionPlan {
@@ -38,7 +37,7 @@ model SessionPlan {
   sessionNumber    Int
   title            String
   date             DateTime?
-  status           String   @default("draft") // draft, planning, ready, completed
+  status           String   @default("draft") // draft, planning, ready, in_progress, completed
   summary          String?
   keyBeats         String?  // JSON array
   encounters       String?  // JSON array
@@ -51,6 +50,11 @@ model SessionPlan {
   reminders        String?  // JSON array
   checklist        String?  // JSON array
   template         String?  // tavern, travel, mystery, combat, political
+  liveLog          String?  // JSON array of {timestamp, entry} — legacy typed notes
+  transcript       String?  // accumulated Deepgram transcript (appended per chunk)
+  liveExtractions  String?  // JSON — accumulated real-time chunk extraction results
+  keyEvents        String?  // JSON array of {type, description} — final synthesis output
+  recapForNext     String?  // "Previously on..." paragraph — final synthesis output
   campaignId       String
   campaign         Campaign @relation(fields: [campaignId], references: [id])
   createdAt        DateTime @default(now())
@@ -60,6 +64,19 @@ model SessionPlan {
   npcLinks         SessionNPC[]
   secretLinks      SessionSecret[]
   journalEntries   JournalEntry[]
+  agentLogs        AgentLog[]
+}
+
+model AgentLog {
+  id         String      @id @default(cuid())
+  agent      String      // e.g. "chronicler"
+  action     String      // e.g. "chunk_processed" | "session_synthesized"
+  sessionId  String?
+  session    SessionPlan? @relation(fields: [sessionId], references: [id])
+  data       String?     // JSON — result summary
+  campaignId String
+  campaign   Campaign    @relation(fields: [campaignId], references: [id])
+  createdAt  DateTime    @default(now())
 }
 
 model Storyline {
@@ -68,8 +85,8 @@ model Storyline {
   summary         String?
   status          String   @default("active") // active, resolved, dormant, failed
   arcName         String?
-  urgency         String   @default("medium") // low, medium, high, critical
-  nextDevelopment  String?
+  urgency         String   @default("medium")
+  nextDevelopment String?
   notes           String?
   tags            String?  // JSON array
   campaignId      String
@@ -87,9 +104,9 @@ model StoryEvent {
   id          String   @id @default(cuid())
   title       String
   description String?
-  date        String?  // in-game date
-  session     Int?     // session number reference
-  type        String   @default("event") // event, milestone, quest, revelation
+  date        String?
+  session     Int?
+  type        String   @default("event")
   storylineId String
   storyline   Storyline @relation(fields: [storylineId], references: [id])
   createdAt   DateTime  @default(now())
@@ -99,16 +116,16 @@ model NPC {
   id              String   @id @default(cuid())
   name            String
   race            String?
-  role            String?  // class/archetype
+  role            String?
   faction         String?
-  disposition     String   @default("neutral") // friendly, neutral, hostile, unknown
-  status          String   @default("alive") // alive, dead, missing, hostile, ally, unknown
+  disposition     String   @default("neutral")
+  status          String   @default("alive")
   location        String?
   goals           String?
   secrets         String?
-  relationships   String?  // JSON array
-  firstAppearance Int?     // session number
-  lastAppearance  Int?     // session number
+  relationships   String?
+  firstAppearance Int?
+  lastAppearance  Int?
   voiceNotes      String?
   dmNotes         String?
   storyRelevance  String?
@@ -127,13 +144,13 @@ model NPC {
 model SecretGoal {
   id          String   @id @default(cuid())
   title       String
-  type        String   // party_goal, player_goal, npc_goal, dm_secret, world_secret, faction_secret
-  owner       String?  // party, player name, NPC name, DM/world
+  type        String
+  owner       String?
   description String?
-  visibility  String   @default("dm_only") // visible, partial, dm_only
-  urgency     String   @default("medium") // low, medium, high, critical
-  status      String   @default("active") // active, revealed, resolved, abandoned
-  progress    Int      @default(0) // 0-100
+  visibility  String   @default("dm_only")
+  urgency     String   @default("medium")
+  status      String   @default("active")
+  progress    Int      @default(0)
   notes       String?
   isPinned    Boolean  @default(false)
   campaignId  String
@@ -150,8 +167,8 @@ model JournalEntry {
   id          String   @id @default(cuid())
   title       String
   content     String
-  type        String   @default("session_recap") // session_recap, prep_notes, reflection, worldbuilding
-  tags        String?  // JSON array
+  type        String   @default("session_recap")
+  tags        String?
   isPinned    Boolean  @default(false)
   sessionId   String?
   session     SessionPlan? @relation(fields: [sessionId], references: [id])
@@ -175,8 +192,8 @@ model Character {
   flaws         String?
   ideals        String?
   currentGoals  String?
-  relationships String?  // JSON
-  status        String   @default("active") // active, dead, retired, missing
+  relationships String?
+  status        String   @default("active")
   notes         String?
   isPlayerCharacter Boolean @default(true)
   playerName    String?
@@ -192,10 +209,10 @@ model Character {
 model CharacterBackground {
   id                String   @id @default(cuid())
   backgroundText    String?
-  keyHistory        String?  // JSON array
-  plotHooks         String?  // JSON array
-  unresolvedThreads String?  // JSON array
-  linkedNPCs        String?  // JSON array
+  keyHistory        String?
+  plotHooks         String?
+  unresolvedThreads String?
+  linkedNPCs        String?
   characterId       String
   character         Character @relation(fields: [characterId], references: [id])
   createdAt         DateTime  @default(now())
@@ -205,11 +222,11 @@ model CharacterBackground {
 model MagicItemWishlist {
   id          String   @id @default(cuid())
   itemName    String
-  rarity      String   @default("uncommon") // common, uncommon, rare, very_rare, legendary, artifact
+  rarity      String   @default("uncommon")
   characterId String
   character   Character @relation(fields: [characterId], references: [id])
   reason      String?
-  status      String   @default("rumored") // rumored, planned, found, obtained
+  status      String   @default("rumored")
   storyHook   String?
   campaignId  String
   campaign    Campaign @relation(fields: [campaignId], references: [id])
@@ -221,7 +238,7 @@ model Location {
   id          String   @id @default(cuid())
   name        String
   description String?
-  type        String?  // city, dungeon, wilderness, tavern, etc
+  type        String?
   region      String?
   notes       String?
   campaignId  String
@@ -321,4 +338,3 @@ model NoteDocument {
 
   @@unique([campaignId, slug])
 }
-
