@@ -51,7 +51,7 @@ const item = {
 export function DashboardClient({ campaign }: { campaign: CampaignData }) {
   const toggleCommandPalette = useCampaignStore((state) => state.toggleCommandPalette);
 
-  const upcomingSession = campaign.sessions
+  const upcomingSession = [...campaign.sessions]
     .filter((s) => s.status !== "completed")
     .sort((a, b) => a.sessionNumber - b.sessionNumber)[0];
 
@@ -65,7 +65,7 @@ export function DashboardClient({ campaign }: { campaign: CampaignData }) {
     (s) => s.urgency === "critical" || s.urgency === "high",
   );
   const pinnedNPCs = campaign.npcs.filter((n) => n.isPinned);
-  const recentNPCs = campaign.npcs
+  const recentNPCs = [...campaign.npcs]
     .sort(
       (a, b) =>
         new Date(b.updatedAt).getTime() - new Date(a.updatedAt).getTime(),
@@ -80,14 +80,23 @@ export function DashboardClient({ campaign }: { campaign: CampaignData }) {
   return (
     <div>
       {/* Custom Sleek Header */}
-      <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 mb-8 bg-zinc-950/20 p-6 rounded-2xl border border-white/5">
+      <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 mb-10 bg-zinc-950/20 p-6 rounded-2xl border border-white/5">
         <div>
           <h1 className="text-2xl font-bold tracking-tight text-white mb-1.5 flex items-center gap-2">
             Hello, Dungeon Master Rachel! 
             <span className="text-xl">👋</span>
           </h1>
-          <p className="text-xs text-zinc-400 max-w-lg">
-            Manage your campaign flow, track critical storylines, and prepare for your next epic adventure.
+          <p className="text-xs text-zinc-400 max-w-lg leading-relaxed">
+            {upcomingSession ? (
+              <>
+                The corruption in <span className="text-purple-400 font-medium">{upcomingSession.title}</span> deepens. 
+                {pinnedNPCs.some(n => n.status === 'missing') && (
+                  <> With <span className="text-emerald-400 font-medium">{pinnedNPCs.find(n => n.status === 'missing')?.name}</span> still missing, your preparation for Session {upcomingSession.sessionNumber} is critical.</>
+                )}
+              </>
+            ) : (
+              "Manage your campaign flow, track critical storylines, and prepare for your next epic adventure."
+            )}
           </p>
         </div>
         
@@ -123,7 +132,7 @@ export function DashboardClient({ campaign }: { campaign: CampaignData }) {
                   </div>
                   <div>
                     <h4 className="text-sm font-medium">Session 4 Scheduled</h4>
-                    <p className="text-xs text-muted-foreground mt-1">Tomorrow at 7:00 PM. Don't forget prep materials!</p>
+                    <p className="text-xs text-muted-foreground mt-1">Tomorrow at 7:00 PM. Don&apos;t forget prep materials!</p>
                   </div>
                 </div>
                 <div className="flex items-start gap-4 p-3 rounded-lg bg-muted/50 dark:bg-white/[0.02] border border-border dark:border-white/[0.04]">
@@ -146,500 +155,296 @@ export function DashboardClient({ campaign }: { campaign: CampaignData }) {
         </div>
       </div>
 
-      <motion.div variants={item} className="mb-8">
-        <div className="flex items-center justify-between mb-4">
-          <h2 className="text-lg font-bold tracking-tight text-white flex items-center gap-2">
-            World Map
-            <Badge variant="secondary" className="bg-white/5 border-white/10 text-zinc-400 text-[10px] py-0 h-5">
-              Interactive
-            </Badge>
-          </h2>
-        </div>
-        <InteractiveMap 
-          src="/map.jpg" 
-          className="w-full aspect-[16/9] lg:aspect-[21/9]" 
-        />
-      </motion.div>
-
       <motion.div
         variants={container}
         initial="hidden"
         animate="show"
-        className="grid grid-cols-1 lg:grid-cols-3 gap-4"
+        className="grid grid-cols-12 gap-x-8 gap-y-6"
       >
-        {/* Upcoming Session - Full width top */}
-        {upcomingSession && (
-          <motion.div variants={item} className="lg:col-span-2">
-            <Link href={`/sessions`}>
-              <Card className="group hover:border-gold/20 transition-all duration-300 glow-gold cursor-pointer">
-                <CardHeader className="pb-3">
-                  <div className="flex items-center justify-between">
-                    <div className="flex items-center gap-2">
-                      <CalendarClock className="h-4 w-4 text-purple-600 dark:text-purple-400" />
-                      <CardTitle className="text-base text-purple-600 dark:text-purple-300">
-                        Next Session
-                      </CardTitle>
+        {/* Next Session & Map Row */}
+        <div className="col-span-12 lg:col-span-8">
+          {upcomingSession && (
+            <motion.div variants={item}>
+              <Link href={`/sessions`}>
+                <Card className="group hover:border-gold/20 transition-all duration-300 glow-gold cursor-pointer h-full border-white/5 bg-[#141416] min-h-[280px] max-h-[280px]">
+                  <CardHeader className="pb-3">
+                    <div className="flex items-center justify-between">
+                      <div className="flex items-center gap-2">
+                        <CalendarClock className="h-4 w-4 text-purple-600 dark:text-purple-400" />
+                        <CardTitle className="text-base text-purple-600 dark:text-purple-300">
+                          Next Session
+                        </CardTitle>
+                      </div>
+                      <StatusBadge status={upcomingSession.status} />
                     </div>
-                    <StatusBadge status={upcomingSession.status} />
-                  </div>
-                </CardHeader>
-                <CardContent>
-                  <div className="space-y-3">
-                    <div>
-                      <h3 className="text-lg font-heading font-semibold text-foreground dark:text-white">
-                        {upcomingSession.title.toLowerCase().startsWith(`session ${upcomingSession.sessionNumber}`)
-                          ? upcomingSession.title
-                          : `Session ${upcomingSession.sessionNumber}: ${upcomingSession.title}`}
-                      </h3>
-                      {upcomingSession.date && (
-                        <p className="text-sm text-muted-foreground dark:text-zinc-400 mt-1">
-                          <Clock className="inline h-3 w-3 mr-1" />
-                          {formatRelativeDate(upcomingSession.date)} —{" "}
-                          {formatDate(upcomingSession.date)}
+                  </CardHeader>
+                  <CardContent>
+                    <div className="space-y-4">
+                      <div>
+                        <h3 className="text-xl font-heading font-bold text-foreground dark:text-white group-hover:text-purple-400 transition-colors">
+                          {upcomingSession.title.toLowerCase().startsWith(`session ${upcomingSession.sessionNumber}`)
+                            ? upcomingSession.title
+                            : `Session ${upcomingSession.sessionNumber}: ${upcomingSession.title}`}
+                        </h3>
+                        {upcomingSession.date && (
+                          <p className="text-sm text-muted-foreground dark:text-zinc-400 mt-1 flex items-center gap-1.5">
+                            <Clock className="h-3.5 w-3.5" />
+                            {formatRelativeDate(upcomingSession.date)} — {formatDate(upcomingSession.date)}
+                          </p>
+                        )}
+                      </div>
+                      
+                      {upcomingSession.summary && (
+                        <p className="text-sm text-foreground/80 dark:text-zinc-300 line-clamp-3 leading-relaxed">
+                          {upcomingSession.summary}
                         </p>
                       )}
-                    </div>
-                    {upcomingSession.summary && (
-                      <p className="text-sm text-foreground/80 dark:text-zinc-300 line-clamp-2">
-                        {upcomingSession.summary}
-                      </p>
-                    )}
 
-                    <div className="flex flex-wrap gap-2">
-                      {upcomingSession.storylineLinks.map((sl) => (
-                        <Badge
-                          key={sl.storylineId}
-                          variant="arcane"
-                          className="text-xs"
-                        >
-                          <GitBranch className="h-3 w-3 mr-1" />
-                          {sl.storyline.title}
-                        </Badge>
-                      ))}
-                      {upcomingSession.npcLinks.slice(0, 4).map((nl) => (
-                        <Badge
-                          key={nl.npcId}
-                          variant="emerald"
-                          className="text-xs"
-                        >
-                          <Users className="h-3 w-3 mr-1" />
-                          {nl.npc.name}
-                        </Badge>
-                      ))}
+                      <div className="flex flex-wrap gap-2">
+                        {upcomingSession.storylineLinks.map((sl) => (
+                          <Badge key={sl.storylineId} variant="arcane" className="text-[10px] px-2 py-0">
+                            <GitBranch className="h-3 w-3 mr-1" />
+                            {sl.storyline.title}
+                          </Badge>
+                        ))}
+                        {upcomingSession.npcLinks.slice(0, 3).map((nl) => (
+                          <Badge key={nl.npcId} variant="emerald" className="text-[10px] px-2 py-0">
+                            <Users className="h-3 w-3 mr-1" />
+                            {nl.npc.name}
+                          </Badge>
+                        ))}
+                      </div>
+                      
+                      <div className="flex items-center text-xs font-semibold text-purple-500 hover:text-purple-400 transition-colors pt-2">
+                        Open Session Plan
+                        <ArrowRight className="h-3.5 w-3.5 ml-1.5 group-hover:translate-x-1 transition-transform" />
+                      </div>
                     </div>
-                    <div className="flex items-center text-xs text-purple-600 dark:text-purple-400 group-hover:text-purple-500 dark:group-hover:text-purple-300 transition-colors pt-1">
-                      Open Session Plan
-                      <ArrowRight className="h-3 w-3 ml-1 group-hover:translate-x-1 transition-transform" />
-                    </div>
-                  </div>
-                </CardContent>
-              </Card>
-            </Link>
+                  </CardContent>
+                </Card>
+              </Link>
+            </motion.div>
+          )}
+        </div>
+
+        <div className="col-span-12 lg:col-span-4">
+          <motion.div variants={item} className="h-full">
+            <Card className="h-full border-white/5 bg-zinc-900/40 relative overflow-hidden group min-h-[280px] max-h-[280px]">
+              <div className="absolute top-3 left-3 z-10">
+                <Badge variant="secondary" className="bg-black/60 backdrop-blur-md border-white/10 text-white text-[10px] py-0 h-5">
+                  World Map
+                </Badge>
+              </div>
+              <InteractiveMap 
+                src="/map.jpg" 
+                className="w-full h-full border-none rounded-none object-cover" 
+                initialScale={0.4}
+              />
+            </Card>
           </motion.div>
-        )}
+        </div>
 
-
-
-        {/* Active Plot Threads */}
-        <motion.div variants={item}>
-          <Card className="h-full">
-            <CardHeader className="pb-3">
-              <div className="flex items-center justify-between">
-                <CardTitle className="text-base text-foreground/80 dark:text-zinc-300 flex items-center gap-2">
-                  <GitBranch className="h-4 w-4 text-blue-600 dark:text-arcane" />
-                  Active Plot Threads
+        {/* Triple Column Tracking Row */}
+        <div className="col-span-12 lg:col-span-4">
+          <motion.div variants={item} className="h-full">
+            <Card className="h-full border-white/5 bg-[#141416]">
+              <CardHeader className="pb-3 flex-row items-center justify-between space-y-0">
+                <CardTitle className="text-sm font-bold text-zinc-400 flex items-center gap-2">
+                  <GitBranch className="h-4 w-4 text-indigo-400" />
+                  Active Plots
                 </CardTitle>
                 <Link href="/storylines">
-                  <Button
-                    variant="ghost"
-                    size="sm"
-                    className="text-xs text-muted-foreground dark:text-zinc-500 hover:text-foreground/80 dark:text-zinc-300 h-7"
-                  >
-                    View All <ArrowRight className="h-3 w-3 ml-1" />
+                  <Button variant="ghost" size="sm" className="h-7 text-[10px] text-zinc-500 hover:text-white px-2">
+                    View All
                   </Button>
                 </Link>
-              </div>
-            </CardHeader>
-            <CardContent>
-              <div className="space-y-2">
-                {activeStorylines.slice(0, 5).map((storyline) => (
-                  <Dialog key={storyline.id}>
-                    <DialogTrigger asChild>
-                      <div className="p-2.5 rounded-lg hover:bg-card hover:bg-muted/60 dark:bg-white/[0.03] transition-colors cursor-pointer group hover:border text-left">
-                        <div className="flex items-start justify-between gap-2">
-                          <div className="min-w-0 flex-1">
-                            <p className="text-sm font-medium text-foreground dark:text-zinc-200 truncate group-hover:text-foreground dark:text-white transition-colors">
-                              {storyline.title}
-                            </p>
-                            {storyline.arcName && (
-                              <p className="text-xs text-muted-foreground dark:text-zinc-500 mt-0.5">
-                                {storyline.arcName}
-                              </p>
-                            )}
-                            {storyline.summary && (
-                              <p className="text-xs text-muted-foreground dark:text-zinc-400 mt-1 line-clamp-1">
-                                {storyline.summary}
-                              </p>
-                            )}
-                          </div>
-                          <StatusBadge
-                            status={storyline.urgency}
-                            type="urgency"
-                            className="shrink-0"
-                          />
-                        </div>
+              </CardHeader>
+              <CardContent className="space-y-2">
+                {activeStorylines.slice(0, 4).map((storyline) => (
+                  <div key={storyline.id} className="p-3 rounded-xl bg-zinc-800/30 border border-white/[0.03] hover:border-white/10 transition-all cursor-pointer group">
+                    <div className="flex items-start justify-between gap-2">
+                      <div className="min-w-0">
+                        <p className="text-sm font-medium text-white truncate group-hover:text-indigo-400 transition-colors">{storyline.title}</p>
+                        <p className="text-[10px] text-zinc-500 mt-0.5">{storyline.arcName || "Main Story"}</p>
                       </div>
-                    </DialogTrigger>
-                    <DialogContent>
-                      <DialogHeader>
-                        <DialogTitle>{storyline.title}</DialogTitle>
-                      </DialogHeader>
-                      <div className="space-y-4 pt-4">
-                        <div className="flex gap-2">
-                          <StatusBadge status={storyline.urgency} type="urgency" />
-                          <StatusBadge status={storyline.status} />
-                          {storyline.arcName && (
-                            <Badge variant="outline">{storyline.arcName}</Badge>
-                          )}
-                        </div>
-                        {storyline.summary && (
-                          <div className="text-sm text-foreground/80 dark:text-zinc-300">
-                            {storyline.summary}
-                          </div>
-                        )}
-                        <Link href="/storylines">
-                          <Button variant="outline" className="w-full mt-4">
-                            Open Storylines Dashboard
-                          </Button>
-                        </Link>
-                      </div>
-                    </DialogContent>
-                  </Dialog>
+                      <StatusBadge status={storyline.urgency} type="urgency" className="whitespace-nowrap" />
+                    </div>
+                  </div>
                 ))}
-              </div>
-            </CardContent>
-          </Card>
-        </motion.div>
+              </CardContent>
+            </Card>
+          </motion.div>
+        </div>
 
-        {/* High-Priority Secrets */}
-        <motion.div variants={item}>
-          <Card className="h-full">
-            <CardHeader className="pb-3">
-              <div className="flex items-center justify-between">
-                <CardTitle className="text-base text-foreground/80 dark:text-zinc-300 flex items-center gap-2">
-                  <KeyRound className="h-4 w-4 text-purple-600 dark:text-purple-400" />
+        <div className="col-span-12 lg:col-span-4">
+          <motion.div variants={item} className="h-full">
+            <Card className="h-full border-white/5 bg-[#141416]">
+              <CardHeader className="pb-3 flex-row items-center justify-between space-y-0">
+                <CardTitle className="text-sm font-bold text-zinc-400 flex items-center gap-2">
+                  <KeyRound className="h-4 w-4 text-purple-400" />
                   Critical Secrets
                 </CardTitle>
                 <Link href="/secrets">
-                  <Button
-                    variant="ghost"
-                    size="sm"
-                    className="text-xs text-muted-foreground dark:text-zinc-500 hover:text-foreground/80 dark:text-zinc-300 h-7"
-                  >
-                    View All <ArrowRight className="h-3 w-3 ml-1" />
+                  <Button variant="ghost" size="sm" className="h-7 text-[10px] text-zinc-500 hover:text-white px-2">
+                    View All
                   </Button>
                 </Link>
-              </div>
-            </CardHeader>
-            <CardContent>
-              <div className="space-y-2">
-                {criticalSecrets.slice(0, 5).map((secret) => (
-                  <Dialog key={secret.id}>
-                    <DialogTrigger asChild>
-                      <div className="p-2.5 rounded-lg bg-card hover:bg-muted/50 dark:bg-white/[0.02] border border-border dark:border-white/[0.04] cursor-pointer text-left">
-                        <div className="flex items-start justify-between gap-2">
-                          <div className="min-w-0 flex-1">
-                            <div className="flex items-center gap-2">
-                              {secret.visibility === "dm_only" && (
-                                <Eye className="h-3 w-3 text-purple-600 dark:text-purple-400 shrink-0" />
-                              )}
-                              <p className="text-sm font-medium text-foreground dark:text-zinc-200 truncate">
-                                {secret.title}
-                              </p>
-                            </div>
-                            <p className="text-xs text-muted-foreground dark:text-zinc-500 mt-0.5">
-                              {secret.owner || secret.type.replace(/_/g, " ")}
-                            </p>
-                            {secret.description && (
-                              <p className="text-xs text-muted-foreground dark:text-zinc-400 mt-1 line-clamp-1">
-                                {secret.description}
-                              </p>
-                            )}
-                          </div>
-                          <StatusBadge status={secret.urgency} type="urgency" className="shrink-0" />
-                        </div>
+              </CardHeader>
+              <CardContent className="space-y-2">
+                {criticalSecrets.slice(0, 4).map((secret) => (
+                  <div key={secret.id} className="p-3 rounded-xl bg-zinc-800/30 border border-white/[0.03] hover:border-white/10 transition-all cursor-pointer group">
+                    <div className="flex items-start justify-between gap-2">
+                      <div className="min-w-0">
+                        <p className="text-sm font-medium text-white truncate group-hover:text-purple-400 transition-colors tracking-tight">{secret.title}</p>
+                        <p className="text-[10px] text-zinc-500 mt-0.5">{secret.owner || "Universal"}</p>
                       </div>
-                    </DialogTrigger>
-                    <DialogContent>
-                      <DialogHeader>
-                        <DialogTitle className="flex items-center gap-2">
-                          {secret.visibility === "dm_only" && (
-                            <Eye className="h-4 w-4 text-purple-600 dark:text-purple-400 shrink-0" />
-                          )}
-                          {secret.title}
-                        </DialogTitle>
-                      </DialogHeader>
-                      <div className="space-y-4 pt-4">
-                        <div className="flex gap-2">
-                          <StatusBadge status={secret.urgency} type="urgency" />
-                          <StatusBadge status={secret.status} />
-                          <Badge variant="outline">{secret.owner || secret.type.replace(/_/g, " ")}</Badge>
-                        </div>
-                        {secret.description && (
-                          <div className="text-sm text-foreground/80 dark:text-zinc-300">
-                            {secret.description}
-                          </div>
-                        )}
-                        <Link href="/secrets">
-                          <Button variant="outline" className="w-full mt-4">
-                            Open Secrets Vault
-                          </Button>
-                        </Link>
-                      </div>
-                    </DialogContent>
-                  </Dialog>
+                      <StatusBadge status={secret.urgency} type="urgency" className="whitespace-nowrap" />
+                    </div>
+                  </div>
                 ))}
-                {criticalSecrets.length === 0 && (
-                  <p className="text-sm text-muted-foreground dark:text-zinc-500 text-center py-4">
-                    No critical secrets
-                  </p>
-                )}
-              </div>
-            </CardContent>
-          </Card>
-        </motion.div>
+              </CardContent>
+            </Card>
+          </motion.div>
+        </div>
 
-        {/* Recently Active NPCs */}
-        <motion.div variants={item}>
-          <Card className="h-full">
-            <CardHeader className="pb-3">
-              <div className="flex items-center justify-between">
-                <CardTitle className="text-base text-foreground/80 dark:text-zinc-300 flex items-center gap-2">
-                  <Users className="h-4 w-4 text-emerald-600 dark:text-emerald-400" />
+        <div className="col-span-12 lg:col-span-4">
+          <motion.div variants={item} className="h-full">
+            <Card className="h-full border-white/5 bg-[#141416]">
+              <CardHeader className="pb-3 flex-row items-center justify-between space-y-0">
+                <CardTitle className="text-sm font-bold text-zinc-400 flex items-center gap-2">
+                  <Users className="h-4 w-4 text-emerald-400" />
                   Active NPCs
                 </CardTitle>
                 <Link href="/npcs">
-                  <Button
-                    variant="ghost"
-                    size="sm"
-                    className="text-xs text-muted-foreground dark:text-zinc-500 hover:text-foreground/80 dark:text-zinc-300 h-7"
-                  >
-                    View All <ArrowRight className="h-3 w-3 ml-1" />
+                  <Button variant="ghost" size="sm" className="h-7 text-[10px] text-zinc-500 hover:text-white px-2">
+                    View All
                   </Button>
                 </Link>
-              </div>
-            </CardHeader>
-            <CardContent>
-              <div className="space-y-2">
-                {(pinnedNPCs.length > 0 ? pinnedNPCs : recentNPCs)
-                  .slice(0, 5)
-                  .map((npc) => (
-                    <Dialog key={npc.id}>
-                      <DialogTrigger asChild>
-                        <div className="flex items-center gap-3 p-2 rounded-lg hover:bg-card hover:bg-muted/60 dark:bg-white/[0.03] transition-colors cursor-pointer text-left hover:border">
-                          <div className="w-8 h-8 rounded-full bg-gradient-to-br from-emerald-400/20 to-emerald-400/5 border border-emerald-300 dark:border-emerald-400/20 flex items-center justify-center shrink-0">
-                            <span className="text-xs font-medium text-emerald-600 dark:text-emerald-400">
-                              {npc.name.charAt(0)}
-                            </span>
-                          </div>
-                          <div className="min-w-0 flex-1">
-                            <div className="flex items-center gap-2">
-                              <p className="text-sm font-medium text-foreground dark:text-zinc-200 truncate">
-                                {npc.name}
-                              </p>
-                              {npc.isPinned && (
-                                <Pin className="h-3 w-3 text-amber-600 dark:text-gold shrink-0" />
-                              )}
-                            </div>
-                            <p className="text-xs text-muted-foreground dark:text-zinc-500">
-                              {npc.role || npc.race}
-                              {npc.faction ? ` · ${npc.faction}` : ""}
-                            </p>
-                            {(npc.dmNotes || npc.goals) && (
-                              <p className="text-xs text-muted-foreground dark:text-zinc-400 mt-1 line-clamp-1">
-                                {npc.dmNotes || npc.goals}
-                              </p>
-                            )}
-                          </div>
-                          <StatusBadge status={npc.status} />
-                        </div>
-                      </DialogTrigger>
-                      <DialogContent>
-                        <DialogHeader>
-                          <DialogTitle className="flex items-center gap-2">
-                            {npc.name}
-                            {npc.isPinned && <Pin className="h-4 w-4 text-amber-600 dark:text-gold" />}
-                          </DialogTitle>
-                        </DialogHeader>
-                        <div className="space-y-4 pt-4">
-                          <div className="flex gap-2">
-                            <StatusBadge status={npc.status} />
-                            <Badge variant="outline">{npc.role || npc.race}</Badge>
-                            {npc.faction && <Badge variant="arcane">{npc.faction}</Badge>}
-                          </div>
-                          {(npc.dmNotes || npc.goals) && (
-                            <div className="text-sm text-foreground/80 dark:text-zinc-300">
-                              <strong>Notes:</strong> {npc.dmNotes || npc.goals}
-                            </div>
-                          )}
-                          <Link href="/npcs">
-                            <Button variant="outline" className="w-full mt-4">
-                              Open NPC Registry
-                            </Button>
-                          </Link>
-                        </div>
-                      </DialogContent>
-                    </Dialog>
-                  ))}
-              </div>
-            </CardContent>
-          </Card>
-        </motion.div>
-
-        {/* Party Goals */}
-        <motion.div variants={item}>
-          <Card className="h-full">
-            <CardHeader className="pb-3">
-              <CardTitle className="text-base text-foreground/80 dark:text-zinc-300 flex items-center gap-2">
-                <AlertTriangle className="h-4 w-4 text-amber-600 dark:text-amber-400" />
-                Party Goals
-              </CardTitle>
-            </CardHeader>
-            <CardContent>
-              <div className="space-y-2">
-                {partyGoals.slice(0, 5).map((goal) => (
-                  <div
-                    key={goal.id}
-                    className="p-2.5 rounded-lg bg-card hover:bg-muted/50 dark:bg-white/[0.02] border border-border dark:border-white/[0.04]"
-                  >
-                    <div className="flex items-center justify-between gap-2 mb-1.5">
-                      <p className="text-sm font-medium text-foreground dark:text-zinc-200 truncate">
-                        {goal.title}
-                      </p>
-                      <span className="text-xs text-muted-foreground dark:text-zinc-500 shrink-0">
-                        {goal.progress}%
-                      </span>
+              </CardHeader>
+              <CardContent className="space-y-2 flex-1 flex flex-col">
+                <div className="space-y-2 flex-1">
+                  {(pinnedNPCs.length > 0 ? pinnedNPCs : recentNPCs).slice(0, 6).map((npc) => (
+                    <div key={npc.id} className="flex items-center gap-3 p-3 rounded-xl bg-zinc-800/30 border border-white/[0.03] hover:border-white/10 transition-all cursor-pointer group">
+                      <div className="w-8 h-8 rounded-full bg-emerald-500/10 border border-emerald-500/20 flex items-center justify-center shrink-0">
+                        <span className="text-xs font-bold text-emerald-400">{npc.name.charAt(0)}</span>
+                      </div>
+                      <div className="min-w-0 flex-1">
+                        <p className="text-sm font-medium text-white truncate group-hover:text-emerald-400 transition-colors">{npc.name}</p>
+                        <p className="text-[10px] text-zinc-500">{npc.role || npc.race}</p>
+                      </div>
+                      <StatusBadge status={npc.status} className="whitespace-nowrap" />
                     </div>
-                    <Progress value={goal.progress} className="h-1.5" />
+                  ))}
+                </div>
+                
+                {/* Visual filler / NPC context summary if list is short */}
+                {(pinnedNPCs.length > 0 ? pinnedNPCs : recentNPCs).length < 4 && (
+                  <div className="mt-4 p-3 rounded-xl border border-dashed border-white/5 bg-white/[0.01]">
+                    <p className="text-[10px] text-zinc-600 italic leading-relaxed">
+                      &quot;The shadows of the past cling to the residents of this world. Every face hides a secret, and every ally carries a price.&quot;
+                    </p>
                   </div>
-                ))}
-                {partyGoals.length === 0 && (
-                  <p className="text-sm text-muted-foreground dark:text-zinc-500 text-center py-4">
-                    No party goals set
-                  </p>
                 )}
-              </div>
-            </CardContent>
-          </Card>
-        </motion.div>
+              </CardContent>
+            </Card>
+          </motion.div>
+        </div>
 
-        {/* Recent Journal Entries */}
-        <motion.div variants={item} className="lg:col-span-2">
-          <Card>
-            <CardHeader className="pb-3">
-              <div className="flex items-center justify-between">
-                <CardTitle className="text-base text-foreground/80 dark:text-zinc-300 flex items-center gap-2">
-                  <BookOpen className="h-4 w-4 text-red-600 dark:text-crimson-light" />
+        {/* Bottom Row - Journals & Quick Actions */}
+        <div className="col-span-12 lg:col-span-8">
+          <motion.div variants={item} className="h-full">
+            <Card className="h-full border-white/5 bg-[#141416]">
+              <CardHeader className="pb-3 flex-row items-center justify-between space-y-0">
+                <CardTitle className="text-sm font-bold text-zinc-400 flex items-center gap-2">
+                  <BookOpen className="h-4 w-4 text-rose-400" />
                   Recent Journal Entries
                 </CardTitle>
                 <Link href="/journal">
-                  <Button
-                    variant="ghost"
-                    size="sm"
-                    className="text-xs text-muted-foreground dark:text-zinc-500 hover:text-foreground/80 dark:text-zinc-300 h-7"
-                  >
-                    View All <ArrowRight className="h-3 w-3 ml-1" />
+                  <Button variant="ghost" size="sm" className="h-7 text-[10px] text-zinc-500 hover:text-white px-2">
+                    Full Journal <ArrowRight className="ml-1 h-3 w-3" />
                   </Button>
                 </Link>
-              </div>
-            </CardHeader>
-            <CardContent>
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
-                {recentJournals.map((entry) => (
-                  <Link key={entry.id} href="/journal">
-                    <div className="p-3 rounded-lg bg-card hover:bg-muted/50 dark:bg-white/[0.02] border border-border dark:border-white/[0.04] hover:bg-muted dark:bg-white/[0.04] transition-colors cursor-pointer">
-                      <div className="flex items-center gap-2 mb-2">
-                        <span className="px-2 py-0.5 rounded-full bg-rose-500/10 border border-rose-500/20 text-rose-400 text-[10px] font-semibold capitalize tracking-wide">
-                          {entry.type.replace(/_/g, " ")}
-                        </span>
-                        {entry.isPinned && (
-                          <Pin className="h-3 w-3 text-amber-600 dark:text-gold" />
-                        )}
+              </CardHeader>
+              <CardContent>
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  {recentJournals.map((entry) => (
+                    <Link key={entry.id} href="/journal">
+                      <div className="p-4 rounded-xl bg-zinc-800/20 border border-white/[0.03] hover:border-white/10 transition-all cursor-pointer group h-full">
+                        <div className="flex items-center gap-2 mb-3">
+                          <span className="px-2 py-0.5 rounded-full bg-rose-500/10 border border-rose-500/20 text-rose-400 text-[10px] font-semibold capitalize tracking-wide">
+                            {entry.type.replace(/_/g, " ")}
+                          </span>
+                          {entry.isPinned && <Pin className="h-3 w-3 text-amber-500" />}
+                        </div>
+                        <h4 className="text-sm font-bold text-white mb-2 group-hover:text-rose-400 transition-colors truncate">
+                          {entry.title}
+                        </h4>
+                        <p className="text-xs text-zinc-500 line-clamp-2 leading-relaxed mb-3">
+                          {entry.content}
+                        </p>
+                        <p className="text-[10px] text-zinc-600 font-medium">
+                          {formatDate(entry.createdAt)}
+                        </p>
                       </div>
-                      <h4 className="text-sm font-medium text-foreground dark:text-zinc-200 line-clamp-1">
-                        {entry.title}
-                      </h4>
-                      <p className="text-xs text-muted-foreground dark:text-zinc-500 mt-1 line-clamp-2">
-                        {entry.content}
-                      </p>
-                      <p className="text-[10px] text-muted-foreground dark:text-zinc-600 mt-2">
-                        {formatDate(entry.createdAt)}
-                      </p>
-                    </div>
-                  </Link>
-                ))}
-              </div>
-            </CardContent>
-          </Card>
-        </motion.div>
+                    </Link>
+                  ))}
+                </div>
+              </CardContent>
+            </Card>
+          </motion.div>
+        </div>
 
-        {/* Quick Links */}
-        <motion.div variants={item}>
-          <Card className="h-full">
-            <CardHeader className="pb-3">
-              <CardTitle className="text-base text-foreground/80 dark:text-zinc-300 flex items-center gap-2">
-                <Sparkles className="h-4 w-4 text-amber-600 dark:text-amber-300" />
-                Quick Navigation
-              </CardTitle>
-            </CardHeader>
-            <CardContent>
-              <div className="space-y-1.5">
+        <div className="col-span-12 lg:col-span-4 flex flex-col gap-6">
+          <motion.div variants={item}>
+            <Card className="border-white/5 bg-[#141416]">
+              <CardHeader className="pb-3">
+                <CardTitle className="text-sm font-bold text-zinc-400 flex items-center gap-2">
+                  <AlertTriangle className="h-4 w-4 text-amber-400" />
+                  Party Goals
+                </CardTitle>
+              </CardHeader>
+              <CardContent className="space-y-3">
+                {partyGoals.slice(0, 3).map((goal) => (
+                  <div key={goal.id} className="space-y-1.5">
+                    <div className="flex justify-between text-[11px] font-medium">
+                      <span className="text-zinc-300 truncate">{goal.title}</span>
+                      <span className="text-zinc-500">{goal.progress}%</span>
+                    </div>
+                    <Progress value={goal.progress} className="h-1 bg-white/5" indicatorClassName="bg-amber-500/80" />
+                  </div>
+                ))}
+              </CardContent>
+            </Card>
+          </motion.div>
+
+          <motion.div variants={item} className="flex-1">
+            <Card className="h-full border-white/5 bg-[#141416]">
+              <CardHeader className="pb-3">
+                <CardTitle className="text-sm font-bold text-zinc-400 flex items-center gap-2">
+                  <Sparkles className="h-4 w-4 text-amber-400" />
+                  Quick Navigation
+                </CardTitle>
+              </CardHeader>
+              <CardContent className="space-y-1">
                 {[
-                  {
-                    label: "Session Plans",
-                    href: "/sessions",
-                    icon: CalendarClock,
-                    color: "text-amber-600 dark:text-amber-400",
-                  },
-                  {
-                    label: "Story Timeline",
-                    href: "/storylines",
-                    icon: GitBranch,
-                    color: "text-blue-600 dark:text-arcane-light",
-                  },
-                  {
-                    label: "NPC Registry",
-                    href: "/npcs",
-                    icon: Users,
-                    color: "text-emerald-600 dark:text-emerald-400",
-                  },
-                  {
-                    label: "Secrets Vault",
-                    href: "/secrets",
-                    icon: KeyRound,
-                    color: "text-purple-600 dark:text-purple-400",
-                  },
-                  {
-                    label: "Campaign Journal",
-                    href: "/journal",
-                    icon: BookOpen,
-                    color: "text-red-600 dark:text-crimson-light",
-                  },
+                  { label: "Session Plans", href: "/sessions", icon: CalendarClock, color: "text-amber-500" },
+                  { label: "Story Timeline", href: "/storylines", icon: GitBranch, color: "text-indigo-400" },
+                  { label: "NPC Registry", href: "/npcs", icon: Users, color: "text-emerald-400" },
+                  { label: "Secrets Vault", href: "/secrets", icon: KeyRound, color: "text-purple-400" },
+                  { label: "Campaign Journal", href: "/journal", icon: BookOpen, color: "text-rose-400" },
                 ].map((link) => (
                   <Link key={link.href} href={link.href}>
-                    <div className="flex items-center gap-3 p-2.5 rounded-lg hover:bg-muted dark:bg-white/[0.04] transition-colors cursor-pointer group">
+                    <div className="flex items-center gap-3 p-2.5 rounded-lg hover:bg-white/[0.04] transition-colors group">
                       <link.icon className={`h-4 w-4 ${link.color}`} />
-                      <span className="text-sm text-muted-foreground dark:text-zinc-400 group-hover:text-foreground dark:text-zinc-200 transition-colors flex-1">
-                        {link.label}
-                      </span>
-                      <ArrowRight className="h-3 w-3 text-muted-foreground dark:text-zinc-600 group-hover:text-muted-foreground dark:text-zinc-400 group-hover:translate-x-0.5 transition-all" />
+                      <span className="text-xs text-zinc-400 group-hover:text-white transition-colors flex-1">{link.label}</span>
+                      <ArrowRight className="h-3 w-3 text-zinc-600 group-hover:text-zinc-400 group-hover:translate-x-0.5 transition-all" />
                     </div>
                   </Link>
                 ))}
-              </div>
-            </CardContent>
-          </Card>
-        </motion.div>
+              </CardContent>
+            </Card>
+          </motion.div>
+        </div>
       </motion.div>
     </div>
   );

@@ -24,7 +24,7 @@ export function StatusBadge({
       {(() => {
         let display = status.replace(/_/g, " ");
         if (type === "urgency" && ["low", "medium", "high", "critical"].includes(display)) {
-          return `${display} priority`;
+          return display;
         }
         if (display === "visible") return "known";
         if (display === "partial") return "unknown";

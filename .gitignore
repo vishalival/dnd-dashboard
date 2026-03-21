@@ -37,3 +37,7 @@ next-env.d.ts
 # prisma
 prisma/dev.db
 prisma/dev.db-journal
+
+# documents
+EmpireHacks - D&D Docs-20260321T190102Z-1-001.zip
+EmpireHacks Hackathon Ideas.docx

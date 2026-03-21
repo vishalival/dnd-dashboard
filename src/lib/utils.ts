@@ -71,12 +71,12 @@ export function getStatusColor(status: string): string {
 
 export function getUrgencyColor(urgency: string): string {
   const colors: Record<string, string> = {
-    low: "text-zinc-500 bg-zinc-50 border border-zinc-200 dark:text-zinc-400 dark:bg-zinc-400/10 dark:border-transparent",
-    medium: "text-amber-600 bg-amber-50 border border-amber-200 dark:text-amber-400 dark:bg-amber-400/10 dark:border-transparent",
-    high: "text-orange-600 bg-orange-50 border border-orange-200 dark:text-orange-400 dark:bg-orange-400/10 dark:border-transparent",
-    critical: "text-red-500 bg-red-50 border border-red-200 dark:text-red-400 dark:bg-red-400/10 dark:border-transparent",
+    low: "text-zinc-500 bg-zinc-50 border border-zinc-200 dark:text-zinc-400 dark:bg-zinc-400/10 dark:border-white/5",
+    medium: "text-amber-600 bg-amber-50 border border-amber-200 dark:text-amber-300 dark:bg-amber-400/20 dark:border-amber-400/30",
+    high: "text-orange-600 bg-orange-50 border border-orange-200 dark:text-orange-400 dark:bg-orange-400/20 dark:border-orange-400/30",
+    critical: "text-red-500 bg-red-50 border border-red-200 dark:text-red-400 dark:bg-red-400/20 dark:border-red-400/30",
   };
-  return colors[urgency] || "text-zinc-500 bg-zinc-50 border border-zinc-200 dark:text-zinc-400 dark:bg-zinc-400/10 dark:border-transparent";
+  return colors[urgency] || "text-zinc-500 bg-zinc-50 border border-zinc-200 dark:text-zinc-400 dark:bg-zinc-400/10 dark:border-white/5";
 }
 
 export function getRarityColor(rarity: string): string {

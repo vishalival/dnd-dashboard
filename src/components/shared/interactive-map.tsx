@@ -8,11 +8,12 @@ import { cn } from "@/lib/utils";
 interface InteractiveMapProps {
   src: string;
   className?: string;
+  initialScale?: number;
 }
 
-export function InteractiveMap({ src, className }: InteractiveMapProps) {
+export function InteractiveMap({ src, className, initialScale = 1 }: InteractiveMapProps) {
   const containerRef = useRef<HTMLDivElement>(null);
-  const [scale, setScale] = useState(1);
+  const [scale, setScale] = useState(initialScale);
   const [isDragging, setIsDragging] = useState(false);
   
   const x = useMotionValue(0);
@@ -25,7 +26,7 @@ export function InteractiveMap({ src, className }: InteractiveMapProps) {
   const handleZoomIn = () => setScale((s) => Math.min(s + 0.5, 4));
   const handleZoomOut = () => setScale((s) => Math.max(s - 0.5, 0.5));
   const handleReset = () => {
-    setScale(1);
+    setScale(initialScale);
     x.set(0);
     y.set(0);
   };
