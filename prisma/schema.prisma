@@ -1,0 +1,285 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "sqlite"
+  url      = "file:./dev.db"
+}
+
+model Campaign {
+  id          String   @id @default(cuid())
+  name        String
+  description String?
+  currentArc  String?
+  startDate   DateTime @default(now())
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  sessions    SessionPlan[]
+  storylines  Storyline[]
+  npcs        NPC[]
+  secrets     SecretGoal[]
+  journals    JournalEntry[]
+  characters  Character[]
+  locations   Location[]
+  factions    Faction[]
+  wishlists   MagicItemWishlist[]
+}
+
+model SessionPlan {
+  id               String   @id @default(cuid())
+  sessionNumber    Int
+  title            String
+  date             DateTime?
+  status           String   @default("draft") // draft, planning, ready, completed
+  summary          String?
+  keyBeats         String?  // JSON array
+  encounters       String?  // JSON array
+  hooks            String?  // JSON array
+  npcAppearances   String?  // JSON array of NPC ids
+  locations        String?  // JSON array
+  playerNotes      String?  // JSON array
+  contingencies    String?  // JSON array
+  improvPrompts    String?  // JSON array
+  reminders        String?  // JSON array
+  checklist        String?  // JSON array
+  template         String?  // tavern, travel, mystery, combat, political
+  campaignId       String
+  campaign         Campaign @relation(fields: [campaignId], references: [id])
+  createdAt        DateTime @default(now())
+  updatedAt        DateTime @updatedAt
+
+  storylineLinks   SessionStoryline[]
+  npcLinks         SessionNPC[]
+  secretLinks      SessionSecret[]
+  journalEntries   JournalEntry[]
+}
+
+model Storyline {
+  id              String   @id @default(cuid())
+  title           String
+  summary         String?
+  status          String   @default("active") // active, resolved, dormant, failed
+  arcName         String?
+  urgency         String   @default("medium") // low, medium, high, critical
+  nextDevelopment  String?
+  notes           String?
+  tags            String?  // JSON array
+  campaignId      String
+  campaign        Campaign @relation(fields: [campaignId], references: [id])
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+
+  events          StoryEvent[]
+  npcLinks        StorylineNPC[]
+  secretLinks     StorylineSecret[]
+  sessionLinks    SessionStoryline[]
+}
+
+model StoryEvent {
+  id          String   @id @default(cuid())
+  title       String
+  description String?
+  date        String?  // in-game date
+  session     Int?     // session number reference
+  type        String   @default("event") // event, milestone, quest, revelation
+  storylineId String
+  storyline   Storyline @relation(fields: [storylineId], references: [id])
+  createdAt   DateTime  @default(now())
+}
+
+model NPC {
+  id              String   @id @default(cuid())
+  name            String
+  race            String?
+  role            String?  // class/archetype
+  faction         String?
+  disposition     String   @default("neutral") // friendly, neutral, hostile, unknown
+  status          String   @default("alive") // alive, dead, missing, hostile, ally, unknown
+  location        String?
+  goals           String?
+  secrets         String?
+  relationships   String?  // JSON array
+  firstAppearance Int?     // session number
+  lastAppearance  Int?     // session number
+  voiceNotes      String?
+  dmNotes         String?
+  storyRelevance  String?
+  isPlayerKnown   Boolean  @default(true)
+  isPinned        Boolean  @default(false)
+  campaignId      String
+  campaign        Campaign @relation(fields: [campaignId], references: [id])
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+
+  storylineLinks  StorylineNPC[]
+  sessionLinks    SessionNPC[]
+  secretLinks     NPCSecret[]
+}
+
+model SecretGoal {
+  id          String   @id @default(cuid())
+  title       String
+  type        String   // party_goal, player_goal, npc_goal, dm_secret, world_secret, faction_secret
+  owner       String?  // party, player name, NPC name, DM/world
+  description String?
+  visibility  String   @default("dm_only") // visible, partial, dm_only
+  urgency     String   @default("medium") // low, medium, high, critical
+  status      String   @default("active") // active, revealed, resolved, abandoned
+  progress    Int      @default(0) // 0-100
+  notes       String?
+  isPinned    Boolean  @default(false)
+  campaignId  String
+  campaign    Campaign @relation(fields: [campaignId], references: [id])
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  storylineLinks  StorylineSecret[]
+  sessionLinks    SessionSecret[]
+  npcLinks        NPCSecret[]
+}
+
+model JournalEntry {
+  id          String   @id @default(cuid())
+  title       String
+  content     String
+  type        String   @default("session_recap") // session_recap, prep_notes, reflection, worldbuilding
+  tags        String?  // JSON array
+  isPinned    Boolean  @default(false)
+  sessionId   String?
+  session     SessionPlan? @relation(fields: [sessionId], references: [id])
+  campaignId  String
+  campaign    Campaign @relation(fields: [campaignId], references: [id])
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+}
+
+model Character {
+  id            String   @id @default(cuid())
+  name          String
+  className     String?
+  subclass      String?
+  race          String?
+  level         Int      @default(1)
+  background    String?
+  backstory     String?
+  personality   String?
+  bonds         String?
+  flaws         String?
+  ideals        String?
+  currentGoals  String?
+  relationships String?  // JSON
+  status        String   @default("active") // active, dead, retired, missing
+  notes         String?
+  isPlayerCharacter Boolean @default(true)
+  playerName    String?
+  campaignId    String
+  campaign      Campaign @relation(fields: [campaignId], references: [id])
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+
+  backgrounds   CharacterBackground[]
+  wishlists     MagicItemWishlist[]
+}
+
+model CharacterBackground {
+  id                String   @id @default(cuid())
+  backgroundText    String?
+  keyHistory        String?  // JSON array
+  plotHooks         String?  // JSON array
+  unresolvedThreads String?  // JSON array
+  linkedNPCs        String?  // JSON array
+  characterId       String
+  character         Character @relation(fields: [characterId], references: [id])
+  createdAt         DateTime  @default(now())
+  updatedAt         DateTime  @updatedAt
+}
+
+model MagicItemWishlist {
+  id          String   @id @default(cuid())
+  itemName    String
+  rarity      String   @default("uncommon") // common, uncommon, rare, very_rare, legendary, artifact
+  characterId String
+  character   Character @relation(fields: [characterId], references: [id])
+  reason      String?
+  status      String   @default("rumored") // rumored, planned, found, obtained
+  storyHook   String?
+  campaignId  String
+  campaign    Campaign @relation(fields: [campaignId], references: [id])
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+}
+
+model Location {
+  id          String   @id @default(cuid())
+  name        String
+  description String?
+  type        String?  // city, dungeon, wilderness, tavern, etc
+  region      String?
+  notes       String?
+  campaignId  String
+  campaign    Campaign @relation(fields: [campaignId], references: [id])
+  createdAt   DateTime @default(now())
+}
+
+model Faction {
+  id          String   @id @default(cuid())
+  name        String
+  description String?
+  alignment   String?
+  goals       String?
+  status      String   @default("active")
+  campaignId  String
+  campaign    Campaign @relation(fields: [campaignId], references: [id])
+  createdAt   DateTime @default(now())
+}
+
+// Junction tables
+model SessionStoryline {
+  sessionId   String
+  storylineId String
+  session     SessionPlan @relation(fields: [sessionId], references: [id])
+  storyline   Storyline   @relation(fields: [storylineId], references: [id])
+  @@id([sessionId, storylineId])
+}
+
+model SessionNPC {
+  sessionId String
+  npcId     String
+  session   SessionPlan @relation(fields: [sessionId], references: [id])
+  npc       NPC         @relation(fields: [npcId], references: [id])
+  @@id([sessionId, npcId])
+}
+
+model SessionSecret {
+  sessionId String
+  secretId  String
+  session   SessionPlan @relation(fields: [sessionId], references: [id])
+  secret    SecretGoal  @relation(fields: [secretId], references: [id])
+  @@id([sessionId, secretId])
+}
+
+model StorylineNPC {
+  storylineId String
+  npcId       String
+  storyline   Storyline @relation(fields: [storylineId], references: [id])
+  npc         NPC       @relation(fields: [npcId], references: [id])
+  @@id([storylineId, npcId])
+}
+
+model StorylineSecret {
+  storylineId String
+  secretId    String
+  storyline   Storyline  @relation(fields: [storylineId], references: [id])
+  secret      SecretGoal @relation(fields: [secretId], references: [id])
+  @@id([storylineId, secretId])
+}
+
+model NPCSecret {
+  npcId    String
+  secretId String
+  npc      NPC        @relation(fields: [npcId], references: [id])
+  secret   SecretGoal @relation(fields: [secretId], references: [id])
+  @@id([npcId, secretId])
+}

@@ -1,0 +1,329 @@
+"use client";
+
+import React, { useState } from "react";
+import { motion, AnimatePresence } from "framer-motion";
+import {
+  Shield,
+  Swords,
+  Heart,
+  BookOpen,
+  Target,
+  Users,
+  Sparkles,
+  Star,
+  Scroll,
+  X,
+} from "lucide-react";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
+import { Separator } from "@/components/ui/separator";
+import { PageHeader } from "@/components/shared/page-header";
+import { StatusBadge } from "@/components/shared/status-badge";
+import { getRarityColor } from "@/lib/utils";
+import { cn } from "@/lib/utils";
+import type { CampaignData, CharacterData } from "@/lib/data";
+
+const container = {
+  hidden: { opacity: 0 },
+  show: { opacity: 1, transition: { staggerChildren: 0.05 } },
+};
+
+const item = {
+  hidden: { opacity: 0, y: 10 },
+  show: { opacity: 1, y: 0 },
+};
+
+function CharacterCard({
+  character,
+  isSelected,
+  onClick,
+}: {
+  character: CharacterData;
+  isSelected: boolean;
+  onClick: () => void;
+}) {
+  return (
+    <motion.div variants={item} whileHover={{ y: -3 }} whileTap={{ scale: 0.99 }}>
+      <Card
+        className={cn(
+          "cursor-pointer transition-all duration-200",
+          isSelected ? "border-blue-400/30 glow-arcane" : "hover:border-white/[0.1]"
+        )}
+        onClick={onClick}
+      >
+        <CardContent className="p-5">
+          <div className="flex items-start gap-4">
+            <div className="w-14 h-14 rounded-xl bg-gradient-to-br from-blue-400/20 to-purple-400/10 border border-blue-400/20 flex items-center justify-center shrink-0">
+              <span className="text-xl font-heading font-bold text-blue-400">
+                {character.name.charAt(0)}
+              </span>
+            </div>
+            <div className="min-w-0 flex-1">
+              <h3 className="text-base font-heading font-semibold text-white">
+                {character.name}
+              </h3>
+              <p className="text-sm text-zinc-400 mt-0.5">
+                Level {character.level}{" "}
+                {[character.race, character.className].filter(Boolean).join(" ")}
+                {character.subclass ? ` (${character.subclass})` : ""}
+              </p>
+              {character.playerName && (
+                <p className="text-xs text-zinc-500 mt-1">
+                  Player: {character.playerName}
+                </p>
+              )}
+              <div className="flex items-center gap-2 mt-2">
+                <StatusBadge status={character.status} />
+                {character.wishlists.length > 0 && (
+                  <Badge variant="gold" className="text-[10px] h-4 px-1.5 gap-0.5">
+                    <Sparkles className="h-3 w-3" />
+                    {character.wishlists.length}
+                  </Badge>
+                )}
+              </div>
+            </div>
+          </div>
+        </CardContent>
+      </Card>
+    </motion.div>
+  );
+}
+
+function CharacterDetail({ character }: { character: CharacterData }) {
+  const bg = character.backgrounds[0];
+
+  return (
+    <motion.div
+      key={character.id}
+      initial={{ opacity: 0, x: 10 }}
+      animate={{ opacity: 1, x: 0 }}
+      className="space-y-6"
+    >
+      {/* Header */}
+      <div className="flex items-start gap-4">
+        <div className="w-16 h-16 rounded-xl bg-gradient-to-br from-blue-400/20 to-purple-400/10 border border-blue-400/20 flex items-center justify-center shrink-0">
+          <span className="text-2xl font-heading font-bold text-blue-400">
+            {character.name.charAt(0)}
+          </span>
+        </div>
+        <div>
+          <h2 className="text-xl font-heading font-semibold text-white">
+            {character.name}
+          </h2>
+          <p className="text-sm text-zinc-400 mt-0.5">
+            Level {character.level}{" "}
+            {[character.race, character.className].filter(Boolean).join(" ")}
+            {character.subclass ? ` (${character.subclass})` : ""}
+          </p>
+          {character.playerName && (
+            <p className="text-xs text-zinc-500 mt-1">
+              Player: {character.playerName}
+            </p>
+          )}
+          <div className="flex items-center gap-2 mt-2">
+            <StatusBadge status={character.status} />
+            {character.background && (
+              <Badge variant="secondary" className="text-xs">
+                {character.background}
+              </Badge>
+            )}
+          </div>
+        </div>
+      </div>
+
+      {/* Personality Traits */}
+      <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+        {character.personality && (
+          <div className="p-3 rounded-lg bg-white/[0.02] border border-white/[0.04]">
+            <h4 className="text-[10px] text-zinc-500 uppercase tracking-wider mb-1">Personality</h4>
+            <p className="text-sm text-zinc-300">{character.personality}</p>
+          </div>
+        )}
+        {character.ideals && (
+          <div className="p-3 rounded-lg bg-white/[0.02] border border-white/[0.04]">
+            <h4 className="text-[10px] text-zinc-500 uppercase tracking-wider mb-1">Ideals</h4>
+            <p className="text-sm text-zinc-300">{character.ideals}</p>
+          </div>
+        )}
+        {character.bonds && (
+          <div className="p-3 rounded-lg bg-white/[0.02] border border-white/[0.04]">
+            <h4 className="text-[10px] text-zinc-500 uppercase tracking-wider mb-1">Bonds</h4>
+            <p className="text-sm text-zinc-300">{character.bonds}</p>
+          </div>
+        )}
+        {character.flaws && (
+          <div className="p-3 rounded-lg bg-white/[0.02] border border-white/[0.04]">
+            <h4 className="text-[10px] text-zinc-500 uppercase tracking-wider mb-1">Flaws</h4>
+            <p className="text-sm text-zinc-300">{character.flaws}</p>
+          </div>
+        )}
+      </div>
+
+      {/* Backstory */}
+      {character.backstory && (
+        <div>
+          <h4 className="text-xs font-medium text-zinc-400 uppercase tracking-wider mb-2 flex items-center gap-1">
+            <Scroll className="h-3 w-3" /> Backstory
+          </h4>
+          <p className="text-sm text-zinc-300 p-4 rounded-lg bg-white/[0.02] border border-white/[0.04] leading-relaxed whitespace-pre-wrap">
+            {character.backstory}
+          </p>
+        </div>
+      )}
+
+      {/* Current Goals */}
+      {character.currentGoals && (
+        <div>
+          <h4 className="text-xs font-medium text-zinc-400 uppercase tracking-wider mb-2 flex items-center gap-1">
+            <Target className="h-3 w-3 text-amber-400" /> Current Goals
+          </h4>
+          <p className="text-sm text-zinc-300 p-3 rounded-lg bg-amber-400/5 border border-amber-400/10">
+            {character.currentGoals}
+          </p>
+        </div>
+      )}
+
+      {/* Background Details */}
+      {bg && (
+        <div className="space-y-3">
+          <h4 className="text-xs font-medium text-zinc-400 uppercase tracking-wider flex items-center gap-1">
+            <BookOpen className="h-3 w-3 text-crimson-light" /> Background Details
+          </h4>
+          {bg.backgroundText && (
+            <p className="text-sm text-zinc-300 p-3 rounded-lg bg-white/[0.02] border border-white/[0.04] whitespace-pre-wrap">
+              {bg.backgroundText}
+            </p>
+          )}
+          {bg.plotHooks && (
+            <div>
+              <p className="text-[10px] text-zinc-500 uppercase tracking-wider mb-1">Plot Hooks</p>
+              <div className="space-y-1">
+                {JSON.parse(bg.plotHooks).map((hook: string, i: number) => (
+                  <div key={i} className="text-sm text-zinc-300 p-2 rounded bg-gold/5 border border-gold/10">
+                    {hook}
+                  </div>
+                ))}
+              </div>
+            </div>
+          )}
+          {bg.unresolvedThreads && (
+            <div>
+              <p className="text-[10px] text-zinc-500 uppercase tracking-wider mb-1">Unresolved Threads</p>
+              <div className="space-y-1">
+                {JSON.parse(bg.unresolvedThreads).map((thread: string, i: number) => (
+                  <div key={i} className="text-sm text-zinc-300 p-2 rounded bg-purple-400/5 border border-purple-400/10">
+                    {thread}
+                  </div>
+                ))}
+              </div>
+            </div>
+          )}
+        </div>
+      )}
+
+      {/* Magic Item Wishlists */}
+      {character.wishlists.length > 0 && (
+        <div>
+          <h4 className="text-xs font-medium text-zinc-400 uppercase tracking-wider mb-3 flex items-center gap-1">
+            <Sparkles className="h-3 w-3 text-amber-300" /> Magic Item Wishlist
+          </h4>
+          <div className="space-y-2">
+            {character.wishlists.map((wish) => (
+              <div
+                key={wish.id}
+                className="p-3 rounded-lg bg-white/[0.02] border border-white/[0.04]"
+              >
+                <div className="flex items-center justify-between mb-1">
+                  <h5 className={cn("text-sm font-medium", getRarityColor(wish.rarity))}>
+                    {wish.itemName}
+                  </h5>
+                  <div className="flex items-center gap-2">
+                    <Badge variant="outline" className={cn("text-[10px] capitalize", getRarityColor(wish.rarity))}>
+                      {wish.rarity.replace(/_/g, " ")}
+                    </Badge>
+                    <StatusBadge status={wish.status} />
+                  </div>
+                </div>
+                {wish.reason && (
+                  <p className="text-xs text-zinc-400 mt-1">{wish.reason}</p>
+                )}
+                {wish.storyHook && (
+                  <p className="text-xs text-gold/70 mt-1 italic">
+                    Story hook: {wish.storyHook}
+                  </p>
+                )}
+              </div>
+            ))}
+          </div>
+        </div>
+      )}
+
+      {/* Notes */}
+      {character.notes && (
+        <div>
+          <h4 className="text-xs font-medium text-zinc-400 uppercase tracking-wider mb-2">DM Notes</h4>
+          <p className="text-sm text-zinc-400 p-3 rounded-lg bg-white/[0.02] border border-white/[0.04] whitespace-pre-wrap">
+            {character.notes}
+          </p>
+        </div>
+      )}
+    </motion.div>
+  );
+}
+
+export function PartyClient({ campaign }: { campaign: CampaignData }) {
+  const [selectedCharacter, setSelectedCharacter] = useState<CharacterData | null>(
+    campaign.characters[0] || null
+  );
+
+  const partyCharacters = campaign.characters.filter((c) => c.isPlayerCharacter);
+
+  return (
+    <div>
+      <PageHeader
+        title="Party Hub"
+        subtitle="Player characters, backgrounds, and wishlists"
+        icon={<Shield className="h-5 w-5 text-blue-400" />}
+        actions={
+          <Badge variant="arcane">{partyCharacters.length} Party Members</Badge>
+        }
+      />
+
+      <div className="grid grid-cols-1 lg:grid-cols-12 gap-6">
+        {/* Character Cards */}
+        <motion.div
+          variants={container}
+          initial="hidden"
+          animate="show"
+          className="lg:col-span-4 space-y-3"
+        >
+          {partyCharacters.map((character) => (
+            <CharacterCard
+              key={character.id}
+              character={character}
+              isSelected={selectedCharacter?.id === character.id}
+              onClick={() => setSelectedCharacter(character)}
+            />
+          ))}
+        </motion.div>
+
+        {/* Character Detail */}
+        <div className="lg:col-span-8">
+          {selectedCharacter ? (
+            <Card className="p-6">
+              <CharacterDetail character={selectedCharacter} />
+            </Card>
+          ) : (
+            <Card className="p-12">
+              <div className="text-center text-zinc-500">
+                <Shield className="h-8 w-8 mx-auto mb-3 text-zinc-600" />
+                <p className="text-sm">Select a character to view details</p>
+              </div>
+            </Card>
+          )}
+        </div>
+      </div>
+    </div>
+  );
+}
