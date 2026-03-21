@@ -5,6 +5,9 @@ const prisma = new PrismaClient();
 const toJson = (value: unknown) => JSON.stringify(value);
 
 async function clearExistingData() {
+  await prisma.noteDocument.deleteMany();
+  await prisma.noteFolder.deleteMany();
+
   await prisma.sessionStoryline.deleteMany();
   await prisma.sessionNPC.deleteMany();
   await prisma.sessionSecret.deleteMany();
@@ -1815,7 +1818,145 @@ async function main() {
     ],
   });
 
-  const [sessionCount, storylineCount, npcCount, secretCount, journalCount, characterCount, wishlistCount] =
+  // --- DM Notes ---
+
+  const wishlistsFolder = await prisma.noteFolder.create({
+    data: {
+      campaignId: campaign.id,
+      name: "Magic Items Wishlists",
+      slug: "magic-items-wishlists",
+      sortOrder: 0,
+      allowNewDocs: true,
+    },
+  });
+
+  const backgroundsFolder = await prisma.noteFolder.create({
+    data: {
+      campaignId: campaign.id,
+      name: "Character Backgrounds",
+      slug: "character-backgrounds",
+      sortOrder: 1,
+      allowNewDocs: true,
+    },
+  });
+
+  const sessionsFolder = await prisma.noteFolder.create({
+    data: {
+      campaignId: campaign.id,
+      name: "Session Outlines",
+      slug: "session-outlines",
+      sortOrder: 2,
+      allowNewDocs: true,
+    },
+  });
+
+  const characters = [characterFlynt, characterGarie, characterBells, characterAllryn, characterAmara];
+
+  // Per-character wishlist docs
+  for (let i = 0; i < characters.length; i++) {
+    await prisma.noteDocument.create({
+      data: {
+        campaignId: campaign.id,
+        folderId: wishlistsFolder.id,
+        title: `${characters[i].name} Wishlist`,
+        slug: `wishlist-${characters[i].name.toLowerCase()}`,
+        sortOrder: i,
+        isDeletable: false,
+      },
+    });
+  }
+
+  // Character Template + per-character background docs
+  await prisma.noteDocument.create({
+    data: {
+      campaignId: campaign.id,
+      folderId: backgroundsFolder.id,
+      title: "Character Template",
+      slug: "character-template",
+      sortOrder: 0,
+      isDeletable: false,
+      content: {
+        type: "doc",
+        content: [
+          {
+            type: "heading",
+            attrs: { level: 2 },
+            content: [{ type: "text", text: "Character Background Template" }],
+          },
+          {
+            type: "paragraph",
+            content: [{ type: "text", text: "Use this template for new character backgrounds. Fill in each section below." }],
+          },
+          {
+            type: "heading",
+            attrs: { level: 3 },
+            content: [{ type: "text", text: "Origin & History" }],
+          },
+          { type: "paragraph", content: [{ type: "text", text: "Where did they come from? Key life events..." }] },
+          {
+            type: "heading",
+            attrs: { level: 3 },
+            content: [{ type: "text", text: "Motivations & Goals" }],
+          },
+          { type: "paragraph", content: [{ type: "text", text: "What drives them? What do they want?" }] },
+          {
+            type: "heading",
+            attrs: { level: 3 },
+            content: [{ type: "text", text: "Plot Hooks" }],
+          },
+          { type: "paragraph", content: [{ type: "text", text: "Unresolved threads, potential story connections..." }] },
+        ],
+      },
+    },
+  });
+
+  for (let i = 0; i < characters.length; i++) {
+    await prisma.noteDocument.create({
+      data: {
+        campaignId: campaign.id,
+        folderId: backgroundsFolder.id,
+        title: `${characters[i].name} Background`,
+        slug: `bg-${characters[i].name.toLowerCase()}`,
+        sortOrder: i + 1,
+        isDeletable: false,
+      },
+    });
+  }
+
+  // Session outline docs
+  const sessions = [session1, session2, session3, session4];
+  for (let i = 0; i < sessions.length; i++) {
+    await prisma.noteDocument.create({
+      data: {
+        campaignId: campaign.id,
+        folderId: sessionsFolder.id,
+        title: `Session ${sessions[i].sessionNumber}`,
+        slug: `session-outline-${sessions[i].sessionNumber}`,
+        sortOrder: i,
+        isDeletable: false,
+      },
+    });
+  }
+
+  // Standalone docs (no folder)
+  const standaloneDocs = [
+    { title: "Party Notes", slug: "party-notes", sortOrder: 0 },
+    { title: "Party Goals", slug: "party-goals", sortOrder: 1 },
+    { title: "NPC Tracker", slug: "npc-tracker", sortOrder: 2 },
+    { title: "Midnight Thoughts", slug: "midnight-thoughts", sortOrder: 3 },
+  ];
+
+  for (const doc of standaloneDocs) {
+    await prisma.noteDocument.create({
+      data: {
+        campaignId: campaign.id,
+        ...doc,
+        isDeletable: false,
+      },
+    });
+  }
+
+  const [sessionCount, storylineCount, npcCount, secretCount, journalCount, characterCount, wishlistCount, noteCount] =
     await Promise.all([
       prisma.sessionPlan.count(),
       prisma.storyline.count(),
@@ -1824,6 +1965,7 @@ async function main() {
       prisma.journalEntry.count(),
       prisma.character.count(),
       prisma.magicItemWishlist.count(),
+      prisma.noteDocument.count(),
     ]);
 
   console.log("Seed complete:", {
@@ -1835,6 +1977,7 @@ async function main() {
     journals: journalCount,
     characters: characterCount,
     wishlists: wishlistCount,
+    notes: noteCount,
   });
 }
 

@@ -136,6 +136,75 @@
   animation: pulse-glow 3s ease-in-out infinite;
 }
 
+/* TipTap / ProseMirror editor styles */
+.ProseMirror {
+  outline: none;
+}
+
+.ProseMirror h1 {
+  @apply text-2xl font-heading font-bold text-zinc-100 mb-3 mt-6;
+}
+
+.ProseMirror h2 {
+  @apply text-xl font-heading font-semibold text-zinc-200 mb-2 mt-5;
+}
+
+.ProseMirror h3 {
+  @apply text-lg font-heading font-medium text-zinc-300 mb-2 mt-4;
+}
+
+.ProseMirror p {
+  @apply text-sm text-zinc-300 leading-relaxed mb-2;
+}
+
+.ProseMirror ul {
+  @apply list-disc pl-5 mb-3 text-sm text-zinc-300;
+}
+
+.ProseMirror ol {
+  @apply list-decimal pl-5 mb-3 text-sm text-zinc-300;
+}
+
+.ProseMirror li {
+  @apply mb-1;
+}
+
+.ProseMirror blockquote {
+  @apply border-l-2 border-orange-400/40 pl-4 italic text-zinc-400 my-3;
+}
+
+.ProseMirror code {
+  @apply bg-zinc-800 text-orange-300 px-1.5 py-0.5 rounded text-xs font-mono;
+}
+
+.ProseMirror pre {
+  @apply bg-zinc-900 rounded-lg p-4 my-3 overflow-x-auto;
+}
+
+.ProseMirror pre code {
+  @apply bg-transparent p-0 text-zinc-300;
+}
+
+.ProseMirror hr {
+  @apply border-white/[0.08] my-6;
+}
+
+.ProseMirror strong {
+  @apply font-semibold text-zinc-100;
+}
+
+.ProseMirror em {
+  @apply italic;
+}
+
+.ProseMirror p.is-editor-empty:first-child::before {
+  @apply text-zinc-600;
+  content: attr(data-placeholder);
+  float: left;
+  height: 0;
+  pointer-events: none;
+}
+
 /* Background pattern */
 body {
   background-image:

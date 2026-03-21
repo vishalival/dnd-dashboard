@@ -13,6 +13,7 @@ import {
   BookOpen,
   Shield,
   Sparkles,
+  NotebookPen,
   ChevronLeft,
   ChevronRight,
   Search,
@@ -70,6 +71,12 @@ const navItems = [
     href: "/wishlists",
     icon: Sparkles,
     color: "text-amber-300",
+  },
+  {
+    label: "DM Notes",
+    href: "/notes",
+    icon: NotebookPen,
+    color: "text-orange-400",
   },
 ];
 

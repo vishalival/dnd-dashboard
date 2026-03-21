@@ -54,6 +54,14 @@ export async function getCampaign() {
         orderBy: { createdAt: "desc" },
         include: { character: true },
       },
+      noteFolders: {
+        orderBy: { sortOrder: "asc" },
+        include: { documents: { orderBy: { sortOrder: "asc" } } },
+      },
+      noteDocuments: {
+        where: { folderId: null },
+        orderBy: { sortOrder: "asc" },
+      },
     },
   });
 }
@@ -66,3 +74,5 @@ export type SecretData = CampaignData["secrets"][number];
 export type JournalData = CampaignData["journals"][number];
 export type CharacterData = CampaignData["characters"][number];
 export type WishlistData = CampaignData["wishlists"][number];
+export type NoteFolderData = CampaignData["noteFolders"][number];
+export type NoteDocumentData = NoteFolderData["documents"][number];

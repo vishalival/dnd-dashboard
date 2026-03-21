@@ -26,7 +26,10 @@ model Campaign {
   characters  Character[]
   locations   Location[]
   factions    Faction[]
-  wishlists   MagicItemWishlist[]
+  wishlists     MagicItemWishlist[]
+  noteFolders   NoteFolder[]
+  noteDocuments NoteDocument[]
+
 }
 
 model SessionPlan {
@@ -285,3 +288,36 @@ model NPCSecret {
   secret   SecretGoal @relation(fields: [secretId], references: [id])
   @@id([npcId, secretId])
 }
+
+model NoteFolder {
+  id           String         @id @default(cuid())
+  name         String
+  slug         String
+  sortOrder    Int            @default(0)
+  allowNewDocs Boolean        @default(false)
+  campaignId   String
+  campaign     Campaign       @relation(fields: [campaignId], references: [id])
+  documents    NoteDocument[]
+  createdAt    DateTime       @default(now())
+  updatedAt    DateTime       @updatedAt
+
+  @@unique([campaignId, slug])
+}
+
+model NoteDocument {
+  id          String      @id @default(cuid())
+  title       String
+  slug        String
+  content     Json?
+  sortOrder   Int         @default(0)
+  isDeletable Boolean     @default(false)
+  folderId    String?
+  folder      NoteFolder? @relation(fields: [folderId], references: [id])
+  campaignId  String
+  campaign    Campaign    @relation(fields: [campaignId], references: [id])
+  createdAt   DateTime    @default(now())
+  updatedAt   DateTime    @updatedAt
+
+  @@unique([campaignId, slug])
+}
+
