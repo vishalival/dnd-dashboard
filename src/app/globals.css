@@ -26,10 +26,6 @@
     --radius: 0.75rem;
   }
 
-  /* Make Settle modern font override for headings */
-  body:not(.dark) {
-    --font-heading: var(--font-body);
-  }
 
   .dark {
     --background: 240 6% 6%;
