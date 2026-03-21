@@ -109,7 +109,6 @@ export function CommandPalette() {
                 {staticPages.map((page) => (
                   <Command.Item
                     key={page.href}
-                    onValueChange={() => {}}
                     onSelect={() => onSelect(page.href)}
                     className="flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm text-zinc-400 cursor-pointer hover:bg-white/5 hover:text-white aria-selected:bg-white/5 aria-selected:text-white transition-colors group"
                   >
