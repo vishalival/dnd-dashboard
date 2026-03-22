@@ -75,10 +75,24 @@ const navItems = [
   },
 ];
 
-export function Sidebar() {
+export function Sidebar({
+  dmName,
+  campaignName,
+}: {
+  dmName: string | null;
+  campaignName: string | null;
+}) {
   const pathname = usePathname();
   const { toggleCommandPalette } = useCampaignStore();
   const isRecording = useChroniclerStore((s) => s.phase === "recording");
+
+  const displayName = dmName || "Dungeon Master";
+  const initials = displayName
+    .split(" ")
+    .map((w) => w[0])
+    .join("")
+    .toUpperCase()
+    .slice(0, 2);
 
   return (
     <motion.aside
@@ -151,11 +165,11 @@ export function Sidebar() {
       <div className="p-4 mt-auto border-t border-[#1F1F22]">
         <div className="flex items-center gap-3 p-3 rounded-xl bg-[#141416] border border-[#1F1F22]">
           <div className="w-8 h-8 rounded-full bg-zinc-800 flex items-center justify-center shrink-0">
-            <span className="text-xs font-semibold text-white">DR</span>
+            <span className="text-xs font-semibold text-white">{initials}</span>
           </div>
           <div className="min-w-0 flex-1">
-            <p className="text-sm font-medium text-white truncate">Dungeon Master Rachel</p>
-            <p className="text-[10px] text-zinc-500 truncate">rachel@dxragond.com</p>
+            <p className="text-sm font-medium text-white truncate">{displayName}</p>
+            <p className="text-[10px] text-zinc-500 truncate">Dungeon Master</p>
           </div>
         </div>
       </div>
