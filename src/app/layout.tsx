@@ -10,9 +10,22 @@ const inter = Inter({
 });
 
 export const metadata: Metadata = {
-  title: "DM Campaign Dashboard — Dungeon Master Command Center",
+  title: "ArcMind — Dungeon Master Command Center",
   description:
     "A premium Dungeon Master operating system for campaign management, session planning, NPC tracking, and storyline orchestration.",
+  openGraph: {
+    title: "ArcMind — Dungeon Master Command Center",
+    description:
+      "A premium Dungeon Master operating system for campaign management, session planning, NPC tracking, and storyline orchestration.",
+    images: [{ url: "/logo.svg" }],
+  },
+  twitter: {
+    card: "summary_large_image",
+    title: "ArcMind — Dungeon Master Command Center",
+    description:
+      "A premium Dungeon Master operating system for campaign management, session planning, NPC tracking, and storyline orchestration.",
+    images: ["/logo.svg"],
+  },
 };
 
 export default function RootLayout({

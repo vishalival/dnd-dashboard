@@ -14,7 +14,6 @@ import {
   BookOpen,
   Shield,
   NotebookPen,
-  Sparkles,
   Search,
   Command,
   ChevronLeft,
@@ -33,7 +32,6 @@ const navItems = [
   { label: "Secrets & Goals", href: "/secrets", icon: KeyRound, color: "text-pink-400" },
   { label: "DM Journal", href: "/journal", icon: BookOpen, color: "text-rose-400" },
   { label: "Party Hub", href: "/party", icon: Shield, color: "text-blue-400" },
-  { label: "Magic Items", href: "/wishlists", icon: Sparkles, color: "text-amber-300" },
   { label: "Tome of Schemes", href: "/notes", icon: NotebookPen, color: "text-orange-400" },
 ];
 

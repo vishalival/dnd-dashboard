@@ -168,7 +168,7 @@ export function DashboardClient({ campaign }: { campaign: CampaignData }) {
           {upcomingSession && (
             <motion.div variants={item}>
               <Link href={`/sessions`}>
-                <Card className="group hover:border-gold/20 transition-all duration-300 glow-gold cursor-pointer h-full border-white/5 bg-[#141416] min-h-[280px] max-h-[280px]">
+                <Card className="group hover:border-gold/20 transition-all duration-300 glow-gold cursor-pointer h-full border-white/5 bg-[#141416]">
                   <CardHeader className="pb-3">
                     <div className="flex items-center justify-between">
                       <div className="flex items-center gap-2">

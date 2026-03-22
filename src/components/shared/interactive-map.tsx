@@ -2,7 +2,7 @@
 
 import React, { useRef, useState, useCallback } from "react";
 import { motion, useMotionValue, useSpring } from "framer-motion";
-import { Maximize2, ZoomIn, ZoomOut, Move } from "lucide-react";
+import { Maximize2, Minimize2, ZoomIn, ZoomOut, Move } from "lucide-react";
 import { cn } from "@/lib/utils";
 
 interface InteractiveMapProps {
@@ -16,6 +16,7 @@ export function InteractiveMap({ src, className, initialScale = 1 }: Interactive
   const imgRef = useRef<HTMLImageElement>(null);
   const [scale, setScale] = useState(initialScale);
   const [isDragging, setIsDragging] = useState(false);
+  const [isFullscreen, setIsFullscreen] = useState(false);
   
   const x = useMotionValue(0);
   const y = useMotionValue(0);
@@ -72,11 +73,21 @@ export function InteractiveMap({ src, className, initialScale = 1 }: Interactive
     y.set(0);
   };
 
+  const toggleFullscreen = useCallback(() => {
+    const el = containerRef.current?.closest(".interactive-map-root") as HTMLElement | null;
+    if (!el) return;
+    if (!document.fullscreenElement) {
+      el.requestFullscreen().then(() => setIsFullscreen(true)).catch(() => {});
+    } else {
+      document.exitFullscreen().then(() => setIsFullscreen(false)).catch(() => {});
+    }
+  }, []);
+
   // Prevent default drag behavior on the image
   const onDragStart = (e: React.DragEvent) => e.preventDefault();
 
   return (
-    <div className={cn("relative overflow-hidden bg-zinc-950 rounded-2xl border border-white/5 group", className)}>
+    <div className={cn("relative overflow-hidden bg-zinc-950 rounded-2xl border border-white/5 group interactive-map-root", isFullscreen && "!rounded-none !border-0", className)}>
       {/* Controls Overlay */}
       <div className="absolute top-4 right-4 z-10 flex flex-col gap-2 opacity-0 group-hover:opacity-100 transition-opacity duration-300">
         <button
@@ -94,11 +105,11 @@ export function InteractiveMap({ src, className, initialScale = 1 }: Interactive
           <ZoomOut className="h-4 w-4" />
         </button>
         <button
-          onClick={handleReset}
+          onClick={toggleFullscreen}
           className="w-9 h-9 flex items-center justify-center rounded-xl bg-black/60 backdrop-blur-md border border-white/10 text-white hover:bg-black/80 transition-colors"
-          title="Reset View"
+          title={isFullscreen ? "Exit Fullscreen" : "Fullscreen"}
         >
-          <Maximize2 className="h-4 w-4" />
+          {isFullscreen ? <Minimize2 className="h-4 w-4" /> : <Maximize2 className="h-4 w-4" />}
         </button>
       </div>
 
