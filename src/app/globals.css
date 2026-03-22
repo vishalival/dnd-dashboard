@@ -239,3 +239,69 @@
       transparent 50%
     );
 }
+
+/* Driver.js dark theme overrides */
+.dnd-tour-popover.driver-popover {
+  background: #141416;
+  border: 1px solid #2a2a2d;
+  color: #fafafa;
+  box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.5);
+}
+
+.dnd-tour-popover .driver-popover-title {
+  color: #fafafa;
+  font-size: 1rem;
+  font-weight: 600;
+}
+
+.dnd-tour-popover .driver-popover-description {
+  color: #a1a1aa;
+  font-size: 0.875rem;
+}
+
+.dnd-tour-popover .driver-popover-progress-text {
+  color: #71717a;
+}
+
+.dnd-tour-popover .driver-popover-prev-btn {
+  color: #a1a1aa;
+  border: 1px solid #2a2a2d;
+  background: transparent;
+  border-radius: 0.5rem;
+  text-shadow: none;
+}
+
+.dnd-tour-popover .driver-popover-prev-btn:hover {
+  background: rgba(255, 255, 255, 0.05);
+  color: #fafafa;
+}
+
+.dnd-tour-popover .driver-popover-next-btn,
+.dnd-tour-popover .driver-popover-close-btn-text {
+  background: #6366f1;
+  color: #fff;
+  border: none;
+  border-radius: 0.5rem;
+  text-shadow: none;
+}
+
+.dnd-tour-popover .driver-popover-next-btn:hover,
+.dnd-tour-popover .driver-popover-close-btn-text:hover {
+  background: #4f46e5;
+}
+
+.dnd-tour-popover .driver-popover-arrow-side-left .driver-popover-arrow {
+  border-right-color: #141416;
+}
+
+.dnd-tour-popover .driver-popover-arrow-side-right .driver-popover-arrow {
+  border-left-color: #141416;
+}
+
+.dnd-tour-popover .driver-popover-arrow-side-top .driver-popover-arrow {
+  border-bottom-color: #141416;
+}
+
+.dnd-tour-popover .driver-popover-arrow-side-bottom .driver-popover-arrow {
+  border-top-color: #141416;
+}

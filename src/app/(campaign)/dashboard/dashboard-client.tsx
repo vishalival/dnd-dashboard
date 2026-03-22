@@ -78,7 +78,7 @@ export function DashboardClient({ campaign }: { campaign: CampaignData }) {
   ).length;
 
   return (
-    <div>
+    <div data-tour-page="dashboard">
       {/* Custom Sleek Header */}
       <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 mb-10 bg-zinc-950/20 p-6 rounded-2xl border border-white/5">
         <div>

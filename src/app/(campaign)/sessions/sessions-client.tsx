@@ -1314,7 +1314,7 @@ export function SessionsClient({ campaign }: { campaign: CampaignData }) {
   }
 
   return (
-    <div>
+    <div data-tour-page="sessions">
       {/* New Session Dialog */}
       <Dialog open={newSessionOpen} onOpenChange={setNewSessionOpen}>
         <DialogContent className="sm:max-w-md">
