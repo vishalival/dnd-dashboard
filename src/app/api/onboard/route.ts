@@ -1,8 +1,6 @@
 import { NextRequest } from "next/server";
 import { prisma } from "@/lib/prisma";
 import Anthropic from "@anthropic-ai/sdk";
-import JSZip from "jszip";
-import mammoth from "mammoth";
 
 const toJson = (value: unknown) => JSON.stringify(value);
 
@@ -133,40 +131,6 @@ interface ExtractedData {
     isPinned?: boolean;
     sessionNumber?: number;
   }>;
-}
-
-async function extractTextFromZip(buffer: ArrayBuffer): Promise<{ text: string; fileCount: number }> {
-  const zip = await JSZip.loadAsync(buffer);
-  const texts: string[] = [];
-  let fileCount = 0;
-
-  for (const [filename, file] of Object.entries(zip.files)) {
-    if (file.dir) continue;
-
-    const lowerName = filename.toLowerCase();
-    if (lowerName.endsWith(".docx")) {
-      try {
-        const docxBuffer = await file.async("nodebuffer");
-        const result = await mammoth.extractRawText({ buffer: docxBuffer });
-        const cleanName = filename.split("/").pop() || filename;
-        texts.push(`\n=== FILE: ${cleanName} ===\n${result.value}`);
-        fileCount++;
-      } catch (e) {
-        console.warn(`Failed to parse ${filename}:`, e);
-      }
-    } else if (lowerName.endsWith(".txt") || lowerName.endsWith(".md")) {
-      try {
-        const content = await file.async("text");
-        const cleanName = filename.split("/").pop() || filename;
-        texts.push(`\n=== FILE: ${cleanName} ===\n${content}`);
-        fileCount++;
-      } catch (e) {
-        console.warn(`Failed to read ${filename}:`, e);
-      }
-    }
-  }
-
-  return { text: texts.join("\n\n"), fileCount };
 }
 
 async function extractCampaignData(
@@ -592,6 +556,9 @@ async function seedDatabase(data: ExtractedData): Promise<string> {
   }, { timeout: 60000 });
 }
 
+// Allow larger JSON payloads (extracted text from campaign docs)
+export const maxDuration = 120; // seconds — Claude extraction can take a while
+
 export async function POST(request: NextRequest) {
   const encoder = new TextEncoder();
 
@@ -603,36 +570,19 @@ export async function POST(request: NextRequest) {
       }
 
       try {
-        const formData = await request.formData();
-        const file = formData.get("file") as File | null;
-        const dmName = (formData.get("dmName") as string) || "Dungeon Master";
+        const body = await request.json();
+        const documentText: string = body.documentText || "";
+        const fileCount: number = body.fileCount || 0;
+        const dmName: string = body.dmName || "Dungeon Master";
 
-        if (!file) {
-          send("error", "No file uploaded");
-          controller.close();
-          return;
-        }
-
-        const fileName = file.name.toLowerCase();
-        if (!fileName.endsWith(".zip")) {
-          send("error", "Please upload a .zip file");
+        if (!documentText.trim()) {
+          send("error", "No readable documents received. Include .docx, .txt, or .md files.");
           controller.close();
           return;
         }
 
         // Step 1: Processing your info
-        send("processing", "Unpacking your campaign archive...");
-
-        const buffer = await file.arrayBuffer();
-        const { text: documentText, fileCount } = await extractTextFromZip(buffer);
-
-        if (!documentText.trim()) {
-          send("error", "No readable documents found in zip. Include .docx, .txt, or .md files.");
-          controller.close();
-          return;
-        }
-
-        send("processing", `Found ${fileCount} document${fileCount !== 1 ? "s" : ""} to analyze`);
+        send("processing", `Received ${fileCount} document${fileCount !== 1 ? "s" : ""} to analyze`);
 
         // Step 2: Analyzing your stories
         send("analyzing", "ArcMind is reading through your campaign lore...");
