@@ -14,12 +14,14 @@ export default async function DashboardPage() {
             No Campaign Found
           </h2>
           <p className="text-sm text-muted-foreground dark:text-zinc-500 mb-4">
-            Run{" "}
-            <code className="px-2 py-1 bg-muted dark:bg-zinc-800 rounded text-amber-600 dark:text-gold text-xs">
-              npm run db:seed
-            </code>{" "}
-            to load sample data.
+            Upload your D&D campaign documents to get started.
           </p>
+          <a
+            href="/onboard"
+            className="inline-flex items-center gap-2 px-4 py-2 rounded-lg bg-indigo-500 text-white text-sm font-medium hover:bg-indigo-400 transition-colors"
+          >
+            Set Up Campaign
+          </a>
         </div>
       </div>
     );

@@ -2,6 +2,7 @@
 
 import React from "react";
 import Link from "next/link";
+import Image from "next/image";
 import { usePathname } from "next/navigation";
 import { motion, AnimatePresence } from "framer-motion";
 import {
@@ -13,6 +14,7 @@ import {
   BookOpen,
   Shield,
   NotebookPen,
+  Sparkles,
   Search,
   Command,
   ChevronLeft,
@@ -31,13 +33,28 @@ const navItems = [
   { label: "Secrets & Goals", href: "/secrets", icon: KeyRound, color: "text-pink-400" },
   { label: "DM Journal", href: "/journal", icon: BookOpen, color: "text-rose-400" },
   { label: "Party Hub", href: "/party", icon: Shield, color: "text-blue-400" },
-  { label: "DM Notes", href: "/notes", icon: NotebookPen, color: "text-orange-400" },
+  { label: "Magic Items", href: "/wishlists", icon: Sparkles, color: "text-amber-300" },
+  { label: "Tome of Schemes", href: "/notes", icon: NotebookPen, color: "text-orange-400" },
 ];
 
-export function Sidebar() {
+export function Sidebar({
+  dmName,
+  campaignName,
+}: {
+  dmName: string | null;
+  campaignName: string | null;
+}) {
   const pathname = usePathname();
   const { sidebarOpen, toggleSidebar, toggleCommandPalette } = useCampaignStore();
   const isRecording = useChroniclerStore((s) => s.phase === "recording");
+
+  const displayName = dmName || "Dungeon Master";
+  const initials = displayName
+    .split(" ")
+    .map((w) => w[0])
+    .join("")
+    .toUpperCase()
+    .slice(0, 2);
 
   return (
     <motion.aside
@@ -46,25 +63,15 @@ export function Sidebar() {
       transition={{ duration: 0.3, ease: [0.4, 0, 0.2, 1] }}
       className="fixed left-0 top-0 z-40 h-screen border-r border-[#1F1F22] bg-[#0A0A0B] flex flex-col overflow-hidden"
     >
-      {/* Header */}
+      {/* Header / Logo */}
       <div className="flex items-center h-20 px-4 mb-4 shrink-0">
-        <div className="w-8 h-8 rounded-full bg-gradient-to-br from-indigo-400 to-purple-500 flex items-center justify-center shrink-0">
-          <span className="font-heading font-black text-xs text-white">DM</span>
-        </div>
-
-        <AnimatePresence initial={false}>
-          {sidebarOpen && (
-            <motion.span
-              initial={{ opacity: 0, width: 0 }}
-              animate={{ opacity: 1, width: "auto" }}
-              exit={{ opacity: 0, width: 0 }}
-              transition={{ duration: 0.2 }}
-              className="font-heading font-semibold text-base text-white tracking-wide truncate ml-3 overflow-hidden whitespace-nowrap"
-            >
-              D&D Campaign
-            </motion.span>
-          )}
-        </AnimatePresence>
+        <Image
+          src="/logo.svg"
+          alt="Logo"
+          width={140}
+          height={33}
+          priority
+        />
 
         <button
           onClick={toggleSidebar}
@@ -168,7 +175,7 @@ export function Sidebar() {
           )}
         >
           <div className="w-8 h-8 rounded-full bg-zinc-800 flex items-center justify-center shrink-0">
-            <span className="text-xs font-semibold text-white">DR</span>
+            <span className="text-xs font-semibold text-white">{initials}</span>
           </div>
           <AnimatePresence initial={false}>
             {sidebarOpen && (
@@ -179,8 +186,8 @@ export function Sidebar() {
                 transition={{ duration: 0.15 }}
                 className="min-w-0 flex-1 overflow-hidden"
               >
-                <p className="text-sm font-medium text-white truncate whitespace-nowrap">Dungeon Master Rachel</p>
-                <p className="text-[10px] text-zinc-500 truncate whitespace-nowrap">rachel@dxragond.com</p>
+                <p className="text-sm font-medium text-white truncate whitespace-nowrap">{displayName}</p>
+                <p className="text-[10px] text-zinc-500 truncate whitespace-nowrap">Dungeon Master</p>
               </motion.div>
             )}
           </AnimatePresence>

@@ -20,6 +20,7 @@ interface FileTreeProps {
   selectedDocId: string | null;
   onSelectDoc: (doc: NoteDocumentData) => void;
   onAddDoc: (folderId: string) => void;
+  onAddRootDoc: () => void;
   onDeleteDoc: (docId: string) => void;
 }
 
@@ -29,6 +30,7 @@ export function FileTree({
   selectedDocId,
   onSelectDoc,
   onAddDoc,
+  onAddRootDoc,
   onDeleteDoc,
 }: FileTreeProps) {
   const [expandedFolders, setExpandedFolders] = useState<Set<string>>(
@@ -121,10 +123,24 @@ export function FileTree({
               doc={doc}
               isSelected={selectedDocId === doc.id}
               onSelect={() => onSelectDoc(doc)}
+              onDelete={
+                doc.isDeletable
+                  ? () => onDeleteDoc(doc.id)
+                  : undefined
+              }
             />
           ))}
         </>
       )}
+
+      <div className="h-px bg-white/[0.06] mx-3 my-2" />
+      <button
+        onClick={onAddRootDoc}
+        className="flex items-center gap-2 w-full px-3 py-1.5 text-sm text-zinc-500 hover:text-zinc-300 hover:bg-white/[0.04] rounded-md transition-colors"
+      >
+        <Plus className="h-3.5 w-3.5" />
+        <span>New Document</span>
+      </button>
     </div>
   );
 }
