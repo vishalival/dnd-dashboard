@@ -2,6 +2,7 @@
 
 import React, { useEffect, useRef, useState } from "react";
 import * as d3 from "d3";
+import { useTheme } from "next-themes";
 import type { CampaignData, NPCData } from "@/lib/data";
 
 // ── Types ──────────────────────────────────────────────────────────────
@@ -158,6 +159,8 @@ export function NPCWeb({ campaign }: { campaign: CampaignData }) {
   const [activeEdgeFilters, setActiveEdgeFilters] = useState<Set<string>>(
     new Set(["storyline", "session", "secret", "faction"])
   );
+  const { theme } = useTheme();
+  const isLight = theme === "light";
   const [activeStatusFilters, setActiveStatusFilters] = useState<Set<string>>(
     new Set(["alive", "dead", "missing", "hostile"])
   );
@@ -323,13 +326,13 @@ export function NPCWeb({ campaign }: { campaign: CampaignData }) {
       .attr("fill", "none")
       .attr("stroke", (d) => getFactionColor(d.faction))
       .attr("stroke-width", 1)
-      .attr("stroke-opacity", 0.2);
+      .attr("stroke-opacity", isLight ? 0.4 : 0.2);
 
     // Main circle — dark fill with thick faction border
     nodeGroup
       .append("circle")
       .attr("r", NODE_RADIUS)
-      .attr("fill", "#141420")
+      .attr("fill", isLight ? "#ffffff" : "#141420")
       .attr("stroke", (d) => getFactionColor(d.faction))
       .attr("stroke-width", 2.5);
 
@@ -341,7 +344,7 @@ export function NPCWeb({ campaign }: { campaign: CampaignData }) {
       .attr("font-size", 22)
       .attr("font-weight", "600")
       .attr("font-family", "Inter, sans-serif")
-      .attr("fill", "#e4e4e7")
+      .attr("fill", isLight ? "#18181b" : "#e4e4e7")
       .attr("pointer-events", "none")
       .text((d) => d.name.charAt(0));
 
@@ -352,7 +355,7 @@ export function NPCWeb({ campaign }: { campaign: CampaignData }) {
       .attr("dy", NODE_RADIUS + 16)
       .attr("font-size", 11)
       .attr("font-family", "Inter, sans-serif")
-      .attr("fill", "#a1a1aa")
+      .attr("fill", isLight ? "#52525b" : "#a1a1aa")
       .attr("pointer-events", "none")
       .text((d) => d.name);
 
@@ -437,7 +440,7 @@ export function NPCWeb({ campaign }: { campaign: CampaignData }) {
     return () => {
       simulation.stop();
     };
-  }, [campaign.npcs, dimensions, activeEdgeFilters, activeStatusFilters]);
+  }, [campaign.npcs, dimensions, activeEdgeFilters, activeStatusFilters, isLight]);
 
   return (
     <div className="space-y-4">
@@ -492,7 +495,7 @@ export function NPCWeb({ campaign }: { campaign: CampaignData }) {
       {/* Graph + Legend container */}
       <div
         ref={containerRef}
-        className="relative w-full h-[calc(100vh-14rem)] rounded-xl border border-white/[0.06] bg-[#0d0d18] overflow-hidden"
+        className="relative w-full h-[calc(100vh-14rem)] rounded-xl border border-border dark:border-white/[0.06] bg-[#f8f8f8] dark:bg-[#0d0d18] overflow-hidden"
       >
         {/* Factions legend — bottom left */}
         <div className="absolute bottom-4 left-4 z-10 p-3 rounded-lg bg-white/80 dark:bg-[#0d0d18]/80 backdrop-blur-sm border border-border dark:border-white/[0.08] text-[11px] space-y-1.5">
