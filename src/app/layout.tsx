@@ -12,21 +12,21 @@ const newsreader = Newsreader({
 
 export const metadata: Metadata = {
   metadataBase: new URL("https://arcmind-dnd.vercel.app"),
-  title: "ArcMind — Dungeon Master Command Center",
+  title: "DarcMind — Dungeon Master Command Center",
   description:
     "A premium Dungeon Master operating system for campaign management, session planning, NPC tracking, and storyline orchestration.",
   openGraph: {
-    title: "ArcMind — Dungeon Master Command Center",
+    title: "DarcMind — Dungeon Master Command Center",
     description:
       "A premium Dungeon Master operating system for campaign management, session planning, NPC tracking, and storyline orchestration.",
-    images: [{ url: "/og-image.png", width: 1200, height: 630, alt: "ArcMind" }],
+    images: [{ url: "/og-image-new.png", width: 1200, height: 630, alt: "DarcMind" }],
   },
   twitter: {
     card: "summary_large_image",
-    title: "ArcMind — Dungeon Master Command Center",
+    title: "DarcMind — Dungeon Master Command Center",
     description:
       "A premium Dungeon Master operating system for campaign management, session planning, NPC tracking, and storyline orchestration.",
-    images: ["/og-image.png"],
+    images: ["/og-image-new.png"],
   },
 };
 

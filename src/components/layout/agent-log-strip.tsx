@@ -48,9 +48,9 @@ export function AgentLogStrip() {
         onClick={() => !isIdle && setExpanded((v) => !v)}
         className={cn(
           "w-full flex items-center gap-2 px-3 h-9 transition-colors",
-          !isIdle && "hover:bg-white/[0.03] cursor-pointer",
+          !isIdle && "hover:bg-black/5 dark:hover:bg-white/[0.03] cursor-pointer",
           isIdle && "cursor-default",
-          pulsing && "bg-amber-500/[0.04]"
+          pulsing && "bg-amber-500/[0.08]"
         )}
       >
         {/* Status dot */}
@@ -60,14 +60,14 @@ export function AgentLogStrip() {
           )}
           <span className={cn(
             "relative inline-flex rounded-full h-1.5 w-1.5",
-            isIdle ? "bg-zinc-700" : "bg-amber-500/70"
+            isIdle ? "bg-zinc-300 dark:bg-zinc-700" : "bg-amber-600/80 dark:bg-amber-500/70"
           )} />
         </span>
 
         {/* Timestamp */}
         <span className={cn(
           "font-mono text-[10px] shrink-0 tabular-nums",
-          isIdle ? "text-zinc-700" : "text-amber-600/60"
+          isIdle ? "text-zinc-500 dark:text-zinc-700" : "text-amber-700 dark:text-amber-600/60"
         )}>
           {latest ? formatElapsed(latest.elapsedMs) : "00:00"}
         </span>
@@ -75,7 +75,7 @@ export function AgentLogStrip() {
         {/* Message */}
         <span className={cn(
           "font-mono text-[11px] truncate flex-1 text-left leading-none",
-          isIdle ? "text-zinc-700" : "text-amber-400/75"
+          isIdle ? "text-zinc-500 dark:text-zinc-700" : "text-amber-800 dark:text-amber-400/75"
         )}>
           {isIdle ? "no active session" : (latest?.message ?? "agent log")}
         </span>
@@ -90,7 +90,7 @@ export function AgentLogStrip() {
 
       {/* Expanded list — oldest at top, newest at bottom */}
       {expanded && !isIdle && (
-        <div ref={scrollRef} className="max-h-48 overflow-y-auto scrollbar-thin border-t border-[#1F1F22] bg-black/20">
+        <div ref={scrollRef} className="max-h-48 overflow-y-auto scrollbar-thin border-t border-border bg-black/[0.03] dark:bg-black/20">
           {displayed.map((entry, i) => {
             // Oldest entries are dimmer, newest (bottom) are brightest
             const opacity = Math.max(0.45, 0.45 + (i / displayed.length) * 0.55);
@@ -100,10 +100,10 @@ export function AgentLogStrip() {
                 className="flex items-start gap-2 px-3 py-1.5 border-b border-white/[0.025] last:border-0"
                 style={{ opacity }}
               >
-                <span className="font-mono text-[10px] text-amber-600/50 shrink-0 tabular-nums mt-px">
+                <span className="font-mono text-[10px] text-amber-700 dark:text-amber-600/50 shrink-0 tabular-nums mt-px">
                   {formatElapsed(entry.elapsedMs)}
                 </span>
-                <span className="font-mono text-[11px] text-amber-400/70 leading-tight break-words min-w-0">
+                <span className="font-mono text-[11px] text-amber-800 dark:text-amber-400/70 leading-tight break-words min-w-0">
                   {entry.message}
                 </span>
               </div>

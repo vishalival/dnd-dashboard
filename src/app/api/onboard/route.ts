@@ -586,7 +586,7 @@ export async function POST(request: NextRequest) {
         send("processing", `Received ${fileCount} document${fileCount !== 1 ? "s" : ""} to analyze`);
 
         // Step 2: Analyzing your stories
-        send("analyzing", "ArcMind is reading through your campaign lore...");
+        send("analyzing", "DarcMind is reading through your campaign lore...");
 
         const extractedData = await extractCampaignData(documentText, dmName);
 

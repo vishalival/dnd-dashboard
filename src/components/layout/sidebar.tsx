@@ -142,21 +142,21 @@ export function Sidebar({
 		>
 			{/* Header / Logo */}
 			<div className="flex items-center h-20 px-4 mb-4 shrink-0">
-				<a href="https://arcmind-dnd.vercel.app/dashboard">
-					<Image src={theme === "dark" ? "/logo.svg" : "/arcmind-black.svg"} alt="Logo" width={140} height={33} priority />
+				<a href="/dashboard">
+					<Image src={theme === "dark" ? "/darcmind_white.svg" : "/darcmind_black.svg"} alt="DarcMind" width={140} height={33} priority />
 				</a>
 
 				<div className="ml-auto flex items-center gap-1 shrink-0">
 					<button
 						onClick={() => setTheme(theme === "dark" ? "light" : "dark")}
-						className="flex items-center justify-center w-7 h-7 rounded-md text-zinc-500 hover:text-zinc-300 hover:bg-black/[0.06] dark:hover:bg-white/[0.06] transition-all"
+						className="flex items-center justify-center w-7 h-7 rounded-md text-zinc-500 hover:text-foreground hover:bg-black/[0.06] dark:hover:bg-white/[0.06] transition-all"
 						title={theme === "dark" ? "Switch to light mode" : "Switch to dark mode"}
 					>
 						{theme === "dark" ? <Sun className="h-3.5 w-3.5" /> : <Moon className="h-3.5 w-3.5" />}
 					</button>
 					<button
 						onClick={toggleSidebar}
-						className="flex items-center justify-center w-7 h-7 rounded-md text-zinc-500 hover:text-zinc-300 hover:bg-black/[0.06] dark:hover:bg-white/[0.06] transition-all"
+						className="flex items-center justify-center w-7 h-7 rounded-md text-zinc-500 hover:text-foreground hover:bg-black/[0.06] dark:hover:bg-white/[0.06] transition-all"
 						title={sidebarOpen ? "Collapse sidebar" : "Expand sidebar"}
 					>
 						{sidebarOpen ? (

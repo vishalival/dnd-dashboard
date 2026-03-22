@@ -358,7 +358,7 @@ export function NPCsClient({ campaign }: { campaign: CampaignData }) {
         return false;
       return true;
     });
-  }, [campaign.npcs, search, statusFilter, factionFilter]);
+  }, [npcs, search, statusFilter, factionFilter]);
 
   return (
     <div>

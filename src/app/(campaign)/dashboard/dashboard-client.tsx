@@ -1,6 +1,6 @@
 "use client";
 
-import React from "react";
+import React, { useState } from "react";
 import Link from "next/link";
 import { motion } from "framer-motion";
 import {
@@ -21,12 +21,13 @@ import {
   Bell,
   MoreVertical,
   TrendingDown,
-  TrendingUp,
+  Pencil,
 } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
+import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { PageHeader } from "@/components/shared/page-header";
 import { StatusBadge } from "@/components/shared/status-badge";
 import { Progress } from "@/components/ui/progress";
@@ -83,7 +84,7 @@ export function DashboardClient({ campaign }: { campaign: CampaignData }) {
       <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 mb-10 bg-amber-50/60 dark:bg-zinc-950/20 p-6 rounded-2xl border border-amber-200/60 dark:border-white/5">
         <div>
           <h1 className="text-2xl font-bold tracking-tight text-foreground mb-1.5 flex items-center gap-2">
-            Hello, {campaign.dmName ? `Dungeon Master ${campaign.dmName}` : "Dungeon Master"}!
+            Hello, {(campaign as any).dmName ? `Dungeon Master ${(campaign as any).dmName}` : "Dungeon Master"}!
             <span className="text-xl">👋</span>
           </h1>
           <div className="mt-2 p-3 bg-amber-500/10 border border-amber-500/20 rounded-lg max-w-2xl">
@@ -160,11 +161,7 @@ export function DashboardClient({ campaign }: { campaign: CampaignData }) {
           </Dialog>
           
           {/* User Avatar */}
-          <div className="h-9 w-9 rounded-full bg-gradient-to-br from-amber-500 to-amber-700 flex items-center justify-center border border-white/10 shrink-0 cursor-pointer shadow-lg shadow-amber-900/20">
-            <span className="text-xs font-bold text-white shadow-sm">
-              {(campaign.dmName || "DM").split(" ").map(w => w[0]).join("").toUpperCase().slice(0, 2)}
-            </span>
-          </div>
+          <ProfileAvatar campaign={campaign} />
         </div>
       </div>
 
@@ -190,10 +187,10 @@ export function DashboardClient({ campaign }: { campaign: CampaignData }) {
                       </div>
                       <div className="flex items-center gap-2">
                         <StatusBadge status={upcomingSession.status} />
-                        {upcomingSession.aiBadge && (
+                        {(upcomingSession as any).aiBadge && (
                           <Badge variant="outline" className="text-[10px] px-2 py-0 text-amber-400 border-amber-400/30">
                             <Sparkles className="h-3 w-3 mr-1" />
-                            {upcomingSession.aiBadge}
+                            {(upcomingSession as any).aiBadge}
                           </Badge>
                         )}
                       </div>
@@ -215,9 +212,9 @@ export function DashboardClient({ campaign }: { campaign: CampaignData }) {
                         )}
                       </div>
                       
-                      {((upcomingSession.summary && upcomingSession.summary !== "Session summary unavailable.") || upcomingSession.aiSummary) && (
+                      {((upcomingSession.summary && upcomingSession.summary !== "Session summary unavailable.") || (upcomingSession as any).aiSummary) && (
                         <p className="text-sm text-foreground/80 dark:text-zinc-300 line-clamp-3 leading-relaxed">
-                          {upcomingSession.summary || upcomingSession.aiSummary}
+                          {upcomingSession.summary || (upcomingSession as any).aiSummary}
                         </p>
                       )}
 
@@ -242,6 +239,21 @@ export function DashboardClient({ campaign }: { campaign: CampaignData }) {
                       </div>
                     </div>
                   </CardContent>
+                </Card>
+              </Link>
+            </motion.div>
+          )}
+          {!upcomingSession && (
+            <motion.div variants={item}>
+              <Link href={`/sessions`} className="block h-full">
+                <Card className="h-full min-h-[220px] flex flex-col items-center justify-center text-center p-6 border-dashed border-2 hover:border-gold/30 hover:bg-white/[0.02] dark:hover:bg-white/[0.01] transition-all cursor-pointer">
+                  <div className="w-12 h-12 rounded-full bg-purple-500/10 flex items-center justify-center mb-4">
+                    <CalendarClock className="h-6 w-6 text-purple-500" />
+                  </div>
+                  <h3 className="text-lg font-semibold text-foreground dark:text-zinc-200 mb-2">No Upcoming Sessions</h3>
+                  <p className="text-sm text-muted-foreground max-w-[250px]">
+                    You don&apos;t have any upcoming sessions planned. Click to visit the session planner.
+                  </p>
                 </Card>
               </Link>
             </motion.div>
@@ -468,5 +480,81 @@ export function DashboardClient({ campaign }: { campaign: CampaignData }) {
         </div>
       </motion.div>
     </div>
+  );
+}
+
+function ProfileAvatar({ campaign }: { campaign: any }) {
+  const [isEditing, setIsEditing] = useState(false);
+  const [name, setName] = useState(campaign.dmName || "DM");
+  const [saving, setSaving] = useState(false);
+  const initials = (name || "DM").split(" ").map((w: string) => w[0]).join("").toUpperCase().slice(0, 2);
+
+  const handleSave = async () => {
+    setSaving(true);
+    try {
+      await fetch("/api/onboard", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ dmName: name, campaignId: campaign.id }),
+      });
+      setIsEditing(false);
+      window.location.reload();
+    } catch {
+      // ignore
+    } finally {
+      setSaving(false);
+    }
+  };
+
+  return (
+    <Popover>
+      <PopoverTrigger asChild>
+        <button className="h-9 w-9 rounded-full bg-gradient-to-br from-amber-500 to-amber-700 flex items-center justify-center border border-white/10 shrink-0 cursor-pointer shadow-lg shadow-amber-900/20 hover:scale-105 transition-transform">
+          <span className="text-xs font-bold text-white">{initials}</span>
+        </button>
+      </PopoverTrigger>
+      <PopoverContent align="end" className="w-64 p-0">
+        <div className="p-4 border-b border-border">
+          <div className="flex items-center gap-3">
+            <div className="h-10 w-10 rounded-full bg-gradient-to-br from-amber-500 to-amber-700 flex items-center justify-center shrink-0">
+              <span className="text-sm font-bold text-white">{initials}</span>
+            </div>
+            <div className="min-w-0">
+              <p className="text-sm font-semibold text-foreground truncate">{name}</p>
+              <p className="text-xs text-muted-foreground">Dungeon Master</p>
+            </div>
+          </div>
+        </div>
+        <div className="p-3 space-y-2">
+          {isEditing ? (
+            <>
+              <label className="text-xs text-muted-foreground font-medium">Display Name</label>
+              <input
+                value={name}
+                onChange={(e) => setName(e.target.value)}
+                className="w-full text-sm bg-accent/50 border border-border rounded-lg px-3 py-1.5 text-foreground focus:outline-none focus:ring-1 focus:ring-amber-500/50"
+                autoFocus
+              />
+              <div className="flex gap-2 pt-1">
+                <Button size="sm" className="flex-1 h-7 text-xs" onClick={handleSave} disabled={saving}>
+                  {saving ? "Saving..." : "Save"}
+                </Button>
+                <Button size="sm" variant="outline" className="flex-1 h-7 text-xs" onClick={() => { setIsEditing(false); setName(campaign.dmName || "DM"); }}>
+                  Cancel
+                </Button>
+              </div>
+            </>
+          ) : (
+            <button
+              onClick={() => setIsEditing(true)}
+              className="w-full flex items-center gap-2 px-3 py-2 rounded-lg text-sm text-foreground hover:bg-accent transition-colors"
+            >
+              <Pencil className="h-3.5 w-3.5 text-muted-foreground" />
+              Edit Profile
+            </button>
+          )}
+        </div>
+      </PopoverContent>
+    </Popover>
   );
 }

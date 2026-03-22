@@ -146,7 +146,7 @@ export function OnboardClient() {
         throw new Error("No readable documents found in zip. Include .docx, .txt, or .md files.");
       }
 
-      setDetail(`Found ${fileCount} document${fileCount !== 1 ? "s" : ""} — sending to ArcMind...`);
+      setDetail(`Found ${fileCount} document${fileCount !== 1 ? "s" : ""} — sending to DarcMind...`);
 
       abortRef.current = new AbortController();
 
@@ -162,7 +162,7 @@ export function OnboardClient() {
       });
 
       if (!response.ok || !response.body) {
-        throw new Error("Failed to connect to ArcMind");
+        throw new Error("Failed to connect to DarcMind");
       }
 
       const reader = response.body.getReader();
@@ -217,7 +217,7 @@ export function OnboardClient() {
   return (
     <div className="min-h-screen bg-[#09090B] flex items-center justify-center p-4">
       <div className="w-full max-w-2xl">
-        {/* ArcMind Header */}
+        {/* DarcMind Header */}
         <motion.div
           initial={{ opacity: 0, y: -20 }}
           animate={{ opacity: 1, y: 0 }}
@@ -229,10 +229,10 @@ export function OnboardClient() {
             </div>
           </div>
           <h1 className="text-3xl font-bold text-white mb-3 tracking-tight">
-            Welcome to <span className="bg-gradient-to-r from-violet-400 to-indigo-400 bg-clip-text text-transparent">ArcMind</span>
+            Welcome to <span className="bg-gradient-to-r from-violet-400 to-indigo-400 bg-clip-text text-transparent">DarcMind</span>
           </h1>
           <p className="text-zinc-400 text-sm max-w-md mx-auto leading-relaxed">
-            Upload a zip file of all your campaign info and ArcMind will build
+            Upload a zip file of all your campaign info and DarcMind will build
             your personalized DM dashboard automatically.
           </p>
         </motion.div>
@@ -359,7 +359,7 @@ export function OnboardClient() {
                       : "bg-gradient-to-r from-violet-500 to-indigo-600 text-white hover:from-violet-400 hover:to-indigo-500 shadow-lg shadow-indigo-500/20"
                   }`}
                 >
-                  Let ArcMind Build My Dashboard
+                  Let DarcMind Build My Dashboard
                 </button>
 
                 <p className="text-[11px] text-zinc-600 text-center mt-4 leading-relaxed">
@@ -517,7 +517,7 @@ export function OnboardClient() {
                 {/* Processing indicator */}
                 {isProcessing && (
                   <p className="text-[11px] text-zinc-600 text-center mt-6">
-                    ArcMind is working its magic — this may take a minute or two
+                    DarcMind is working its magic — this may take a minute or two
                   </p>
                 )}
               </motion.div>

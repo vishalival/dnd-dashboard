@@ -78,10 +78,10 @@ type EventType = "combat" | "revelation" | "death" | "discovery";
 interface KeyEvent { type: EventType; description: string; }
 
 const eventConfig: Record<EventType, { label: string; icon: React.ReactNode; className: string }> = {
-  combat: { label: "Combat", icon: <Swords className="h-3 w-3" />, className: "border-crimson/40 text-crimson-light bg-crimson/10" },
-  revelation: { label: "Revelation", icon: <Eye className="h-3 w-3" />, className: "border-arcane/40 text-arcane-light bg-arcane/10" },
-  death: { label: "Death", icon: <Skull className="h-3 w-3" />, className: "border-zinc-500/40 text-zinc-300 bg-zinc-700/30" },
-  discovery: { label: "Discovery", icon: <Zap className="h-3 w-3" />, className: "border-gold/40 text-gold bg-gold/10" },
+  combat: { label: "Combat", icon: <Swords className="h-3 w-3" />, className: "border-crimson/40 text-crimson-600 dark:text-crimson-light bg-crimson/10" },
+  revelation: { label: "Revelation", icon: <Eye className="h-3 w-3" />, className: "border-arcane/40 text-arcane-600 dark:text-arcane-light bg-arcane/10" },
+  death: { label: "Death", icon: <Skull className="h-3 w-3" />, className: "border-zinc-500/40 text-zinc-700 dark:text-zinc-300 bg-zinc-500/10 dark:bg-zinc-700/30" },
+  discovery: { label: "Discovery", icon: <Zap className="h-3 w-3" />, className: "border-gold/40 text-gold-700 dark:text-gold bg-gold/10" },
 };
 
 // ─── AgentLogPanel ────────────────────────────────────────────────────────────
@@ -89,20 +89,20 @@ const eventConfig: Record<EventType, { label: string; icon: React.ReactNode; cla
 function AgentLogPanel({ entries }: { entries: AgentLogEntry[] }) {
   if (entries.length === 0) return null;
   return (
-    <div className="rounded-lg border border-white/[0.06] bg-black/20 overflow-hidden">
-      <div className="flex items-center gap-2 px-3 py-2 border-b border-white/[0.05]">
-        <Activity className="h-3 w-3 text-gold/50" />
-        <span className="text-[10px] font-mono text-zinc-600 uppercase tracking-wider">Agent Log</span>
+    <div className="rounded-lg border border-border dark:border-white/[0.06] bg-zinc-100 dark:bg-black/20 overflow-hidden">
+      <div className="flex items-center gap-2 px-3 py-2 border-b border-border dark:border-white/[0.05]">
+        <Activity className="h-3 w-3 text-gold-700 dark:text-gold/50" />
+        <span className="text-[10px] font-mono text-zinc-500 dark:text-zinc-600 uppercase tracking-wider">Agent Log</span>
       </div>
       <div className="max-h-32 overflow-y-auto">
         {[...entries].reverse().slice(0, 8).map((e, i) => (
-          <div key={i} className="flex items-start gap-2 px-3 py-1.5 border-b border-white/[0.03] last:border-0">
+          <div key={i} className="flex items-start gap-2 px-3 py-1.5 border-b border-border dark:border-white/[0.03] last:border-0">
             <span className="text-xs shrink-0">🕯️</span>
             <div className="min-w-0">
-              <p className="text-[11px] text-zinc-400 leading-tight">
-                <span className="text-gold/70 font-medium">Chronicler</span> — {e.message}
+              <p className="text-[11px] text-zinc-600 dark:text-zinc-400 leading-tight">
+                <span className="text-gold-700 dark:text-gold/70 font-medium">Chronicler</span> — {e.message}
               </p>
-              <p className="text-[10px] text-zinc-600 mt-0.5">
+              <p className="text-[10px] text-zinc-400 dark:text-zinc-600 mt-0.5">
                 {e.timestamp.toLocaleTimeString("en-US", { hour: "2-digit", minute: "2-digit", second: "2-digit" })}
               </p>
             </div>
@@ -547,7 +547,7 @@ function LiveSessionPanel({ session, characters, onSessionEnded }: {
     };
     document.addEventListener("visibilitychange", onVisibilityChange);
     return () => document.removeEventListener("visibilitychange", onVisibilityChange);
-  }, [session.id, activeSessionId, phase]);
+  }, [session.id, activeSessionId, phase, keywords, isRecording, startRecording]);
 
   const handlePause = () => {
     pauseRecording();
