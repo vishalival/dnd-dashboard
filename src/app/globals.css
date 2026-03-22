@@ -48,24 +48,24 @@ h1, h2, h3, h4, h5, h6 {
 
 
   .dark {
-    --background: 240 6% 6%;
+    --background: 355 25% 6%; /* Deep dark reddish black */
     --foreground: 0 0% 95%;
-    --card: 240 5% 8%;
+    --card: 355 20% 8%;
     --card-foreground: 0 0% 95%;
-    --popover: 240 5% 8%;
+    --popover: 355 20% 8%;
     --popover-foreground: 0 0% 95%;
-    --primary: 43 55% 54%;
+    --primary: 43 55% 54%; /* Keep gold as accent */
     --primary-foreground: 0 0% 5%;
-    --secondary: 240 4% 14%;
+    --secondary: 355 15% 14%;
     --secondary-foreground: 0 0% 95%;
-    --muted: 240 4% 14%;
-    --muted-foreground: 240 5% 55%;
-    --accent: 240 4% 14%;
+    --muted: 355 15% 14%;
+    --muted-foreground: 355 10% 60%;
+    --accent: 355 15% 14%;
     --accent-foreground: 0 0% 95%;
     --destructive: 0 63% 31%;
     --destructive-foreground: 0 0% 95%;
-    --border: 240 4% 16%;
-    --input: 240 4% 16%;
+    --border: 355 15% 16%;
+    --input: 355 15% 16%;
     --ring: 43 55% 54%;
     --radius: 0.75rem;
   }
@@ -240,24 +240,27 @@ h1, h2, h3, h4, h5, h6 {
   pointer-events: none;
 }
 
-/* Background pattern */
+/* Background pattern - dark red gradient with grain */
 .dark body {
+  background-color: hsl(355, 25%, 6%);
   background-image:
     radial-gradient(
-      ellipse at 20% 50%,
-      rgba(74, 111, 165, 0.04) 0%,
+      ellipse at top right,
+      rgba(139, 26, 26, 0.15) 0%,
       transparent 50%
     ),
     radial-gradient(
-      ellipse at 80% 20%,
-      rgba(201, 168, 76, 0.03) 0%,
+      ellipse at bottom left,
+      rgba(201, 168, 76, 0.05) 0%,
       transparent 50%
     ),
     radial-gradient(
-      ellipse at 50% 80%,
-      rgba(139, 26, 26, 0.03) 0%,
-      transparent 50%
-    );
+      ellipse at 50% 50%,
+      rgba(100, 20, 20, 0.1) 0%,
+      transparent 60%
+    ),
+    url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noiseFilter'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noiseFilter)' opacity='0.08'/%3E%3C/svg%3E");
+  background-attachment: fixed;
 }
 
 /* Driver.js dark theme overrides */
