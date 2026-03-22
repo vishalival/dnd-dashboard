@@ -33,11 +33,11 @@ export function PageHeader({
           </div>
         )}
         <div>
-          <h1 className="text-2xl font-heading font-semibold tracking-tight text-foreground">
+          <h1 className="text-2xl font-heading font-bold tracking-wide text-foreground">
             {title}
           </h1>
           {subtitle && (
-            <p className="text-sm text-muted-foreground mt-1">{subtitle}</p>
+            <p className="text-xs text-muted-foreground mt-1 uppercase tracking-widest">{subtitle}</p>
           )}
         </div>
       </div>

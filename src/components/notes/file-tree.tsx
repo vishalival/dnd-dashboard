@@ -65,13 +65,13 @@ export function FileTree({
                   toggleFolder(folder.id);
                 }
               }}
-              className="flex items-center gap-2 w-full px-3 py-1.5 text-sm text-zinc-300 hover:bg-white/[0.04] rounded-md transition-colors group cursor-pointer"
+              className="flex items-center gap-2 w-full px-3 py-1.5 text-sm text-foreground/80 dark:text-zinc-300 hover:bg-black/[0.06] dark:hover:bg-white/[0.04] rounded-md transition-colors group cursor-pointer"
             >
               <motion.div
                 animate={{ rotate: isExpanded ? 90 : 0 }}
                 transition={{ duration: 0.15 }}
               >
-                <ChevronRight className="h-3.5 w-3.5 text-zinc-500" />
+                <ChevronRight className="h-3.5 w-3.5 text-foreground/40 dark:text-zinc-500" />
               </motion.div>
               {isExpanded ? (
                 <FolderOpen className="h-4 w-4 text-orange-400/80" />
@@ -87,14 +87,14 @@ export function FileTree({
                     e.stopPropagation();
                     onAddDoc(folder.id);
                   }}
-                  className="ml-auto h-5 w-5 p-0 opacity-0 group-hover:opacity-100 text-zinc-500 hover:text-zinc-300"
+                  className="ml-auto h-5 w-5 p-0 opacity-0 group-hover:opacity-100 text-foreground/40 dark:text-zinc-500 hover:text-foreground dark:hover:text-zinc-300"
                 >
                   <Plus className="h-3.5 w-3.5" />
                 </Button>
               )}
             </div>
             {isExpanded && (
-              <div className="ml-3 border-l border-white/[0.06] pl-1">
+              <div className="ml-3 border-l border-black/[0.08] dark:border-white/[0.06] pl-1">
                 {folder.documents.map((doc) => (
                   <DocItem
                     key={doc.id}
@@ -116,7 +116,7 @@ export function FileTree({
 
       {standaloneDocs.length > 0 && (
         <>
-          <div className="h-px bg-white/[0.06] mx-3 my-2" />
+          <div className="h-px bg-black/[0.08] dark:bg-white/[0.06] mx-3 my-2" />
           {standaloneDocs.map((doc) => (
             <DocItem
               key={doc.id}
@@ -133,10 +133,10 @@ export function FileTree({
         </>
       )}
 
-      <div className="h-px bg-white/[0.06] mx-3 my-2" />
+      <div className="h-px bg-black/[0.08] dark:bg-white/[0.06] mx-3 my-2" />
       <button
         onClick={onAddRootDoc}
-        className="flex items-center gap-2 w-full px-3 py-1.5 text-sm text-zinc-500 hover:text-zinc-300 hover:bg-white/[0.04] rounded-md transition-colors"
+        className="flex items-center gap-2 w-full px-3 py-1.5 text-sm text-foreground/50 dark:text-zinc-500 hover:text-foreground dark:hover:text-zinc-300 hover:bg-black/[0.06] dark:hover:bg-white/[0.04] rounded-md transition-colors"
       >
         <Plus className="h-3.5 w-3.5" />
         <span>New Document</span>
@@ -162,11 +162,11 @@ function DocItem({
       className={cn(
         "flex items-center gap-2 w-full px-3 py-1.5 text-sm rounded-md transition-colors group",
         isSelected
-          ? "bg-white/[0.08] text-white"
-          : "text-zinc-400 hover:bg-white/[0.04] hover:text-zinc-200"
+          ? "bg-black/[0.08] dark:bg-white/[0.08] text-foreground dark:text-white font-medium"
+          : "text-foreground/60 dark:text-zinc-400 hover:bg-black/[0.06] dark:hover:bg-white/[0.04] hover:text-foreground dark:hover:text-zinc-200"
       )}
     >
-      <FileText className="h-3.5 w-3.5 shrink-0 text-zinc-500" />
+      <FileText className="h-3.5 w-3.5 shrink-0 text-foreground/40 dark:text-zinc-500" />
       <span className="truncate">{doc.title}</span>
       {onDelete && (
         <Button

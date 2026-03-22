@@ -1,12 +1,13 @@
 import type { Metadata } from "next";
-import { Inter } from "next/font/google";
+import { Newsreader } from "next/font/google";
 import "./globals.css";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { ThemeProvider } from "@/components/theme-provider";
 
-const inter = Inter({
+const newsreader = Newsreader({
   subsets: ["latin"],
   variable: "--font-sans",
+  style: ["normal", "italic"],
 });
 
 export const metadata: Metadata = {
@@ -37,13 +38,12 @@ export default function RootLayout({
   return (
     <html lang="en" suppressHydrationWarning>
       <body
-        className={`${inter.variable} font-sans antialiased min-h-screen bg-background text-foreground`}
+        className={`${newsreader.variable} font-sans antialiased min-h-screen bg-background text-foreground`}
       >
         <ThemeProvider
           attribute="class"
           defaultTheme="dark"
           enableSystem={false}
-          forcedTheme="dark"
         >
           <TooltipProvider>{children}</TooltipProvider>
         </ThemeProvider>

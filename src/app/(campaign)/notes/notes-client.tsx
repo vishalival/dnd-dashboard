@@ -147,7 +147,7 @@ export function NotesClient({ campaign }: { campaign: CampaignData }) {
 
       <div className="flex flex-1 min-h-0 mt-6">
         {/* File Tree Sidebar */}
-        <div className="w-64 shrink-0 border-r border-white/[0.06] overflow-y-auto scrollbar-thin">
+        <div className="w-64 shrink-0 border-r border-border overflow-y-auto scrollbar-thin">
           <FileTree
             folders={folders}
             standaloneDocs={standaloneDocs}
@@ -163,8 +163,8 @@ export function NotesClient({ campaign }: { campaign: CampaignData }) {
         <div className="flex-1 min-w-0 overflow-hidden">
           {selectedDoc ? (
             <div className="h-full flex flex-col">
-              <div className="px-6 py-3 border-b border-white/[0.06] flex items-center justify-between">
-                <h2 className="text-lg font-heading font-semibold text-zinc-100">
+              <div className="px-6 py-3 border-b border-border flex items-center justify-between">
+                <h2 className="text-lg font-heading font-semibold text-foreground">
                   {selectedDoc.title}
                 </h2>
                 {selectedDoc.slug?.startsWith("session-outline-") && (
@@ -190,9 +190,9 @@ export function NotesClient({ campaign }: { campaign: CampaignData }) {
               </div>
             </div>
           ) : (
-            <div className="flex items-center justify-center h-full text-zinc-500">
+            <div className="flex items-center justify-center h-full text-muted-foreground">
               <div className="text-center">
-                <NotebookPen className="h-12 w-12 mx-auto mb-3 text-zinc-600" />
+                <NotebookPen className="h-12 w-12 mx-auto mb-3 text-muted-foreground/50" />
                 <p className="text-sm">Select a document to start writing</p>
               </div>
             </div>

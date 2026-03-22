@@ -90,9 +90,9 @@ const config: Config = {
         },
       },
       fontFamily: {
-        sans: ["var(--font-sans)", "sans-serif"],
-        heading: ["var(--font-sans)", "sans-serif"],
-        body: ["var(--font-sans)", "sans-serif"],
+        sans: ["var(--font-sans)", "Georgia", "serif"],
+        heading: ["var(--font-sans)", "Georgia", "serif"],
+        body: ["var(--font-sans)", "Georgia", "serif"],
       },
       backgroundImage: {
         "gradient-radial": "radial-gradient(var(--tw-gradient-stops))",

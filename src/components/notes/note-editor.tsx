@@ -210,7 +210,7 @@ export function NoteEditor({
     editorProps: {
       attributes: {
         class:
-          "prose prose-invert prose-sm max-w-none focus:outline-none min-h-[calc(100vh-12rem)] px-6 py-4",
+          "prose dark:prose-invert prose-sm max-w-none focus:outline-none min-h-[calc(100vh-12rem)] px-6 py-4",
       },
     },
     onUpdate: ({ editor }) => {
@@ -283,7 +283,7 @@ export function NoteEditor({
 
   if (!editor) {
     return (
-      <div className="flex items-center justify-center h-full text-zinc-500 text-sm">
+      <div className="flex items-center justify-center h-full text-muted-foreground text-sm">
         Loading editor...
       </div>
     );
@@ -292,7 +292,7 @@ export function NoteEditor({
   return (
     <div className="flex flex-col h-full">
       {/* Toolbar */}
-      <div className="flex items-center border-b border-white/[0.06]">
+      <div className="flex items-center border-b border-border">
         <div className="flex items-center gap-0.5 px-4 py-2 overflow-x-auto scrollbar-thin">
           <ToolbarButton
             onClick={() => editor.chain().focus().toggleBold().run()}
@@ -304,7 +304,7 @@ export function NoteEditor({
             isActive={editor.isActive("italic")}
             icon={Italic}
           />
-          <div className="w-px h-5 bg-white/[0.08] mx-1 shrink-0" />
+          <div className="w-px h-5 bg-border mx-1 shrink-0" />
           <ToolbarButton
             onClick={() =>
               editor.chain().focus().toggleHeading({ level: 1 }).run()
@@ -326,7 +326,7 @@ export function NoteEditor({
             isActive={editor.isActive("heading", { level: 3 })}
             icon={Heading3}
           />
-          <div className="w-px h-5 bg-white/[0.08] mx-1 shrink-0" />
+          <div className="w-px h-5 bg-border mx-1 shrink-0" />
           <ToolbarButton
             onClick={() => editor.chain().focus().toggleBulletList().run()}
             isActive={editor.isActive("bulletList")}
@@ -347,7 +347,7 @@ export function NoteEditor({
             isActive={editor.isActive("codeBlock")}
             icon={Code2}
           />
-          <div className="w-px h-5 bg-white/[0.08] mx-1 shrink-0" />
+          <div className="w-px h-5 bg-border mx-1 shrink-0" />
           <ToolbarButton
             onClick={() => editor.chain().focus().undo().run()}
             isActive={false}
@@ -362,7 +362,7 @@ export function NoteEditor({
           />
         </div>
 
-        <div className="shrink-0 ml-auto pr-4 text-xs text-zinc-500">
+        <div className="shrink-0 ml-auto pr-4 text-xs text-muted-foreground">
           {saveStatus === "saving" && "Saving..."}
           {saveStatus === "saved" && "Saved"}
           {saveStatus === "unsaved" && "Unsaved"}
@@ -397,8 +397,8 @@ function ToolbarButton({
       className={cn(
         "h-7 w-7 p-0 shrink-0",
         isActive
-          ? "bg-white/[0.1] text-white"
-          : "text-zinc-400 hover:text-zinc-200"
+          ? "bg-foreground/10 dark:bg-white/[0.1] text-foreground dark:text-white"
+          : "text-foreground/50 dark:text-zinc-400 hover:text-foreground dark:hover:text-zinc-200"
       )}
     >
       <Icon className="h-4 w-4" />
