@@ -158,6 +158,22 @@ export async function processChunk(
 
 // ─── End-of-session synthesis ─────────────────────────────────────────────────
 
+export interface PlanItemStatus {
+  description: string;
+  status: "completed" | "skipped" | "partially";
+  note: string;
+}
+
+export interface NewNpc {
+  name: string;
+  race?: string;
+  role?: string;
+  disposition: string;
+  status: string;
+  faction?: string;
+  description: string;
+}
+
 export interface SessionSynthesis {
   session_summary: string;
   previously_on: string;
@@ -168,11 +184,15 @@ export interface SessionSynthesis {
     new_status: string;
     reason: string;
   }>;
+  new_npcs: NewNpc[];
   resolved_storylines: string[];
   revealed_secrets: string[];
   unresolved_threads: string[];
   items_gained: string[];
   session_title: string;
+  plan_beats_status: PlanItemStatus[];
+  plan_encounters_status: PlanItemStatus[];
+  unexpected_events: string[];
 }
 
 const SYNTHESIS_SYSTEM_PROMPT = `You are a D&D campaign chronicler. Read this complete session transcript and return ONLY structured JSON, no prose, no explanation, nothing outside the JSON object.
@@ -186,35 +206,53 @@ const SYNTHESIS_SYSTEM_PROMPT = `You are a D&D campaign chronicler. Read this co
   "npc_status_changes": [
     {"name": "NPC name exactly as spoken", "old_status": "alive | unknown | ally | etc", "new_status": "dead | missing | hostile | ally | unknown", "reason": "why"}
   ],
+  "new_npcs": [
+    {"name": "NPC name", "race": "race if mentioned", "role": "brief role like 'mysterious stranger' or 'healer'", "disposition": "friendly | neutral | hostile | unknown", "status": "alive | dead | missing | unknown", "faction": "faction if mentioned", "description": "one sentence describing who this NPC is and what they did"}
+  ],
   "resolved_storylines": ["exact titles of plot threads or storylines that were fully resolved or concluded this session"],
   "revealed_secrets": ["exact titles or descriptions of secrets, hidden information, or concealed facts that were discovered or revealed to the players this session"],
   "unresolved_threads": ["list of plot threads still open at end of session"],
   "items_gained": ["list of items the party acquired this session"],
-  "session_title": "a short evocative title for this session like a TV episode name"
+  "session_title": "a short evocative title for this session like a TV episode name",
+  "plan_beats_status": [
+    {"description": "the planned act/beat text from the DM's plan", "status": "completed | skipped | partially", "note": "brief explanation of what happened or why it was skipped"}
+  ],
+  "plan_encounters_status": [
+    {"description": "the planned encounter text from the DM's plan", "status": "completed | skipped | partially", "note": "brief explanation of what happened or why it was skipped"}
+  ],
+  "unexpected_events": ["description of something significant that happened but was NOT in the DM's plan — improvised encounters, surprise NPC appearances, unexpected plot twists"]
 }
 
 Rules:
 - previously_on must start with exactly "Previously on..."
 - session_title should be 3-6 words, evocative, like a TV episode name
 - npc_status_changes: only include NPCs whose status genuinely changed. new_status must be one of: dead, missing, hostile, ally, unknown, alive.
+- new_npcs: List NPCs who appeared for the first time this session and are NOT in the known NPC list provided. Include their race, role, disposition, status, and faction if mentioned. Do not include NPCs already in npc_status_changes.
 - key_events_final: IMPORTANT — any NPC death, capture, or major status change MUST appear here as type "death". Any secret revealed must appear as type "revelation". Combat encounters appear as "combat". New discoveries appear as "discovery". Do NOT omit NPC deaths from key_events_final even if they also appear in npc_status_changes.
 - revealed_secrets: include any secret, hidden truth, or concealed fact that was uncovered or stated aloud this session.
+- plan_beats_status: Return one entry for EVERY act/beat listed in the DM's Session Plan. Use "completed" if the beat occurred substantially as planned, "partially" if it started but didn't fully play out, "skipped" if it never happened. The note should briefly explain what actually happened. If no plan was provided, return an empty array.
+- plan_encounters_status: Same as plan_beats_status but for each planned encounter. If no plan was provided, return an empty array.
+- unexpected_events: List significant events, encounters, NPC introductions, or plot developments that happened in the session but were NOT listed in the DM's plan. Do not include minor improvisation or flavor text. If no plan was provided, return an empty array.
 - If the transcript is empty or too short, still return valid JSON with empty arrays and brief strings.
 - Never hallucinate events not in the transcript.`;
 
 export async function synthesizeSession(
   transcript: string,
   sessionNumber: number,
-  planContext?: string
+  planContext?: string,
+  knownNpcNames?: string[]
 ): Promise<SessionSynthesis> {
   const planSection = planContext
     ? `\n\nDM's Session Plan (what was intended):\n${planContext}`
     : "";
-  const userMessage = `Session ${sessionNumber} — complete transcript:\n\n${transcript || "(No transcript recorded)"}${planSection}`;
+  const npcSection = knownNpcNames && knownNpcNames.length > 0
+    ? `\n\nKnown NPCs in this campaign:\n${knownNpcNames.map((n) => `- ${n}`).join("\n")}`
+    : "";
+  const userMessage = `Session ${sessionNumber} — complete transcript:\n\n${transcript || "(No transcript recorded)"}${planSection}${npcSection}`;
 
   const response = await client.messages.create({
     model: MODEL,
-    max_tokens: 2048,
+    max_tokens: 3072,
     system: SYNTHESIS_SYSTEM_PROMPT,
     messages: [{ role: "user", content: userMessage }],
   });
@@ -230,11 +268,15 @@ export async function synthesizeSession(
       previously_on: "Previously on... the adventure continued.",
       key_events_final: [],
       npc_status_changes: [],
+      new_npcs: [],
       resolved_storylines: [],
       revealed_secrets: [],
       unresolved_threads: [],
       items_gained: [],
       session_title: `Session ${sessionNumber}`,
+      plan_beats_status: [],
+      plan_encounters_status: [],
+      unexpected_events: [],
     };
   }
 }

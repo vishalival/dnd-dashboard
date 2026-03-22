@@ -10,14 +10,36 @@ export interface LiveExtractions {
   inventory_changes: Array<{ character: string; item: string; action: "gained" | "lost" }>;
 }
 
+export interface PlanItemStatus {
+  description: string;
+  status: "completed" | "skipped" | "partially";
+  note: string;
+}
+
+export interface NewNpc {
+  name: string;
+  race?: string;
+  role?: string;
+  disposition: string;
+  status: string;
+  faction?: string;
+  description: string;
+}
+
 export interface SessionSynthesis {
   session_summary: string;
   previously_on: string;
   key_events_final: Array<{ type: string; description: string }>;
   npc_status_changes: Array<{ name: string; old_status: string; new_status: string; reason: string }>;
+  new_npcs: NewNpc[];
+  resolved_storylines: string[];
+  revealed_secrets: string[];
   unresolved_threads: string[];
   items_gained: string[];
   session_title: string;
+  plan_beats_status: PlanItemStatus[];
+  plan_encounters_status: PlanItemStatus[];
+  unexpected_events: string[];
 }
 
 export interface AgentLogEntry {

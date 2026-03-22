@@ -71,7 +71,8 @@ export async function POST(req: NextRequest) {
       data: {},
     });
 
-    const synthesis = await synthesizeSession(transcript, session.sessionNumber, planContext);
+    const knownNpcNames = allNpcs.map((n) => n.name);
+    const synthesis = await synthesizeSession(transcript, session.sessionNumber, planContext, knownNpcNames);
 
     await prisma.$transaction(async (tx) => {
       // Update session record
@@ -95,6 +96,28 @@ export async function POST(req: NextRequest) {
         await tx.nPC.update({
           where: { id: match.id },
           data: { status: change.new_status, lastAppearance: session.sessionNumber },
+        });
+      }
+
+      // Create new NPCs discovered during the session
+      for (const newNpc of synthesis.new_npcs) {
+        const alreadyExists = allNpcs.some(
+          (n) => n.name.toLowerCase() === newNpc.name.toLowerCase()
+        );
+        if (alreadyExists) continue;
+        await tx.nPC.create({
+          data: {
+            name: newNpc.name,
+            race: newNpc.race || null,
+            role: newNpc.role || null,
+            disposition: newNpc.disposition || "neutral",
+            status: newNpc.status || "alive",
+            faction: newNpc.faction || null,
+            dmNotes: newNpc.description || null,
+            firstAppearance: session.sessionNumber,
+            lastAppearance: session.sessionNumber,
+            campaignId: session.campaignId,
+          },
         });
       }
 
@@ -156,8 +179,12 @@ export async function POST(req: NextRequest) {
             sessionTitle: synthesis.session_title,
             keyEventCount: synthesis.key_events_final.length,
             npcChangeCount: synthesis.npc_status_changes.length,
+            newNpcCount: synthesis.new_npcs.length,
             storylinesResolved: synthesis.resolved_storylines.length,
             secretsRevealed: synthesis.revealed_secrets.length,
+            plannedBeatsCompleted: synthesis.plan_beats_status.filter((b) => b.status === "completed").length,
+            plannedBeatsTotal: synthesis.plan_beats_status.length,
+            unexpectedEventCount: synthesis.unexpected_events.length,
           }),
         },
       });
@@ -171,6 +198,15 @@ export async function POST(req: NextRequest) {
         message: change.new_status === "dead"
           ? `marked ${change.name} as dead`
           : `updated ${change.name} status → ${change.new_status}`,
+        data: {},
+      });
+    }
+
+    for (const newNpc of synthesis.new_npcs) {
+      emitAgentEvent(sessionId, {
+        agent: "chronicler",
+        state: "log",
+        message: `new NPC — ${newNpc.name}${newNpc.role ? ` (${newNpc.role})` : ""}`,
         data: {},
       });
     }
@@ -207,6 +243,26 @@ export async function POST(req: NextRequest) {
         agent: "chronicler",
         state: "log",
         message: `party acquired — ${item}`,
+        data: {},
+      });
+    }
+
+    for (const event of synthesis.unexpected_events) {
+      emitAgentEvent(sessionId, {
+        agent: "chronicler",
+        state: "log",
+        message: `off-script — ${event}`,
+        data: {},
+      });
+    }
+
+    const beatsCompleted = synthesis.plan_beats_status.filter((b) => b.status === "completed").length;
+    const beatsTotal = synthesis.plan_beats_status.length;
+    if (beatsTotal > 0) {
+      emitAgentEvent(sessionId, {
+        agent: "chronicler",
+        state: "log",
+        message: `plan coverage — ${beatsCompleted}/${beatsTotal} beats completed`,
         data: {},
       });
     }
