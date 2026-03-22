@@ -19,15 +19,27 @@ export async function GET(req: NextRequest) {
         controller.enqueue(encoder.encode(data));
         if (msg.state === "done" || msg.state === "error") {
           agentEmitter.off(`session:${sessionId}`, send);
+          clearInterval(heartbeat);
           controller.close();
         }
       };
 
       agentEmitter.on(`session:${sessionId}`, send);
 
+      // Send a comment ping every 20s so proxies/browsers don't close the
+      // idle connection between 30s chunk-processing events.
+      const heartbeat = setInterval(() => {
+        try {
+          controller.enqueue(encoder.encode(": ping\n\n"));
+        } catch {
+          clearInterval(heartbeat);
+        }
+      }, 20_000);
+
       // Clean up if the client disconnects before done
       req.signal.addEventListener("abort", () => {
         agentEmitter.off(`session:${sessionId}`, send);
+        clearInterval(heartbeat);
         controller.close();
       });
     },

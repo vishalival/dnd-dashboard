@@ -57,7 +57,7 @@ import { StatusBadge } from "@/components/shared/status-badge";
 import { formatDate, parseJsonField, parseExtractedItems } from "@/lib/utils";
 import { cn } from "@/lib/utils";
 import type { CampaignData, SessionData } from "@/lib/data";
-import { useChroniclerStore, type AgentLogEntry, type LiveExtractions, type SessionSynthesis } from "@/stores/chronicler-store";
+import { useChroniclerStore, emptyExtractions, type AgentLogEntry, type LiveExtractions, type SessionSynthesis } from "@/stores/chronicler-store";
 import { startRecording, stopRecording, pauseRecording, isRecording } from "@/lib/recording-manager";
 import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
 import { TipTapReadonlyViewer } from "@/components/sessions/tiptap-readonly-viewer";
@@ -480,7 +480,7 @@ function LiveSessionPanel({ session, characters, onSessionEnded }: {
   const {
     phase, activeSessionId,
     transcriptBuffer, extractions, agentLog, synthesis, micError,
-    setPhase, setActiveSession, mergeIncomingExtractions, setSynthesis, addAgentLog,
+    setPhase, setActiveSession, setExtractions, mergeIncomingExtractions, setSynthesis, addAgentLog,
   } = useChroniclerStore();
 
   const [showTranscript, setShowTranscript] = useState(false);
@@ -495,7 +495,7 @@ function LiveSessionPanel({ session, characters, onSessionEnded }: {
       const msg = JSON.parse(e.data);
       if (msg.state === "log") {
         addAgentLog(msg.message);
-      } else if (msg.state === "processing" && msg.data && Array.isArray(msg.data.key_events)) {
+      } else if (msg.state === "processing" && msg.data) {
         mergeIncomingExtractions(msg.data as LiveExtractions);
       } else if (msg.state === "done" && msg.data?.session_summary) {
         setSynthesis(msg.data as SessionSynthesis);
@@ -521,6 +521,22 @@ function LiveSessionPanel({ session, characters, onSessionEnded }: {
     }
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
+
+  // Hydrate the extractions store from the DB on mount so existing
+  // accumulated data is visible immediately without waiting for the
+  // next 30s chunk to fire.
+  useEffect(() => {
+    if (session.liveExtractions) {
+      try {
+        setExtractions(JSON.parse(session.liveExtractions) as LiveExtractions);
+      } catch {
+        setExtractions(emptyExtractions());
+      }
+    } else {
+      setExtractions(emptyExtractions());
+    }
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [session.id]);
 
   useEffect(() => {
     const onVisibilityChange = () => {
