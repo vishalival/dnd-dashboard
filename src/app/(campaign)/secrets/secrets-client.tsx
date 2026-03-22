@@ -583,6 +583,7 @@ export function SecretsClient({ campaign }: { campaign: CampaignData }) {
         onValueChange={(val) => {
           setActiveTab(val as "secrets" | "goals");
           setTypeFilter("all");
+          setVisibilityFilter("all");
           setSelectedSecret(null);
         }}
         className="mb-6"
@@ -604,43 +605,44 @@ export function SecretsClient({ campaign }: { campaign: CampaignData }) {
             className="pl-9 bg-card hover:bg-muted/60 dark:bg-white/[0.03] border-border dark:border-white/[0.06]"
           />
         </div>
-        <div className="flex gap-1.5">
-          <Button
-            variant={typeFilter === "all" ? "arcane" : "ghost"}
-            size="sm"
-            onClick={() => setTypeFilter("all")}
-            className="text-xs"
-          >
-            All
-          </Button>
-          {(activeTab === "secrets"
-            ? ["dm_secret", "world_secret", "faction_secret"]
-            : ["party_goal", "player_goal", "npc_goal"]
-          ).map((t) => (
+        {activeTab === "secrets" && (
+          <div className="flex gap-1.5">
             <Button
-              key={t}
-              variant={typeFilter === t ? "arcane" : "ghost"}
+              variant={typeFilter === "all" ? "arcane" : "ghost"}
               size="sm"
-              onClick={() => setTypeFilter(t)}
+              onClick={() => setTypeFilter("all")}
               className="text-xs"
             >
-              {typeLabels[t]}
+              All
             </Button>
-          ))}
-        </div>
-        <div className="flex gap-1.5">
-          {["all", "visible", "partial", "dm_only"].map((v) => (
-            <Button
-              key={v}
-              variant={visibilityFilter === v ? "gold" : "ghost"}
-              size="sm"
-              onClick={() => setVisibilityFilter(v)}
-              className="text-xs capitalize"
-            >
-              {v === "dm_only" ? "DM Only" : v}
-            </Button>
-          ))}
-        </div>
+            {["dm_secret", "world_secret", "faction_secret"].map((t) => (
+              <Button
+                key={t}
+                variant={typeFilter === t ? "arcane" : "ghost"}
+                size="sm"
+                onClick={() => setTypeFilter(t)}
+                className="text-xs"
+              >
+                {typeLabels[t]}
+              </Button>
+            ))}
+          </div>
+        )}
+        {activeTab === "goals" && (
+          <div className="flex gap-1.5">
+            {["all", "visible", "partial", "dm_only"].map((v) => (
+              <Button
+                key={v}
+                variant={visibilityFilter === v ? "gold" : "ghost"}
+                size="sm"
+                onClick={() => setVisibilityFilter(v)}
+                className="text-xs capitalize"
+              >
+                {v === "dm_only" ? "DM Only" : v}
+              </Button>
+            ))}
+          </div>
+        )}
       </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-12 gap-6">

@@ -32,6 +32,7 @@ export async function POST(req: NextRequest) {
           select: {
             id: true,
             npcs: { select: { id: true, name: true, disposition: true, status: true } },
+            storylines: { select: { id: true, title: true, status: true } },
           },
         },
       },
@@ -137,6 +138,23 @@ export async function POST(req: NextRequest) {
           },
         });
         npcChanges.push(`${update.name}: created (new NPC)`);
+      }
+    }
+
+    // Update storylines in DB when resolved
+    for (const thread of extraction.plot_threads) {
+      if (thread.status === "resolved") {
+        const lower = thread.title.toLowerCase();
+        const match = session.campaign.storylines.find(
+          (s) => s.title.toLowerCase().includes(lower) || lower.includes(s.title.toLowerCase())
+        );
+        if (match && match.status !== "resolved") {
+          await prisma.storyline.update({
+            where: { id: match.id },
+            data: { status: "resolved" },
+          });
+          match.status = "resolved"; // Prevent redundant updates if same chunk resolves it twice
+        }
       }
     }
 
