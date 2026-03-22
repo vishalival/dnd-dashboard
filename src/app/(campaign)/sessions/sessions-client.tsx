@@ -89,20 +89,20 @@ const eventConfig: Record<EventType, { label: string; icon: React.ReactNode; cla
 function AgentLogPanel({ entries }: { entries: AgentLogEntry[] }) {
   if (entries.length === 0) return null;
   return (
-    <div className="rounded-lg border border-white/[0.06] bg-black/20 overflow-hidden">
-      <div className="flex items-center gap-2 px-3 py-2 border-b border-white/[0.05]">
-        <Activity className="h-3 w-3 text-gold/50" />
-        <span className="text-[10px] font-mono text-zinc-600 uppercase tracking-wider">Agent Log</span>
+    <div className="rounded-lg border border-border dark:border-white/[0.06] bg-zinc-100 dark:bg-black/20 overflow-hidden">
+      <div className="flex items-center gap-2 px-3 py-2 border-b border-border dark:border-white/[0.05]">
+        <Activity className="h-3 w-3 text-gold-700 dark:text-gold/50" />
+        <span className="text-[10px] font-mono text-zinc-500 dark:text-zinc-600 uppercase tracking-wider">Agent Log</span>
       </div>
       <div className="max-h-32 overflow-y-auto">
         {[...entries].reverse().slice(0, 8).map((e, i) => (
-          <div key={i} className="flex items-start gap-2 px-3 py-1.5 border-b border-white/[0.03] last:border-0">
+          <div key={i} className="flex items-start gap-2 px-3 py-1.5 border-b border-border dark:border-white/[0.03] last:border-0">
             <span className="text-xs shrink-0">🕯️</span>
             <div className="min-w-0">
-              <p className="text-[11px] text-zinc-400 leading-tight">
-                <span className="text-gold/70 font-medium">Chronicler</span> — {e.message}
+              <p className="text-[11px] text-zinc-600 dark:text-zinc-400 leading-tight">
+                <span className="text-gold-700 dark:text-gold/70 font-medium">Chronicler</span> — {e.message}
               </p>
-              <p className="text-[10px] text-zinc-600 mt-0.5">
+              <p className="text-[10px] text-zinc-400 dark:text-zinc-600 mt-0.5">
                 {e.timestamp.toLocaleTimeString("en-US", { hour: "2-digit", minute: "2-digit", second: "2-digit" })}
               </p>
             </div>
