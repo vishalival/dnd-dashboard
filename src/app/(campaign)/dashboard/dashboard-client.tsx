@@ -96,13 +96,13 @@ export function DashboardClient({ campaign }: { campaign: CampaignData }) {
             </p>
             <div className="flex flex-wrap gap-2">
               <Link href="/sessions">
-                <Button variant="outline" size="sm" className="h-7 text-[11px] bg-amber-500/10 hover:bg-amber-500/20 text-amber-300 border-amber-500/30">
+                <Button variant="outline" size="sm" className="h-7 text-[11px] bg-amber-500/10 hover:bg-amber-500/20 text-amber-700 dark:text-amber-300 border-amber-500/30">
                   <CalendarClock className="h-3 w-3 mr-1.5" />
                   Review Session 4 plan
                 </Button>
               </Link>
               <Link href="/npcs">
-                <Button variant="outline" size="sm" className="h-7 text-[11px] bg-emerald-500/10 hover:bg-emerald-500/20 text-emerald-300 border-emerald-500/30">
+                <Button variant="outline" size="sm" className="h-7 text-[11px] bg-emerald-500/10 hover:bg-emerald-500/20 text-emerald-700 dark:text-emerald-300 border-emerald-500/30">
                   <Users className="h-3 w-3 mr-1.5" />
                   Update Garrick&apos;s location
                 </Button>

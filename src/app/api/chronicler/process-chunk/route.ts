@@ -168,14 +168,14 @@ export async function POST(req: NextRequest) {
       },
     });
 
-    // Emit one "processing" event with the FULL merged state so the live
-    // world-state panel always has a complete picture, even if a prior
-    // update was missed.
+    // Emit only the NEW chunk's extraction (not the full merged state).
+    // The client merges incrementally; the full state is hydrated from
+    // session.liveExtractions on panel mount.
     emitAgentEvent(sessionId, {
       agent: "chronicler",
       state: "processing",
       message: "chunk processed",
-      data: merged as unknown as Record<string, unknown>,
+      data: extraction as unknown as Record<string, unknown>,
     });
 
     // Emit individual specific "log" events for every world-state change

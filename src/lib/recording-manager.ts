@@ -5,7 +5,7 @@
 import { useChroniclerStore } from "@/stores/chronicler-store";
 
 const AUDIO_SLICE_MS = 5_000;
-const CHUNK_INTERVAL_MS = 30_000;
+const CHUNK_INTERVAL_MS = 20_000;
 
 let _stream: MediaStream | null = null;
 let _recorder: MediaRecorder | null = null;

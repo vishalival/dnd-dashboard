@@ -95,6 +95,7 @@ interface ChroniclerState {
   setActiveSession: (id: string | null) => void;
   appendTranscript: (text: string) => void;
   addAgentLog: (message: string) => void;
+  setExtractions: (extractions: LiveExtractions) => void;
   mergeIncomingExtractions: (incoming: LiveExtractions) => void;
   setSynthesis: (s: SessionSynthesis) => void;
   setMicError: (err: string | null) => void;
@@ -127,6 +128,7 @@ export const useChroniclerStore = create<ChroniclerState>((set, get) => ({
         },
       ],
     })),
+  setExtractions: (extractions) => set({ extractions }),
   mergeIncomingExtractions: (incoming) =>
     set((s) => ({ extractions: mergeExtractions(s.extractions, incoming) })),
   setSynthesis: (synthesis) => set({ synthesis }),
