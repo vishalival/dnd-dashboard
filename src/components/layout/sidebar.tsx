@@ -1,9 +1,9 @@
 "use client";
 
-import React from "react";
+import React, { useState } from "react";
 import Link from "next/link";
 import Image from "next/image";
-import { usePathname } from "next/navigation";
+import { usePathname, useRouter } from "next/navigation";
 import { motion, AnimatePresence } from "framer-motion";
 import {
   LayoutDashboard,
@@ -18,6 +18,7 @@ import {
   Command,
   ChevronLeft,
   ChevronRight,
+  RotateCcw,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { useCampaignStore } from "@/stores/campaign-store";
@@ -43,8 +44,24 @@ export function Sidebar({
   campaignName: string | null;
 }) {
   const pathname = usePathname();
+  const router = useRouter();
   const { sidebarOpen, toggleSidebar, toggleCommandPalette } = useCampaignStore();
   const isRecording = useChroniclerStore((s) => s.phase === "recording");
+  const [showResetConfirm, setShowResetConfirm] = useState(false);
+  const [resetting, setResetting] = useState(false);
+
+  const handleReset = async () => {
+    setResetting(true);
+    try {
+      const res = await fetch("/api/reset", { method: "POST" });
+      if (!res.ok) throw new Error("Reset failed");
+      router.push("/");
+    } catch (err) {
+      console.error("Reset failed:", err);
+      setResetting(false);
+      setShowResetConfirm(false);
+    }
+  };
 
   const displayName = dmName || "Dungeon Master";
   const initials = displayName
@@ -164,8 +181,66 @@ export function Sidebar({
       {/* Agent Log Strip — only when sidebar is expanded */}
       {sidebarOpen && <AgentLogStrip />}
 
+      {/* Reset Confirmation Overlay */}
+      <AnimatePresence>
+        {showResetConfirm && (
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            className="absolute inset-0 z-50 bg-black/80 backdrop-blur-sm flex items-center justify-center p-4"
+          >
+            <div className="bg-[#141416] border border-red-500/30 rounded-xl p-5 max-w-[220px] space-y-3 text-center">
+              <p className="text-sm font-semibold text-white">Reset Campaign?</p>
+              <p className="text-xs text-zinc-400">This will delete all data and return to onboarding.</p>
+              <div className="flex gap-2">
+                <button
+                  onClick={() => setShowResetConfirm(false)}
+                  disabled={resetting}
+                  className="flex-1 px-3 py-1.5 text-xs rounded-lg border border-white/10 text-zinc-300 hover:bg-white/5 transition-colors"
+                >
+                  Cancel
+                </button>
+                <button
+                  onClick={handleReset}
+                  disabled={resetting}
+                  className="flex-1 px-3 py-1.5 text-xs rounded-lg bg-red-600 hover:bg-red-700 text-white font-medium transition-colors disabled:opacity-50"
+                >
+                  {resetting ? "Resetting..." : "Reset"}
+                </button>
+              </div>
+            </div>
+          </motion.div>
+        )}
+      </AnimatePresence>
+
       {/* Profile */}
-      <div className="p-3 mt-auto border-t border-[#1F1F22] shrink-0">
+      <div className="p-3 mt-auto border-t border-[#1F1F22] shrink-0 space-y-2">
+        {/* Reset Button */}
+        <button
+          onClick={() => setShowResetConfirm(true)}
+          title="Reset campaign & re-onboard"
+          className={cn(
+            "flex items-center gap-3 w-full h-9 px-3 rounded-lg text-zinc-500 hover:text-red-400 hover:bg-red-500/10 transition-all text-sm",
+            !sidebarOpen && "justify-center px-0"
+          )}
+        >
+          <RotateCcw className="h-4 w-4 shrink-0" />
+          <AnimatePresence initial={false}>
+            {sidebarOpen && (
+              <motion.span
+                initial={{ opacity: 0, width: 0 }}
+                animate={{ opacity: 1, width: "auto" }}
+                exit={{ opacity: 0, width: 0 }}
+                transition={{ duration: 0.15 }}
+                className="font-medium truncate overflow-hidden whitespace-nowrap"
+              >
+                Reset Campaign
+              </motion.span>
+            )}
+          </AnimatePresence>
+        </button>
+
         <div
           className={cn(
             "flex items-center gap-3 p-3 rounded-xl bg-[#141416] border border-[#1F1F22]",
