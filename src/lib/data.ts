@@ -67,7 +67,13 @@ export async function getCampaign() {
 }
 
 export type CampaignData = NonNullable<Awaited<ReturnType<typeof getCampaign>>>;
-export type SessionData = CampaignData["sessions"][number];
+export type SessionData = CampaignData["sessions"][number] & {
+  liveLog?: string | null;
+  transcript?: string | null;
+  liveExtractions?: string | null;
+  keyEvents?: string | null;
+  recapForNext?: string | null;
+};
 export type StorylineData = CampaignData["storylines"][number];
 export type NPCData = CampaignData["npcs"][number];
 export type SecretData = CampaignData["secrets"][number];
