@@ -196,9 +196,9 @@ function LiveWorldState({ extractions }: { extractions: LiveExtractions }) {
   );
 }
 
-// ─── SessionClosingScreen ─────────────────────────────────────────────────────
+// ─── SynthesisDisplay (shared by closing screen & completed session view) ─────
 
-function SessionClosingScreen({ synthesis }: { synthesis: SessionSynthesis }) {
+function SynthesisDisplay({ synthesis, collapsible = false }: { synthesis: SessionSynthesis; collapsible?: boolean }) {
   const allPlanItems = [...(synthesis.plan_beats_status ?? []), ...(synthesis.plan_encounters_status ?? [])];
   const hasPlan = allPlanItems.length > 0;
   const completedCount = allPlanItems.filter((p) => p.status === "completed").length;
@@ -208,6 +208,12 @@ function SessionClosingScreen({ synthesis }: { synthesis: SessionSynthesis }) {
     (synthesis.new_npcs?.length ?? 0) > 0 ||
     (synthesis.resolved_storylines?.length ?? 0) > 0 ||
     (synthesis.revealed_secrets?.length ?? 0) > 0;
+
+  const worldChangeCount =
+    (synthesis.npc_status_changes?.length ?? 0) +
+    (synthesis.new_npcs?.length ?? 0) +
+    (synthesis.resolved_storylines?.length ?? 0) +
+    (synthesis.revealed_secrets?.length ?? 0);
 
   const planStatusIcon = (status: string) => {
     switch (status) {
@@ -225,8 +231,132 @@ function SessionClosingScreen({ synthesis }: { synthesis: SessionSynthesis }) {
     }
   };
 
+  const planContent = hasPlan ? (
+    <div className="space-y-3">
+      {!collapsible && (
+        <div className="flex items-center justify-between">
+          <div className="flex items-center gap-2">
+            <Target className="h-4 w-4 text-zinc-400" />
+            <p className="text-[10px] font-mono text-zinc-500 uppercase tracking-wider">Plan vs Reality</p>
+          </div>
+          <span className="text-[10px] font-mono text-zinc-500">
+            {completedCount}/{allPlanItems.length} completed
+          </span>
+        </div>
+      )}
+      {synthesis.plan_beats_status?.length > 0 && (
+        <div className="space-y-1.5">
+          <p className="text-[10px] font-mono text-zinc-600 uppercase tracking-wider">Beats</p>
+          {synthesis.plan_beats_status.map((item, i) => (
+            <div key={i} className={cn("flex items-start gap-2 px-3 py-2 rounded-lg border text-sm", planStatusStyle(item.status))}>
+              {planStatusIcon(item.status)}
+              <div className="min-w-0">
+                <span className="text-zinc-300 text-xs">{item.description}</span>
+                {item.note && <p className="text-zinc-500 text-xs mt-0.5">{item.note}</p>}
+              </div>
+            </div>
+          ))}
+        </div>
+      )}
+      {synthesis.plan_encounters_status?.length > 0 && (
+        <div className="space-y-1.5">
+          <p className="text-[10px] font-mono text-zinc-600 uppercase tracking-wider">Encounters</p>
+          {synthesis.plan_encounters_status.map((item, i) => (
+            <div key={i} className={cn("flex items-start gap-2 px-3 py-2 rounded-lg border text-sm", planStatusStyle(item.status))}>
+              {planStatusIcon(item.status)}
+              <div className="min-w-0">
+                <span className="text-zinc-300 text-xs">{item.description}</span>
+                {item.note && <p className="text-zinc-500 text-xs mt-0.5">{item.note}</p>}
+              </div>
+            </div>
+          ))}
+        </div>
+      )}
+      {synthesis.unexpected_events?.length > 0 && (
+        <div className="space-y-1.5">
+          <p className="text-[10px] font-mono text-zinc-600 uppercase tracking-wider flex items-center gap-1.5">
+            <Zap className="h-3 w-3 text-amber-400" /> Off-Script
+          </p>
+          {synthesis.unexpected_events.map((event, i) => (
+            <div key={i} className="flex items-start gap-2 px-3 py-2 rounded-lg border border-amber-500/20 bg-amber-500/5 text-sm">
+              <Zap className="h-3.5 w-3.5 text-amber-400 shrink-0 mt-0.5" />
+              <span className="text-zinc-300 text-xs">{event}</span>
+            </div>
+          ))}
+        </div>
+      )}
+    </div>
+  ) : null;
+
+  const worldContent = hasWorldChanges ? (
+    <div className="space-y-3">
+      {!collapsible && (
+        <div className="flex items-center gap-2">
+          <Globe className="h-4 w-4 text-zinc-400" />
+          <p className="text-[10px] font-mono text-zinc-500 uppercase tracking-wider">World State Changes</p>
+        </div>
+      )}
+      {synthesis.npc_status_changes?.length > 0 && (
+        <div className="space-y-1.5">
+          <p className="text-[10px] font-mono text-zinc-600 uppercase tracking-wider">NPCs Updated</p>
+          {synthesis.npc_status_changes.map((c, i) => (
+            <div key={i} className="flex items-start gap-2 px-3 py-2 rounded-lg bg-white/[0.03] border border-white/[0.05] text-sm">
+              <Users className="h-3.5 w-3.5 text-zinc-400 mt-0.5 shrink-0" />
+              <div>
+                <span className="text-zinc-200 font-medium">{c.name}</span>
+                <span className="text-zinc-500 mx-1.5">·</span>
+                <span className="text-zinc-500 line-through text-xs">{c.old_status}</span>
+                <span className="text-zinc-400 mx-1">→</span>
+                <span className={cn("text-xs font-medium", c.new_status === "dead" ? "text-zinc-400" : "text-emerald-400")}>{c.new_status}</span>
+                <p className="text-zinc-500 text-xs mt-0.5">{c.reason}</p>
+              </div>
+            </div>
+          ))}
+        </div>
+      )}
+      {synthesis.new_npcs?.length > 0 && (
+        <div className="space-y-1.5">
+          <p className="text-[10px] font-mono text-zinc-600 uppercase tracking-wider">New NPCs</p>
+          {synthesis.new_npcs.map((npc, i) => (
+            <div key={i} className="flex items-start gap-2 px-3 py-2 rounded-lg border border-gold/20 bg-gold/5 text-sm">
+              <Plus className="h-3.5 w-3.5 text-gold shrink-0 mt-0.5" />
+              <div>
+                <span className="text-zinc-200 font-medium">{npc.name}</span>
+                {npc.role && <span className="text-zinc-500 text-xs ml-1.5">· {npc.role}</span>}
+                {npc.faction && <span className="text-zinc-500 text-xs ml-1.5">· {npc.faction}</span>}
+                {npc.description && <p className="text-zinc-500 text-xs mt-0.5">{npc.description}</p>}
+              </div>
+            </div>
+          ))}
+        </div>
+      )}
+      {synthesis.resolved_storylines?.length > 0 && (
+        <div className="space-y-1.5">
+          <p className="text-[10px] font-mono text-zinc-600 uppercase tracking-wider">Storylines Resolved</p>
+          {synthesis.resolved_storylines.map((title, i) => (
+            <div key={i} className="flex items-start gap-2 px-3 py-2 rounded-lg border border-emerald-500/20 bg-emerald-500/5 text-sm">
+              <GitMerge className="h-3.5 w-3.5 text-emerald-400 shrink-0 mt-0.5" />
+              <span className="text-emerald-300 text-xs">{title}</span>
+            </div>
+          ))}
+        </div>
+      )}
+      {synthesis.revealed_secrets?.length > 0 && (
+        <div className="space-y-1.5">
+          <p className="text-[10px] font-mono text-zinc-600 uppercase tracking-wider">Secrets Revealed</p>
+          {synthesis.revealed_secrets.map((secret, i) => (
+            <div key={i} className="flex items-start gap-2 px-3 py-2 rounded-lg border border-arcane/20 bg-arcane/5 text-sm">
+              <Eye className="h-3.5 w-3.5 text-arcane-light shrink-0 mt-0.5" />
+              <span className="text-arcane-light text-xs">{secret}</span>
+            </div>
+          ))}
+        </div>
+      )}
+    </div>
+  ) : null;
+
   return (
-    <motion.div initial={{ opacity: 0, y: 16 }} animate={{ opacity: 1, y: 0 }} className="space-y-5">
+    <div className="space-y-5">
       {/* Header */}
       <div className="flex items-center gap-2 text-gold">
         <Sparkles className="h-5 w-5" />
@@ -242,60 +372,15 @@ function SessionClosingScreen({ synthesis }: { synthesis: SessionSynthesis }) {
       </div>
 
       {/* Plan vs Reality */}
-      {hasPlan && (
-        <div className="space-y-3">
-          <div className="flex items-center justify-between">
-            <div className="flex items-center gap-2">
-              <Target className="h-4 w-4 text-zinc-400" />
-              <p className="text-[10px] font-mono text-zinc-500 uppercase tracking-wider">Plan vs Reality</p>
-            </div>
-            <span className="text-[10px] font-mono text-zinc-500">
-              {completedCount}/{allPlanItems.length} completed
-            </span>
-          </div>
-          {synthesis.plan_beats_status?.length > 0 && (
-            <div className="space-y-1.5">
-              <p className="text-[10px] font-mono text-zinc-600 uppercase tracking-wider">Beats</p>
-              {synthesis.plan_beats_status.map((item, i) => (
-                <div key={i} className={cn("flex items-start gap-2 px-3 py-2 rounded-lg border text-sm", planStatusStyle(item.status))}>
-                  {planStatusIcon(item.status)}
-                  <div className="min-w-0">
-                    <span className="text-zinc-300 text-xs">{item.description}</span>
-                    {item.note && <p className="text-zinc-500 text-xs mt-0.5">{item.note}</p>}
-                  </div>
-                </div>
-              ))}
-            </div>
-          )}
-          {synthesis.plan_encounters_status?.length > 0 && (
-            <div className="space-y-1.5">
-              <p className="text-[10px] font-mono text-zinc-600 uppercase tracking-wider">Encounters</p>
-              {synthesis.plan_encounters_status.map((item, i) => (
-                <div key={i} className={cn("flex items-start gap-2 px-3 py-2 rounded-lg border text-sm", planStatusStyle(item.status))}>
-                  {planStatusIcon(item.status)}
-                  <div className="min-w-0">
-                    <span className="text-zinc-300 text-xs">{item.description}</span>
-                    {item.note && <p className="text-zinc-500 text-xs mt-0.5">{item.note}</p>}
-                  </div>
-                </div>
-              ))}
-            </div>
-          )}
-          {synthesis.unexpected_events?.length > 0 && (
-            <div className="space-y-1.5">
-              <p className="text-[10px] font-mono text-zinc-600 uppercase tracking-wider flex items-center gap-1.5">
-                <Zap className="h-3 w-3 text-amber-400" /> Off-Script
-              </p>
-              {synthesis.unexpected_events.map((event, i) => (
-                <div key={i} className="flex items-start gap-2 px-3 py-2 rounded-lg border border-amber-500/20 bg-amber-500/5 text-sm">
-                  <Zap className="h-3.5 w-3.5 text-amber-400 shrink-0 mt-0.5" />
-                  <span className="text-zinc-300 text-xs">{event}</span>
-                </div>
-              ))}
-            </div>
-          )}
-        </div>
-      )}
+      {planContent && (collapsible ? (
+        <CollapsibleSection
+          title="Plan vs Reality"
+          icon={<Target className="h-4 w-4 text-zinc-400" />}
+          count={allPlanItems.length}
+        >
+          {planContent}
+        </CollapsibleSection>
+      ) : planContent)}
 
       {/* Key Events */}
       {synthesis.key_events_final?.length > 0 && (
@@ -313,70 +398,15 @@ function SessionClosingScreen({ synthesis }: { synthesis: SessionSynthesis }) {
       )}
 
       {/* World State Changes */}
-      {hasWorldChanges && (
-        <div className="space-y-3">
-          <div className="flex items-center gap-2">
-            <Globe className="h-4 w-4 text-zinc-400" />
-            <p className="text-[10px] font-mono text-zinc-500 uppercase tracking-wider">World State Changes</p>
-          </div>
-          {synthesis.npc_status_changes?.length > 0 && (
-            <div className="space-y-1.5">
-              <p className="text-[10px] font-mono text-zinc-600 uppercase tracking-wider">NPCs Updated</p>
-              {synthesis.npc_status_changes.map((c, i) => (
-                <div key={i} className="flex items-start gap-2 px-3 py-2 rounded-lg bg-white/[0.03] border border-white/[0.05] text-sm">
-                  <Users className="h-3.5 w-3.5 text-zinc-400 mt-0.5 shrink-0" />
-                  <div>
-                    <span className="text-zinc-200 font-medium">{c.name}</span>
-                    <span className="text-zinc-500 mx-1.5">·</span>
-                    <span className="text-zinc-500 line-through text-xs">{c.old_status}</span>
-                    <span className="text-zinc-400 mx-1">→</span>
-                    <span className={cn("text-xs font-medium", c.new_status === "dead" ? "text-zinc-400" : "text-emerald-400")}>{c.new_status}</span>
-                    <p className="text-zinc-500 text-xs mt-0.5">{c.reason}</p>
-                  </div>
-                </div>
-              ))}
-            </div>
-          )}
-          {synthesis.new_npcs?.length > 0 && (
-            <div className="space-y-1.5">
-              <p className="text-[10px] font-mono text-zinc-600 uppercase tracking-wider">New NPCs</p>
-              {synthesis.new_npcs.map((npc, i) => (
-                <div key={i} className="flex items-start gap-2 px-3 py-2 rounded-lg border border-gold/20 bg-gold/5 text-sm">
-                  <Plus className="h-3.5 w-3.5 text-gold shrink-0 mt-0.5" />
-                  <div>
-                    <span className="text-zinc-200 font-medium">{npc.name}</span>
-                    {npc.role && <span className="text-zinc-500 text-xs ml-1.5">· {npc.role}</span>}
-                    {npc.faction && <span className="text-zinc-500 text-xs ml-1.5">· {npc.faction}</span>}
-                    {npc.description && <p className="text-zinc-500 text-xs mt-0.5">{npc.description}</p>}
-                  </div>
-                </div>
-              ))}
-            </div>
-          )}
-          {synthesis.resolved_storylines?.length > 0 && (
-            <div className="space-y-1.5">
-              <p className="text-[10px] font-mono text-zinc-600 uppercase tracking-wider">Storylines Resolved</p>
-              {synthesis.resolved_storylines.map((title, i) => (
-                <div key={i} className="flex items-start gap-2 px-3 py-2 rounded-lg border border-emerald-500/20 bg-emerald-500/5 text-sm">
-                  <GitMerge className="h-3.5 w-3.5 text-emerald-400 shrink-0 mt-0.5" />
-                  <span className="text-emerald-300 text-xs">{title}</span>
-                </div>
-              ))}
-            </div>
-          )}
-          {synthesis.revealed_secrets?.length > 0 && (
-            <div className="space-y-1.5">
-              <p className="text-[10px] font-mono text-zinc-600 uppercase tracking-wider">Secrets Revealed</p>
-              {synthesis.revealed_secrets.map((secret, i) => (
-                <div key={i} className="flex items-start gap-2 px-3 py-2 rounded-lg border border-arcane/20 bg-arcane/5 text-sm">
-                  <Eye className="h-3.5 w-3.5 text-arcane-light shrink-0 mt-0.5" />
-                  <span className="text-arcane-light text-xs">{secret}</span>
-                </div>
-              ))}
-            </div>
-          )}
-        </div>
-      )}
+      {worldContent && (collapsible ? (
+        <CollapsibleSection
+          title="World State Changes"
+          icon={<Globe className="h-4 w-4 text-zinc-400" />}
+          count={worldChangeCount}
+        >
+          {worldContent}
+        </CollapsibleSection>
+      ) : worldContent)}
 
       {/* Footer grid */}
       <div className="grid grid-cols-2 gap-3">
@@ -401,6 +431,16 @@ function SessionClosingScreen({ synthesis }: { synthesis: SessionSynthesis }) {
           </div>
         )}
       </div>
+    </div>
+  );
+}
+
+// ─── SessionClosingScreen ─────────────────────────────────────────────────────
+
+function SessionClosingScreen({ synthesis }: { synthesis: SessionSynthesis }) {
+  return (
+    <motion.div initial={{ opacity: 0, y: 16 }} animate={{ opacity: 1, y: 0 }}>
+      <SynthesisDisplay synthesis={synthesis} />
     </motion.div>
   );
 }
@@ -1215,7 +1255,7 @@ export function SessionsClient({ campaign }: { campaign: CampaignData }) {
     if (!selectedSession) return;
     const updated = sessions.map((s) =>
       s.id === selectedSession.id
-        ? { ...s, status: "completed", summary: synthesis.session_summary, keyEvents: JSON.stringify(synthesis.key_events_final), recapForNext: synthesis.previously_on, title: synthesis.session_title || s.title }
+        ? { ...s, status: "completed", summary: synthesis.session_summary, keyEvents: JSON.stringify(synthesis.key_events_final), recapForNext: synthesis.previously_on, title: synthesis.session_title || s.title, synthesis: JSON.stringify(synthesis) }
         : s
     );
     setSessions(updated);
@@ -1424,34 +1464,49 @@ export function SessionsClient({ campaign }: { campaign: CampaignData }) {
               )}
 
               {/* Completed recap */}
-              {selectedSession.status === "completed" && selectedSession.recapForNext && (
-                <div className="space-y-3">
-                  <div className="flex items-center gap-2 text-gold">
-                    <Sparkles className="h-4 w-4" />
-                    <span className="text-sm font-medium font-heading">Chronicler Summary</span>
-                  </div>
-                  <div className="p-4 rounded-lg bg-gold/5 border border-gold/20">
-                    <p className="text-xs text-gold/60 font-mono mb-2 uppercase tracking-wider">Previously on...</p>
-                    <p className="text-sm text-zinc-200 leading-relaxed italic">{selectedSession.recapForNext}</p>
-                  </div>
-                  {(() => {
-                    const keyEvents = parseJsonField<KeyEvent>(selectedSession.keyEvents ?? null);
-                    return keyEvents.length > 0 ? (
-                      <div className="space-y-2">
-                        <p className="text-xs text-zinc-500 uppercase tracking-wider font-mono">Key Events</p>
-                        {keyEvents.map((e, i) => {
-                          const cfg = eventConfig[e.type as EventType];
-                          return (
-                            <div key={i} className={cn("flex items-start gap-2 px-3 py-2 rounded-lg border text-sm", cfg.className)}>
-                              {cfg.icon}<span>{e.description}</span>
-                            </div>
-                          );
-                        })}
+              {selectedSession.status === "completed" && (() => {
+                const synth = selectedSession.synthesis
+                  ? (JSON.parse(selectedSession.synthesis) as SessionSynthesis)
+                  : null;
+
+                if (synth) {
+                  return <SynthesisDisplay synthesis={synth} collapsible />;
+                }
+
+                // Fallback for older sessions without full synthesis data
+                if (selectedSession.recapForNext) {
+                  return (
+                    <div className="space-y-3">
+                      <div className="flex items-center gap-2 text-gold">
+                        <Sparkles className="h-4 w-4" />
+                        <span className="text-sm font-medium font-heading">Chronicler Summary</span>
                       </div>
-                    ) : null;
-                  })()}
-                </div>
-              )}
+                      <div className="p-4 rounded-lg bg-gold/5 border border-gold/20">
+                        <p className="text-xs text-gold/60 font-mono mb-2 uppercase tracking-wider">Previously on...</p>
+                        <p className="text-sm text-zinc-200 leading-relaxed italic">{selectedSession.recapForNext}</p>
+                      </div>
+                      {(() => {
+                        const keyEvents = parseJsonField<KeyEvent>(selectedSession.keyEvents ?? null);
+                        return keyEvents.length > 0 ? (
+                          <div className="space-y-2">
+                            <p className="text-xs text-zinc-500 uppercase tracking-wider font-mono">Key Events</p>
+                            {keyEvents.map((e, i) => {
+                              const cfg = eventConfig[e.type as EventType];
+                              return (
+                                <div key={i} className={cn("flex items-start gap-2 px-3 py-2 rounded-lg border text-sm", cfg.className)}>
+                                  {cfg.icon}<span>{e.description}</span>
+                                </div>
+                              );
+                            })}
+                          </div>
+                        ) : null;
+                      })()}
+                    </div>
+                  );
+                }
+
+                return null;
+              })()}
 
               {/* Session Transcript (completed sessions) */}
               {selectedSession.status === "completed" && selectedSession.transcript && (

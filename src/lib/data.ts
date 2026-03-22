@@ -73,6 +73,7 @@ export type SessionData = CampaignData["sessions"][number] & {
   liveExtractions?: string | null;
   keyEvents?: string | null;
   recapForNext?: string | null;
+  synthesis?: string | null;
 };
 export type StorylineData = CampaignData["storylines"][number];
 export type NPCData = CampaignData["npcs"][number];
