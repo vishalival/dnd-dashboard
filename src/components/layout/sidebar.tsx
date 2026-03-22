@@ -142,8 +142,8 @@ export function Sidebar({
 		>
 			{/* Header / Logo */}
 			<div className="flex items-center h-20 px-4 mb-4 shrink-0">
-				<a href="https://arcmind-dnd.vercel.app/dashboard">
-					<Image src={theme === "dark" ? "/logo.svg" : "/arcmind-black.svg"} alt="Logo" width={140} height={33} priority />
+				<a href="/dashboard">
+					<Image src={theme === "dark" ? "/darcmind_white.svg" : "/darcmind_black.svg"} alt="DarcMind" width={140} height={33} priority />
 				</a>
 
 				<div className="ml-auto flex items-center gap-1 shrink-0">
