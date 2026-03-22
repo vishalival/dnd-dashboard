@@ -83,7 +83,7 @@ export function DashboardClient({ campaign }: { campaign: CampaignData }) {
       <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 mb-10 bg-zinc-950/20 p-6 rounded-2xl border border-white/5">
         <div>
           <h1 className="text-2xl font-bold tracking-tight text-white mb-1.5 flex items-center gap-2">
-            Hello, Dungeon Master Rachel! 
+            Hello, {campaign.dmName ? `Dungeon Master ${campaign.dmName}` : "Dungeon Master"}!
             <span className="text-xl">👋</span>
           </h1>
           <p className="text-xs text-zinc-400 max-w-lg leading-relaxed">
@@ -150,7 +150,9 @@ export function DashboardClient({ campaign }: { campaign: CampaignData }) {
           
           {/* User Avatar */}
           <div className="h-9 w-9 rounded-full bg-gradient-to-br from-amber-500 to-amber-700 flex items-center justify-center border border-white/10 shrink-0 cursor-pointer shadow-lg shadow-amber-900/20">
-            <span className="text-xs font-bold text-white shadow-sm">DR</span>
+            <span className="text-xs font-bold text-white shadow-sm">
+              {(campaign.dmName || "DM").split(" ").map(w => w[0]).join("").toUpperCase().slice(0, 2)}
+            </span>
           </div>
         </div>
       </div>

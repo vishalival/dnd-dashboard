@@ -1,9 +1,20 @@
 import { AppShell } from "@/components/layout/app-shell";
+import { prisma } from "@/lib/prisma";
 
-export default function CampaignLayout({
+export const dynamic = "force-dynamic";
+
+export default async function CampaignLayout({
   children,
 }: {
   children: React.ReactNode;
 }) {
-  return <AppShell>{children}</AppShell>;
+  const campaign = await prisma.campaign.findFirst({
+    select: { dmName: true, name: true },
+  });
+
+  return (
+    <AppShell dmName={campaign?.dmName || null} campaignName={campaign?.name || null}>
+      {children}
+    </AppShell>
+  );
 }
