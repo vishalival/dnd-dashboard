@@ -85,6 +85,23 @@ export function OnboardClient() {
   const [dragOver, setDragOver] = useState(false);
   const [summary, setSummary] = useState<Record<string, number> | null>(null);
   const abortRef = useRef<AbortController | null>(null);
+  const [loadingRachel, setLoadingRachel] = useState(false);
+
+  const handleRachelLogin = async () => {
+    setLoadingRachel(true);
+    setError(null);
+    try {
+      const res = await fetch("/api/seed-default", { method: "POST" });
+      if (!res.ok) {
+        const data = await res.json();
+        throw new Error(data.error || "Failed to load demo data");
+      }
+      router.push("/dashboard");
+    } catch (err) {
+      setError(err instanceof Error ? err.message : "Something went wrong");
+      setLoadingRachel(false);
+    }
+  };
 
   const handleDrop = useCallback((e: React.DragEvent) => {
     e.preventDefault();
@@ -348,6 +365,35 @@ export function OnboardClient() {
                 <p className="text-[11px] text-zinc-600 text-center mt-4 leading-relaxed">
                   Include session notes, character sheets, NPC trackers, world lore,
                   and more. AI will extract and organize everything.
+                </p>
+
+                {/* Divider */}
+                <div className="flex items-center gap-3 my-6">
+                  <div className="flex-1 h-px bg-white/[0.06]" />
+                  <span className="text-[11px] text-zinc-600 uppercase tracking-wider">or try a demo</span>
+                  <div className="flex-1 h-px bg-white/[0.06]" />
+                </div>
+
+                {/* Log in as Rachel button */}
+                <button
+                  onClick={handleRachelLogin}
+                  disabled={loadingRachel}
+                  className="w-full h-11 rounded-xl font-medium text-sm border border-white/[0.08] bg-white/[0.02] text-zinc-300 hover:bg-white/[0.05] hover:border-white/[0.12] hover:text-white transition-all flex items-center justify-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed"
+                >
+                  {loadingRachel ? (
+                    <>
+                      <Loader2 className="h-4 w-4 animate-spin" />
+                      Loading Rachel&apos;s campaign...
+                    </>
+                  ) : (
+                    <>
+                      <Sparkles className="h-4 w-4 text-violet-400" />
+                      Log in as Rachel
+                    </>
+                  )}
+                </button>
+                <p className="text-[11px] text-zinc-600 text-center mt-2">
+                  Explore a pre-built demo with Rachel&apos;s &ldquo;Of Stars &amp; Stone&rdquo; campaign
                 </p>
               </motion.div>
             ) : (
