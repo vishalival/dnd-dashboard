@@ -155,7 +155,7 @@ function LiveWorldState({ extractions }: { extractions: LiveExtractions }) {
             <motion.div key={i} initial={{ opacity: 0, x: -4 }} animate={{ opacity: 1, x: 0 }} className="flex items-start gap-2 px-2.5 py-1.5 rounded-md bg-white/[0.03] border border-white/[0.05] text-xs">
               <Users className="h-3 w-3 text-zinc-400 mt-0.5 shrink-0" />
               <div>
-                <span className="text-zinc-200 font-medium">{u.name}</span>
+                <span className="text-foreground font-medium">{u.name}</span>
                 {u.disposition_change && <Badge variant="outline" className="ml-1.5 text-[9px] h-3.5 px-1">{u.disposition_change}</Badge>}
                 {u.status_change && <Badge variant="secondary" className="ml-1 text-[9px] h-3.5 px-1">{u.status_change}</Badge>}
                 <p className="text-zinc-500 mt-0.5">{u.reason}</p>
@@ -171,7 +171,7 @@ function LiveWorldState({ extractions }: { extractions: LiveExtractions }) {
             <motion.div key={i} initial={{ opacity: 0, x: -4 }} animate={{ opacity: 1, x: 0 }} className="flex items-start gap-2 px-2.5 py-1.5 rounded-md bg-arcane/5 border border-arcane/10 text-xs">
               <GitMerge className="h-3 w-3 text-arcane-light mt-0.5 shrink-0" />
               <div>
-                <span className="text-zinc-200 font-medium">{t.title}</span>
+                <span className="text-foreground font-medium">{t.title}</span>
                 <Badge variant="outline" className={cn("ml-1.5 text-[9px] h-3.5 px-1", t.status === "resolved" && "text-emerald-400 border-emerald-400/30")}>{t.status}</Badge>
                 <p className="text-zinc-500 mt-0.5">{t.description}</p>
               </div>
@@ -187,7 +187,7 @@ function LiveWorldState({ extractions }: { extractions: LiveExtractions }) {
               <Package className="h-3 w-3 text-zinc-400 shrink-0" />
               <span className="text-zinc-400">{c.character}</span>
               <span className={cn("font-medium", c.action === "gained" ? "text-emerald-400" : "text-red-400")}>{c.action === "gained" ? "+" : "−"}</span>
-              <span className="text-zinc-200">{c.item}</span>
+              <span className="text-foreground">{c.item}</span>
             </motion.div>
           ))}
         </div>
@@ -303,7 +303,7 @@ function SynthesisDisplay({ synthesis, collapsible = false }: { synthesis: Sessi
             <div key={i} className="flex items-start gap-2 px-3 py-2 rounded-lg bg-white/[0.03] border border-white/[0.05] text-sm">
               <Users className="h-3.5 w-3.5 text-zinc-400 mt-0.5 shrink-0" />
               <div>
-                <span className="text-zinc-200 font-medium">{c.name}</span>
+                <span className="text-foreground font-medium">{c.name}</span>
                 <span className="text-zinc-500 mx-1.5">·</span>
                 <span className="text-zinc-500 line-through text-xs">{c.old_status}</span>
                 <span className="text-zinc-400 mx-1">→</span>
@@ -321,7 +321,7 @@ function SynthesisDisplay({ synthesis, collapsible = false }: { synthesis: Sessi
             <div key={i} className="flex items-start gap-2 px-3 py-2 rounded-lg border border-gold/20 bg-gold/5 text-sm">
               <Plus className="h-3.5 w-3.5 text-gold shrink-0 mt-0.5" />
               <div>
-                <span className="text-zinc-200 font-medium">{npc.name}</span>
+                <span className="text-foreground font-medium">{npc.name}</span>
                 {npc.role && <span className="text-zinc-500 text-xs ml-1.5">· {npc.role}</span>}
                 {npc.faction && <span className="text-zinc-500 text-xs ml-1.5">· {npc.faction}</span>}
                 {npc.description && <p className="text-zinc-500 text-xs mt-0.5">{npc.description}</p>}
@@ -364,7 +364,7 @@ function SynthesisDisplay({ synthesis, collapsible = false }: { synthesis: Sessi
       </div>
       <div className="p-5 rounded-xl bg-gold/5 border border-gold/20">
         <p className="text-[10px] font-mono text-gold/50 uppercase tracking-widest mb-3">Previously on...</p>
-        <p className="text-sm text-zinc-200 leading-relaxed italic">{synthesis.previously_on}</p>
+        <p className="text-sm text-foreground leading-relaxed italic">{synthesis.previously_on}</p>
       </div>
       {/* Plan vs Reality */}
       {planContent && (collapsible ? (
@@ -570,7 +570,7 @@ function LiveSessionPanel({ session, characters, onSessionEnded }: {
                 <span className="relative inline-flex rounded-full h-2.5 w-2.5 bg-crimson" />
               </span>
               <Mic className="h-4 w-4 text-crimson-light" />
-              <span className="text-sm font-medium text-zinc-200">Chronicler is listening</span>
+              <span className="text-sm font-medium text-foreground">Chronicler is listening</span>
             </>
           ) : (
             <>
@@ -734,7 +734,7 @@ function EditableList({
               }}
               placeholder={placeholder}
               rows={2}
-              className="flex-1 text-sm bg-white/[0.03] border border-white/[0.08] rounded-lg px-3 py-2 text-zinc-200 placeholder:text-zinc-600 focus:outline-none focus:border-white/[0.15] resize-none"
+              className="flex-1 text-sm bg-white/[0.03] border border-white/[0.08] rounded-lg px-3 py-2 text-foreground placeholder:text-zinc-600 focus:outline-none focus:border-white/[0.15] resize-none"
             />
           ) : (
             <input
@@ -745,7 +745,7 @@ function EditableList({
                 onChange(updated);
               }}
               placeholder={placeholder}
-              className="flex-1 text-sm bg-white/[0.03] border border-white/[0.08] rounded-lg px-3 py-2 text-zinc-200 placeholder:text-zinc-600 focus:outline-none focus:border-white/[0.15]"
+              className="flex-1 text-sm bg-white/[0.03] border border-white/[0.08] rounded-lg px-3 py-2 text-foreground placeholder:text-zinc-600 focus:outline-none focus:border-white/[0.15]"
             />
           )}
           <button
@@ -850,7 +850,7 @@ function SessionDetail({ session, onSave }: {
             <input
               value={draft.title}
               onChange={(e) => setDraft((d) => ({ ...d, title: e.target.value }))}
-              className="w-full text-sm font-medium bg-white/[0.03] border border-white/[0.08] rounded-lg px-3 py-2 text-zinc-200 placeholder:text-zinc-600 focus:outline-none focus:border-white/[0.15]"
+              className="w-full text-sm font-medium bg-white/[0.03] border border-white/[0.08] rounded-lg px-3 py-2 text-foreground placeholder:text-zinc-600 focus:outline-none focus:border-white/[0.15]"
               placeholder="Session title…"
             />
             <select
@@ -879,7 +879,7 @@ function SessionDetail({ session, onSave }: {
           ) : (
             <>
               {!isInProgress && !isCompleted && (
-                <Button variant="ghost" size="sm" onClick={() => setIsEditing(true)} className="gap-1.5 text-xs h-8 text-zinc-400 hover:text-zinc-200">
+                <Button variant="ghost" size="sm" onClick={() => setIsEditing(true)} className="gap-1.5 text-xs h-8 text-zinc-400 hover:text-foreground">
                   <Pencil className="h-3.5 w-3.5" />Edit Plan
                 </Button>
               )}
@@ -1399,7 +1399,7 @@ export function SessionsClient({ campaign }: { campaign: CampaignData }) {
                           </span>
                         )}
                       </div>
-                      <h3 className="text-sm font-medium text-zinc-200 mt-1 truncate">{session.title}</h3>
+                      <h3 className="text-sm font-medium text-foreground mt-1 truncate">{session.title}</h3>
                       {session.date && <p className="text-xs text-zinc-500 mt-1">{formatDate(session.date)}</p>}
                     </div>
                     <button
@@ -1490,7 +1490,7 @@ export function SessionsClient({ campaign }: { campaign: CampaignData }) {
                       </div>
                       <div className="p-4 rounded-lg bg-gold/5 border border-gold/20">
                         <p className="text-xs text-gold/60 font-mono mb-2 uppercase tracking-wider">Previously on...</p>
-                        <p className="text-sm text-zinc-200 leading-relaxed italic">{selectedSession.recapForNext}</p>
+                        <p className="text-sm text-foreground leading-relaxed italic">{selectedSession.recapForNext}</p>
                       </div>
                       {(() => {
                         const keyEvents = parseJsonField<KeyEvent>(selectedSession.keyEvents ?? null);
