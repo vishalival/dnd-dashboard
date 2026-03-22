@@ -87,6 +87,7 @@ export async function startRecording(sessionId: string): Promise<void> {
     };
 
     _recorder.start(AUDIO_SLICE_MS);
+    store.setSessionStartTime(Date.now());
     store.setPhase("recording");
     store.addAgentLog("microphone active — listening...");
 
