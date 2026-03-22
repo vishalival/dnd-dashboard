@@ -877,6 +877,8 @@ function SessionDetail({ session, onSave }: {
               <option value="draft">Draft</option>
               <option value="planning">Planning</option>
               <option value="ready">Ready</option>
+              <option value="in_progress">In Progress</option>
+              <option value="completed">Completed</option>
             </select>
           </div>
         ) : (
@@ -894,11 +896,9 @@ function SessionDetail({ session, onSave }: {
             </>
           ) : (
             <>
-              {!isInProgress && !isCompleted && (
-                <Button variant="ghost" size="sm" onClick={() => setIsEditing(true)} className="gap-1.5 text-xs h-8 text-zinc-400 hover:text-foreground">
-                  <Pencil className="h-3.5 w-3.5" />Edit Plan
-                </Button>
-              )}
+              <Button variant="ghost" size="sm" onClick={() => setIsEditing(true)} className="gap-1.5 text-xs h-8 text-zinc-400 hover:text-foreground">
+                <Pencil className="h-3.5 w-3.5" />Edit Plan
+              </Button>
             </>
           )}
         </div>

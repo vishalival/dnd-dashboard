@@ -23,6 +23,7 @@ import {
   Network,
   List,
   Plus,
+  Trash2,
 } from "lucide-react";
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
@@ -57,7 +58,27 @@ const item = {
   show: { opacity: 1, y: 0 },
 };
 
-function NPCDetail({ npc, onClose }: { npc: NPCData; onClose: () => void }) {
+function NPCDetail({ npc, onClose, onDelete }: { npc: NPCData; onClose: () => void; onDelete: (id: string) => void }) {
+  const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
+  const [isDeleting, setIsDeleting] = useState(false);
+
+  const handleDelete = async () => {
+    setIsDeleting(true);
+    try {
+      const res = await fetch("/api/npcs/delete", {
+        method: "DELETE",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ npcId: npc.id }),
+      });
+      if (!res.ok) throw new Error("Failed to delete NPC");
+      onDelete(npc.id);
+    } catch (err) {
+      console.error(err);
+    } finally {
+      setIsDeleting(false);
+      setShowDeleteConfirm(false);
+    }
+  };
   return (
     <motion.div
       initial={{ opacity: 0, x: 20 }}
@@ -98,14 +119,43 @@ function NPCDetail({ npc, onClose }: { npc: NPCData; onClose: () => void }) {
             </div>
           </div>
         </div>
-        <Button
-          variant="ghost"
-          size="icon"
-          onClick={onClose}
-          className="text-muted-foreground dark:text-zinc-500 hover:text-foreground/80 dark:text-zinc-300 lg:hidden"
-        >
-          <X className="h-4 w-4" />
-        </Button>
+        <div className="flex items-center gap-1 shrink-0">
+          <Button
+            variant="ghost"
+            size="icon"
+            onClick={() => setShowDeleteConfirm(true)}
+            className="text-zinc-500 hover:text-red-400 hover:bg-red-400/10"
+            title="Delete NPC"
+          >
+            <Trash2 className="h-4 w-4" />
+          </Button>
+          <Button
+            variant="ghost"
+            size="icon"
+            onClick={onClose}
+            className="text-muted-foreground dark:text-zinc-500 hover:text-foreground/80 dark:text-zinc-300 lg:hidden"
+          >
+            <X className="h-4 w-4" />
+          </Button>
+        </div>
+
+        {/* Delete Confirmation Dialog */}
+        <Dialog open={showDeleteConfirm} onOpenChange={setShowDeleteConfirm}>
+          <DialogContent>
+            <DialogHeader>
+              <DialogTitle>Delete {npc.name}?</DialogTitle>
+            </DialogHeader>
+            <p className="text-sm text-zinc-400">
+              This will permanently delete this NPC and remove all their connections to sessions, storylines, and secrets. This action cannot be undone.
+            </p>
+            <DialogFooter>
+              <Button variant="ghost" size="sm" onClick={() => setShowDeleteConfirm(false)} disabled={isDeleting}>Cancel</Button>
+              <Button variant="destructive" size="sm" onClick={handleDelete} disabled={isDeleting}>
+                {isDeleting ? "Deleting…" : "Delete NPC"}
+              </Button>
+            </DialogFooter>
+          </DialogContent>
+        </Dialog>
       </div>
 
       {/* Status Row */}
@@ -591,6 +641,10 @@ export function NPCsClient({ campaign }: { campaign: CampaignData }) {
                 <NPCDetail
                   npc={selectedNPC}
                   onClose={() => setSelectedNPC(null)}
+                  onDelete={(id) => {
+                    setNpcs((prev) => prev.filter((n) => n.id !== id));
+                    setSelectedNPC(null);
+                  }}
                 />
               </Card>
             </div>

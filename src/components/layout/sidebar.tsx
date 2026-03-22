@@ -24,7 +24,7 @@ import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
 import { useTheme } from "next-themes";
 import type { LucideIcon } from "lucide-react";
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { cn } from "@/lib/utils";
 import { useCampaignStore } from "@/stores/campaign-store";
 import { useChroniclerStore } from "@/stores/chronicler-store";
@@ -111,6 +111,11 @@ export function Sidebar({
 	const [showResetConfirm, setShowResetConfirm] = useState(false);
 	const [resetting, setResetting] = useState(false);
 	const [sessionPlannerOpen, setSessionPlannerOpen] = useState(true);
+	const [mounted, setMounted] = useState(false);
+
+	useEffect(() => {
+		setMounted(true);
+	}, []);
 
 	const handleReset = async () => {
 		setResetting(true);
@@ -143,16 +148,16 @@ export function Sidebar({
 			{/* Header / Logo */}
 			<div className="flex items-center h-20 px-4 mb-4 shrink-0">
 				<a href="/dashboard">
-					<Image src={theme === "dark" ? "/darcmind_white.svg" : "/darcmind_black.svg"} alt="DarcMind" width={140} height={33} priority />
+					<Image src={mounted && theme === "light" ? "/darcmind_black.svg" : "/darcmind_white.svg"} alt="DarcMind" width={140} height={33} priority />
 				</a>
 
 				<div className="ml-auto flex items-center gap-1 shrink-0">
 					<button
 						onClick={() => setTheme(theme === "dark" ? "light" : "dark")}
 						className="flex items-center justify-center w-7 h-7 rounded-md text-zinc-500 hover:text-foreground hover:bg-black/[0.06] dark:hover:bg-white/[0.06] transition-all"
-						title={theme === "dark" ? "Switch to light mode" : "Switch to dark mode"}
+						title={mounted && theme === "light" ? "Switch to dark mode" : "Switch to light mode"}
 					>
-						{theme === "dark" ? <Sun className="h-3.5 w-3.5" /> : <Moon className="h-3.5 w-3.5" />}
+						{mounted && theme === "light" ? <Moon className="h-3.5 w-3.5" /> : <Sun className="h-3.5 w-3.5" />}
 					</button>
 					<button
 						onClick={toggleSidebar}
