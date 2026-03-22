@@ -92,7 +92,7 @@ export function DashboardClient({ campaign }: { campaign: CampaignData }) {
               Fae, Campaign Assistant
             </h2>
             <p className="text-xs text-zinc-300 leading-relaxed mb-3">
-              Hey there! I see Session 4 is scheduled for tomorrow at 7:00 PM — I can help you review your prep materials, or we can start by updating Garrick's missing location tag. Let me know what you'd like to tackle!
+              Hey there! I see Session 4 is scheduled for tomorrow at 7:00 PM — I can help you review your prep materials, or we can start by updating Garrick&apos;s missing location tag. Let me know what you&apos;d like to tackle!
             </p>
             <div className="flex flex-wrap gap-2">
               <Link href="/sessions">
@@ -104,7 +104,7 @@ export function DashboardClient({ campaign }: { campaign: CampaignData }) {
               <Link href="/npcs">
                 <Button variant="outline" size="sm" className="h-7 text-[11px] bg-emerald-500/10 hover:bg-emerald-500/20 text-emerald-300 border-emerald-500/30">
                   <Users className="h-3 w-3 mr-1.5" />
-                  Update Garrick's location
+                  Update Garrick&apos;s location
                 </Button>
               </Link>
             </div>
