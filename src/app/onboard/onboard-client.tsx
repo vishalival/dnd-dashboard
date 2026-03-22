@@ -130,8 +130,8 @@ export function OnboardClient() {
               setSummary(event.summary);
             }
           } catch (parseErr) {
-            if (parseErr instanceof Error && parseErr.message !== "Something went wrong") {
-              // JSON parse error, skip
+            if (parseErr instanceof SyntaxError) {
+              // JSON parse error from incomplete SSE chunk, skip
             } else {
               throw parseErr;
             }
@@ -342,11 +342,11 @@ export function OnboardClient() {
                           }`}
                         >
                           {isComplete ? (
-                            <CheckCircle2 className="h-4.5 w-4.5" />
+                            <CheckCircle2 className="h-[18px] w-[18px]" />
                           ) : isActive && !isDone ? (
-                            <Loader2 className="h-4.5 w-4.5 animate-spin" />
+                            <Loader2 className="h-[18px] w-[18px] animate-spin" />
                           ) : (
-                            <Icon className="h-4.5 w-4.5" />
+                            <Icon className="h-[18px] w-[18px]" />
                           )}
                         </div>
 
