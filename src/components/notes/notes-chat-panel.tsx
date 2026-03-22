@@ -238,59 +238,62 @@ export function NotesChatPanel({
                   : "bg-white/[0.04] border border-white/[0.06] text-zinc-300"
               }`}
             >
-              {msg.role === "assistant" && !isStreaming(msg) ? (
-                <div className="prose prose-invert prose-sm max-w-none [&>*:first-child]:mt-0 [&>*:last-child]:mb-0 [&_p]:leading-relaxed">
-                  <ReactMarkdown
-                    remarkPlugins={[remarkGfm]}
-                    urlTransform={(url) => url}
-                    components={{
-                      a: ({ href, children }) => {
-                        const cite = href ? parseCiteUri(href) : null;
-                        if (cite) {
-                          return (
-                            <button
-                              onClick={() => {
-                                console.log("[CITE CLICK]", { docId: cite.docId, quote: cite.quote, href });
-                                onCitationClick(cite.docId, cite.quote);
-                              }}
-                              className="text-orange-300 hover:text-orange-200 underline decoration-orange-500/40 hover:decoration-orange-400/60 transition-colors cursor-pointer"
-                              title={`Source: "${cite.quote}"`}
-                            >
+              {msg.role === "assistant" ? (
+                <>
+                  {msg.content ? (
+                    <div className="prose prose-invert prose-sm max-w-none break-words overflow-hidden [&>*:first-child]:mt-0 [&>*:last-child]:mb-0 [&_p]:leading-relaxed">
+                      <ReactMarkdown
+                        remarkPlugins={[remarkGfm]}
+                        urlTransform={(url) => url}
+                        components={{
+                          a: ({ href, children }) => {
+                            const cite = href ? parseCiteUri(href) : null;
+                            if (cite) {
+                              return (
+                                <button
+                                  onClick={() => {
+                                    console.log("[CITE CLICK]", { docId: cite.docId, quote: cite.quote, href });
+                                    onCitationClick(cite.docId, cite.quote);
+                                  }}
+                                  className="inline text-left text-orange-300 hover:text-orange-200 underline decoration-orange-500/40 hover:decoration-orange-400/60 transition-colors cursor-pointer"
+                                  title={`Source: "${cite.quote}"`}
+                                >
+                                  {children}
+                                </button>
+                              );
+                            }
+                            return (
+                              <a
+                                href={href}
+                                target="_blank"
+                                rel="noopener noreferrer"
+                              >
+                                {children}
+                              </a>
+                            );
+                          },
+                          code: ({ children }) => (
+                            <code className="bg-white/[0.08] px-1 py-0.5 rounded text-orange-300 text-xs">
                               {children}
-                            </button>
-                          );
-                        }
-                        return (
-                          <a
-                            href={href}
-                            target="_blank"
-                            rel="noopener noreferrer"
-                          >
-                            {children}
-                          </a>
-                        );
-                      },
-                      code: ({ children }) => (
-                        <code className="bg-white/[0.08] px-1 py-0.5 rounded text-orange-300 text-xs">
-                          {children}
-                        </code>
-                      ),
-                      pre: ({ children }) => (
-                        <pre className="bg-white/[0.06] border border-white/[0.06] rounded-lg p-3 overflow-x-auto text-xs">
-                          {children}
-                        </pre>
-                      ),
-                    }}
-                  >
-                    {getDisplayText(msg)}
-                  </ReactMarkdown>
-                </div>
-              ) : (
-                <div className="whitespace-pre-wrap">
-                  {getDisplayText(msg)}
-                  {msg.role === "assistant" && !msg.content && isLoading && (
+                            </code>
+                          ),
+                          pre: ({ children }) => (
+                            <pre className="bg-white/[0.06] border border-white/[0.06] rounded-lg p-3 overflow-x-auto text-xs">
+                              {children}
+                            </pre>
+                          ),
+                        }}
+                      >
+                        {getDisplayText(msg)}
+                      </ReactMarkdown>
+                    </div>
+                  ) : (
                     <Loader2 className="h-4 w-4 animate-spin text-zinc-500" />
                   )}
+                </>
+              ) : (
+                <div className="whitespace-pre-wrap">
+                  {msg.content}
                 </div>
               )}
 
