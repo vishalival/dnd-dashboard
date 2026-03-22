@@ -366,11 +366,6 @@ function SynthesisDisplay({ synthesis, collapsible = false }: { synthesis: Sessi
         <p className="text-[10px] font-mono text-gold/50 uppercase tracking-widest mb-3">Previously on...</p>
         <p className="text-sm text-zinc-200 leading-relaxed italic">{synthesis.previously_on}</p>
       </div>
-      <div className="p-4 rounded-lg bg-white/[0.02] border border-white/[0.05]">
-        <p className="text-[10px] font-mono text-zinc-500 uppercase tracking-wider mb-2">Session Summary</p>
-        <p className="text-sm text-zinc-300 leading-relaxed">{synthesis.session_summary}</p>
-      </div>
-
       {/* Plan vs Reality */}
       {planContent && (collapsible ? (
         <CollapsibleSection
