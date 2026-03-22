@@ -14,6 +14,7 @@ let _chunkAccumulator = "";
 let _chunkTimer: ReturnType<typeof setInterval> | null = null;
 let _activeSessionId: string | null = null;
 let _mimeType = "";
+let _isStarting = false; // guard against concurrent startRecording calls
 
 async function _transcribeBlob(blob: Blob): Promise<void> {
   if (blob.size < 1000) return;
@@ -56,7 +57,8 @@ export function isRecording(): boolean {
 }
 
 export async function startRecording(sessionId: string): Promise<void> {
-  if (isRecording()) return; // already running
+  if (isRecording() || _isStarting) return;
+  _isStarting = true;
 
   const store = useChroniclerStore.getState();
   store.setMicError(null);
@@ -97,6 +99,8 @@ export async function startRecording(sessionId: string): Promise<void> {
     const msg = err instanceof Error ? err.message : "Microphone error";
     useChroniclerStore.getState().setMicError(msg);
     useChroniclerStore.getState().setPhase("idle");
+  } finally {
+    _isStarting = false;
   }
 }
 

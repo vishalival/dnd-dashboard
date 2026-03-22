@@ -260,9 +260,10 @@ function SessionClosingScreen({ synthesis }: { synthesis: SessionSynthesis }) {
 
 // ─── LiveSessionPanel ─────────────────────────────────────────────────────────
 
-function LiveSessionPanel({ session, onSessionEnded }: {
+function LiveSessionPanel({ session, onSessionEnded, isResumable }: {
   session: SessionData;
   onSessionEnded: (synthesis: SessionSynthesis) => void;
+  isResumable: boolean;
 }) {
   const {
     phase, activeSessionId,
@@ -298,7 +299,9 @@ function LiveSessionPanel({ session, onSessionEnded }: {
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [session.id]);
 
+  // Only auto-start for the most recent in_progress session
   useEffect(() => {
+    if (!isResumable) return;
     if (!isRecording()) {
       setActiveSession(session.id);
       startRecording(session.id);
@@ -306,7 +309,9 @@ function LiveSessionPanel({ session, onSessionEnded }: {
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
+  // Only resume on tab focus for the resumable session
   useEffect(() => {
+    if (!isResumable) return;
     const onVisibilityChange = () => {
       if (!document.hidden && activeSessionId === session.id && !isRecording()) {
         startRecording(session.id);
@@ -314,7 +319,7 @@ function LiveSessionPanel({ session, onSessionEnded }: {
     };
     document.addEventListener("visibilitychange", onVisibilityChange);
     return () => document.removeEventListener("visibilitychange", onVisibilityChange);
-  }, [session.id, activeSessionId]);
+  }, [session.id, activeSessionId, isResumable]);
 
   const endSession = async () => {
     stopRecording();
@@ -337,6 +342,39 @@ function LiveSessionPanel({ session, onSessionEnded }: {
 
   if (synthesis && phase === "done") return <SessionClosingScreen synthesis={synthesis} />;
 
+  // Non-resumable: old in_progress session — can only be ended, not resumed
+  if (!isResumable) {
+    return (
+      <div className="space-y-4">
+        <div className="flex items-center justify-between gap-3">
+          <div className="flex items-center gap-2 text-sm text-zinc-500">
+            <MicOff className="h-4 w-4 shrink-0" />
+            <span>Recording closed — only the most recent session can be resumed.</span>
+          </div>
+          <Button variant="destructive" size="sm" onClick={endSession} disabled={isEnding} className="gap-1.5 text-xs shrink-0">
+            <Square className="h-3 w-3" />End Session
+          </Button>
+        </div>
+        {session.transcript && (
+          <div className="border border-white/[0.04] rounded-lg overflow-hidden">
+            <button onClick={() => setShowTranscript(!showTranscript)} className="flex items-center justify-between w-full px-4 py-2.5 hover:bg-white/[0.02] transition-colors">
+              <div className="flex items-center gap-2 text-xs text-zinc-500">
+                <FileText className="h-3.5 w-3.5" />View Transcript
+                <Badge variant="secondary" className="text-[10px] h-4 px-1.5 font-mono">{session.transcript.split(/\s+/).length} words</Badge>
+              </div>
+              {showTranscript ? <ChevronUp className="h-3.5 w-3.5 text-zinc-600" /> : <ChevronDown className="h-3.5 w-3.5 text-zinc-600" />}
+            </button>
+            {showTranscript && (
+              <div className="px-4 pb-4 pt-1 max-h-48 overflow-y-auto border-t border-white/[0.04]">
+                <p className="text-xs text-zinc-400 leading-relaxed font-mono whitespace-pre-wrap">{session.transcript}</p>
+              </div>
+            )}
+          </div>
+        )}
+      </div>
+    );
+  }
+
   return (
     <div className="space-y-4">
       <div className="flex items-center justify-between">
@@ -357,7 +395,7 @@ function LiveSessionPanel({ session, onSessionEnded }: {
             </>
           )}
           {!isListening && !isEnding && (
-            <Button size="sm" variant="ghost" onClick={() => startRecording(session.id)} className="text-xs h-7 gap-1">
+            <Button size="sm" variant="ghost" onClick={() => { setActiveSession(session.id); startRecording(session.id); }} className="text-xs h-7 gap-1">
               <Mic className="h-3 w-3" /> Resume
             </Button>
           )}
@@ -533,11 +571,13 @@ interface EditDraft {
   checklist: string[];
 }
 
-function SessionDetail({ session, onStartSession, onSessionEnded, onSave }: {
+function SessionDetail({ session, onStartSession, onSessionEnded, onSave, onResumeSession, isResumable }: {
   session: SessionData;
   onStartSession: () => void;
   onSessionEnded: (synthesis: SessionSynthesis) => void;
   onSave: (updated: SessionData) => void;
+  onResumeSession: (sessionId: string) => void;
+  isResumable: boolean;
 }) {
   const [isEditing, setIsEditing] = useState(false);
   const [isSaving, setIsSaving] = useState(false);
@@ -667,6 +707,11 @@ function SessionDetail({ session, onStartSession, onSessionEnded, onSave }: {
                   <Pencil className="h-3.5 w-3.5" />Edit Plan
                 </Button>
               )}
+              {isCompleted && isResumable && (
+                <Button variant="outline" size="sm" onClick={() => onResumeSession(session.id)} className="gap-1.5 text-xs h-8 border-crimson/40 text-crimson hover:bg-crimson/10">
+                  <Mic className="h-3.5 w-3.5" />Continue Recording
+                </Button>
+              )}
               {canStart && (
                 <Button variant="gold" size="sm" onClick={onStartSession} className="gap-1.5">
                   <Play className="h-3.5 w-3.5" />Start Session
@@ -680,7 +725,7 @@ function SessionDetail({ session, onStartSession, onSessionEnded, onSave }: {
       {/* Live session panel */}
       {isInProgress && (
         <div className="rounded-xl border border-crimson/20 bg-crimson/[0.03] p-5">
-          <LiveSessionPanel session={session} onSessionEnded={onSessionEnded} />
+          <LiveSessionPanel session={session} onSessionEnded={onSessionEnded} isResumable={isResumable} />
         </div>
       )}
 
@@ -1003,6 +1048,10 @@ export function SessionsClient({ campaign }: { campaign: CampaignData }) {
   const filteredSessions = statusFilter === "all" ? sessions : sessions.filter((s) => s.status === statusFilter);
   const sortedSessions = [...filteredSessions].sort((a, b) => b.sessionNumber - a.sessionNumber);
 
+  // The most recent session by session number can always be resumed (re-opened if completed)
+  const resumableSessionId = [...sessions]
+    .sort((a, b) => b.sessionNumber - a.sessionNumber)[0]?.id ?? null;
+
   const handleCreateSession = async () => {
     if (!newSessionTitle.trim()) return;
     setIsCreating(true);
@@ -1071,6 +1120,22 @@ export function SessionsClient({ campaign }: { campaign: CampaignData }) {
     );
     setSessions(updated);
     setSelectedSession(updated.find((s) => s.id === selectedSession.id) ?? selectedSession);
+  };
+
+  const handleResumeSession = async (sessionId: string) => {
+    try {
+      const res = await fetch("/api/session/resume", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ sessionId }),
+      });
+      if (!res.ok) return;
+      const updated = await res.json();
+      setSessions((prev) => prev.map((s) => (s.id === sessionId ? { ...s, ...updated } : s)));
+      setSelectedSession((prev) => (prev?.id === sessionId ? { ...prev, ...updated } : prev));
+    } catch (err) {
+      console.error("[handleResumeSession]", err);
+    }
   };
 
   return (
@@ -1195,6 +1260,8 @@ export function SessionsClient({ campaign }: { campaign: CampaignData }) {
                 onStartSession={handleStartSession}
                 onSessionEnded={handleSessionEnded}
                 onSave={handleSaveSession}
+                onResumeSession={handleResumeSession}
+                isResumable={selectedSession.id === resumableSessionId}
               />
             </Card>
           ) : (
