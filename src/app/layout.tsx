@@ -1,19 +1,12 @@
 import type { Metadata } from "next";
-import { Lora, Cinzel } from "next/font/google";
+import { Inter } from "next/font/google";
 import "./globals.css";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { ThemeProvider } from "@/components/theme-provider";
 
-const lora = Lora({
+const inter = Inter({
   subsets: ["latin"],
-  variable: "--font-body",
-  style: ["normal", "italic"],
-});
-
-const cinzel = Cinzel({
-  subsets: ["latin"],
-  variable: "--font-heading",
-  weight: ["400", "500", "600", "700"],
+  variable: "--font-sans",
 });
 
 export const metadata: Metadata = {
@@ -30,7 +23,7 @@ export default function RootLayout({
   return (
     <html lang="en" suppressHydrationWarning>
       <body
-        className={`${lora.variable} ${cinzel.variable} font-body antialiased min-h-screen bg-background text-foreground`}
+        className={`${inter.variable} font-sans antialiased min-h-screen bg-background text-foreground`}
       >
         <ThemeProvider
           attribute="class"
