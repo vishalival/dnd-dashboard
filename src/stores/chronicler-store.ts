@@ -1,6 +1,6 @@
 import { create } from "zustand";
 
-export type ChroniclerPhase = "idle" | "recording" | "processing" | "done" | "error";
+export type ChroniclerPhase = "idle" | "recording" | "paused" | "processing" | "done" | "error";
 
 export interface LiveExtractions {
   session_outline_updates: string[];

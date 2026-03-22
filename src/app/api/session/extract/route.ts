@@ -5,6 +5,51 @@ import { extractTextFromTipTap } from "@/lib/tiptap-utils";
 import { emitAgentEvent } from "@/lib/sse-emitter";
 import type { JSONContent } from "@tiptap/core";
 
+function escapeRegExp(s: string): string {
+  return s.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+}
+
+function matchEntities<T extends { id: string }>(
+  aiNames: string[],
+  dbEntities: T[],
+  getLabel: (e: T) => string,
+): T[] {
+  const matched = new Map<string, T>();
+
+  for (const aiName of aiNames) {
+    const aiLower = aiName.toLowerCase().trim();
+    if (!aiLower) continue;
+
+    // Tier 1: Exact match (case-insensitive)
+    let match = dbEntities.find(
+      (e) => getLabel(e).toLowerCase() === aiLower,
+    );
+
+    // Tier 2: Word-boundary containment (AI name in DB name)
+    if (!match) {
+      const aiPattern = new RegExp(`\\b${escapeRegExp(aiLower)}\\b`, "i");
+      match = dbEntities.find((e) => aiPattern.test(getLabel(e)));
+    }
+
+    // Tier 3: Word-boundary containment (DB name in AI name)
+    if (!match) {
+      match = dbEntities.find((e) => {
+        const dbPattern = new RegExp(
+          `\\b${escapeRegExp(getLabel(e).toLowerCase())}\\b`,
+          "i",
+        );
+        return dbPattern.test(aiLower);
+      });
+    }
+
+    if (match && !matched.has(match.id)) {
+      matched.set(match.id, match);
+    }
+  }
+
+  return Array.from(matched.values());
+}
+
 // POST /api/session/extract
 // Body: { sessionId: string }
 // Reads the session outline document, extracts structured fields via AI,
@@ -87,6 +132,13 @@ export async function POST(req: NextRequest) {
     emit("Analyzing outline with AI...", 2, 6);
     const extraction = await extractSessionFields(outlineText, session.sessionNumber);
 
+    const allFieldsEmpty = Object.values(extraction).every(
+      (arr) => Array.isArray(arr) && arr.length === 0,
+    );
+    if (allFieldsEmpty && outlineText.length > 100) {
+      console.warn("[session/extract] All extraction fields empty despite substantial outline. AI may have returned unparseable JSON.");
+    }
+
     // Step 3: Identify entities
     emit("Identifying connected entities...", 3, 6);
     const entities = await identifyEntities(outlineText, session.sessionNumber, {
@@ -100,41 +152,12 @@ export async function POST(req: NextRequest) {
       })),
     });
 
-    // Step 4: Fuzzy-match entities
+    // Step 4: Match entities (tiered: exact → word-boundary)
     emit("Linking NPCs, plot lines, and secrets...", 4, 6);
 
-    const matchedNpcs = entities.npcNames
-      .map((name) => {
-        const lower = name.toLowerCase();
-        return allNpcs.find(
-          (n) =>
-            n.name.toLowerCase().includes(lower) ||
-            lower.includes(n.name.toLowerCase()),
-        );
-      })
-      .filter(Boolean) as Array<{ id: string; name: string }>;
-
-    const matchedStorylines = entities.storylineTitles
-      .map((title) => {
-        const lower = title.toLowerCase();
-        return allStorylines.find(
-          (s) =>
-            s.title.toLowerCase().includes(lower) ||
-            lower.includes(s.title.toLowerCase()),
-        );
-      })
-      .filter(Boolean) as Array<{ id: string; title: string }>;
-
-    const matchedSecrets = entities.secretTitles
-      .map((title) => {
-        const lower = title.toLowerCase();
-        return allSecrets.find(
-          (s) =>
-            s.title.toLowerCase().includes(lower) ||
-            lower.includes(s.title.toLowerCase()),
-        );
-      })
-      .filter(Boolean) as Array<{ id: string; title: string }>;
+    const matchedNpcs = matchEntities(entities.npcNames, allNpcs, (n) => n.name);
+    const matchedStorylines = matchEntities(entities.storylineTitles, allStorylines, (s) => s.title);
+    const matchedSecrets = matchEntities(entities.secretTitles, allSecrets, (s) => s.title);
 
     // Step 5: Save everything in a transaction
     emit("Saving to database...", 5, 6);
@@ -178,10 +201,11 @@ export async function POST(req: NextRequest) {
       }
     });
 
-    // Step 6: Done
+    // Step 6: Done — use "log" state, NOT "done", because "done" triggers
+    // the LiveSessionPanel's SSE handler to show SessionClosingScreen.
     emitAgentEvent(sessionId, {
       agent: "chronicler",
-      state: "done",
+      state: "log",
       message: "Extraction complete!",
       data: {},
     });
@@ -197,6 +221,9 @@ export async function POST(req: NextRequest) {
         secretId: s.id,
         secret: { title: s.title },
       })),
+      ...(allFieldsEmpty && outlineText.length > 100
+        ? { warning: "Extraction returned empty results — try again or simplify the outline." }
+        : {}),
     });
   } catch (error) {
     console.error("[session/extract]", error);

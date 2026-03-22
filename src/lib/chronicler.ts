@@ -4,12 +4,22 @@ const client = new Anthropic({ apiKey: process.env.ANTHROPIC_API_KEY });
 
 const MODEL = "claude-sonnet-4-5";
 
-// Strip markdown code fences Claude sometimes adds despite instructions
+// Extract JSON object from AI response, handling code fences and preamble text
 function extractJson(raw: string): string {
-  return raw
+  // Strip markdown code fences
+  let cleaned = raw
     .replace(/^```(?:json)?\s*/i, "")
     .replace(/\s*```\s*$/i, "")
     .trim();
+
+  // Extract the outermost JSON object (handles preamble/trailing text)
+  const firstBrace = cleaned.indexOf("{");
+  const lastBrace = cleaned.lastIndexOf("}");
+  if (firstBrace !== -1 && lastBrace > firstBrace) {
+    cleaned = cleaned.slice(firstBrace, lastBrace + 1);
+  }
+
+  return cleaned;
 }
 
 // ─── Shared types ─────────────────────────────────────────────────────────────
@@ -387,7 +397,7 @@ export async function extractSessionFields(
 
   const response = await client.messages.create({
     model: MODEL,
-    max_tokens: 2048,
+    max_tokens: 4096,
     system: EXTRACT_FIELDS_SYSTEM_PROMPT,
     messages: [
       {
@@ -397,6 +407,10 @@ export async function extractSessionFields(
     ],
   });
 
+  if (response.stop_reason !== "end_turn") {
+    console.warn(`[chronicler] extractSessionFields stop_reason: ${response.stop_reason} — response may be truncated`);
+  }
+
   const raw =
     response.content[0].type === "text"
       ? extractJson(response.content[0].text)
@@ -405,7 +419,7 @@ export async function extractSessionFields(
   try {
     return JSON.parse(raw) as SessionFieldExtraction;
   } catch {
-    console.error("[chronicler] Failed to parse field extraction:", raw);
+    console.error("[chronicler] Failed to parse field extraction. Raw response (first 500 chars):", raw.slice(0, 500));
     return EMPTY_EXTRACTION;
   }
 }

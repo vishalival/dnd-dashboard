@@ -1,6 +1,7 @@
 "use client";
 
 import React, { useState, useEffect } from "react";
+import Link from "next/link";
 import { motion, AnimatePresence } from "framer-motion";
 import {
   CalendarClock,
@@ -29,6 +30,7 @@ import {
   Activity,
   Mic,
   MicOff,
+  Pause,
   Square,
   Scroll,
   Package,
@@ -39,6 +41,7 @@ import {
   X,
   Wand2,
   Loader2,
+  ExternalLink,
 } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
@@ -52,7 +55,7 @@ import { formatDate, parseJsonField, parseExtractedItems } from "@/lib/utils";
 import { cn } from "@/lib/utils";
 import type { CampaignData, SessionData } from "@/lib/data";
 import { useChroniclerStore, type AgentLogEntry, type LiveExtractions, type SessionSynthesis } from "@/stores/chronicler-store";
-import { startRecording, stopRecording, isRecording } from "@/lib/recording-manager";
+import { startRecording, stopRecording, pauseRecording, isRecording } from "@/lib/recording-manager";
 import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
 import { TipTapReadonlyViewer } from "@/components/sessions/tiptap-readonly-viewer";
 import { SourceSnippet } from "@/components/sessions/source-snippet";
@@ -207,7 +210,7 @@ function SessionClosingScreen({ synthesis }: { synthesis: SessionSynthesis }) {
         <p className="text-[10px] font-mono text-zinc-500 uppercase tracking-wider mb-2">Session Summary</p>
         <p className="text-sm text-zinc-300 leading-relaxed">{synthesis.session_summary}</p>
       </div>
-      {synthesis.key_events_final.length > 0 && (
+      {synthesis.key_events_final?.length > 0 && (
         <div className="space-y-2">
           <p className="text-[10px] font-mono text-zinc-500 uppercase tracking-wider">Key Events</p>
           {synthesis.key_events_final.map((e, i) => {
@@ -220,7 +223,7 @@ function SessionClosingScreen({ synthesis }: { synthesis: SessionSynthesis }) {
           })}
         </div>
       )}
-      {synthesis.npc_status_changes.length > 0 && (
+      {synthesis.npc_status_changes?.length > 0 && (
         <div className="space-y-2">
           <p className="text-[10px] font-mono text-zinc-500 uppercase tracking-wider">NPC Changes</p>
           {synthesis.npc_status_changes.map((c, i) => (
@@ -239,7 +242,7 @@ function SessionClosingScreen({ synthesis }: { synthesis: SessionSynthesis }) {
         </div>
       )}
       <div className="grid grid-cols-2 gap-3">
-        {synthesis.unresolved_threads.length > 0 && (
+        {synthesis.unresolved_threads?.length > 0 && (
           <div className="p-3 rounded-lg bg-white/[0.02] border border-white/[0.04]">
             <p className="text-[10px] font-mono text-zinc-500 uppercase tracking-wider mb-2">Open Threads</p>
             <ul className="space-y-1">
@@ -249,7 +252,7 @@ function SessionClosingScreen({ synthesis }: { synthesis: SessionSynthesis }) {
             </ul>
           </div>
         )}
-        {synthesis.items_gained.length > 0 && (
+        {synthesis.items_gained?.length > 0 && (
           <div className="p-3 rounded-lg bg-white/[0.02] border border-white/[0.04]">
             <p className="text-[10px] font-mono text-zinc-500 uppercase tracking-wider mb-2">Items Gained</p>
             <ul className="space-y-1">
@@ -278,6 +281,7 @@ function LiveSessionPanel({ session, onSessionEnded }: {
 
   const [showTranscript, setShowTranscript] = useState(false);
   const [isEnding, setIsEnding] = useState(false);
+  const [showCompleteConfirm, setShowCompleteConfirm] = useState(false);
   const isListening = phase === "recording" && activeSessionId === session.id;
 
   useEffect(() => {
@@ -286,9 +290,9 @@ function LiveSessionPanel({ session, onSessionEnded }: {
       const msg = JSON.parse(e.data);
       if (msg.state === "log") {
         addAgentLog(msg.message);
-      } else if (msg.state === "processing" && msg.data && Object.keys(msg.data).length > 0) {
+      } else if (msg.state === "processing" && msg.data && Array.isArray(msg.data.key_events)) {
         mergeIncomingExtractions(msg.data as LiveExtractions);
-      } else if (msg.state === "done") {
+      } else if (msg.state === "done" && msg.data?.session_summary) {
         setSynthesis(msg.data as SessionSynthesis);
         setPhase("done");
         onSessionEnded(msg.data as SessionSynthesis);
@@ -305,24 +309,31 @@ function LiveSessionPanel({ session, onSessionEnded }: {
   }, [session.id]);
 
   useEffect(() => {
+    // Only set the active session on mount — don't auto-start recording.
+    // The user must explicitly click Resume to begin.
     if (!isRecording()) {
       setActiveSession(session.id);
-      startRecording(session.id);
     }
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   useEffect(() => {
     const onVisibilityChange = () => {
-      if (!document.hidden && activeSessionId === session.id && !isRecording()) {
+      // Only auto-resume if we were actively recording when the tab lost focus
+      if (!document.hidden && phase === "recording" && activeSessionId === session.id && !isRecording()) {
         startRecording(session.id);
       }
     };
     document.addEventListener("visibilitychange", onVisibilityChange);
     return () => document.removeEventListener("visibilitychange", onVisibilityChange);
-  }, [session.id, activeSessionId]);
+  }, [session.id, activeSessionId, phase]);
 
-  const endSession = async () => {
+  const handlePause = () => {
+    pauseRecording();
+  };
+
+  const completeSession = async () => {
+    setShowCompleteConfirm(false);
     stopRecording();
     setIsEnding(true);
     setPhase("processing");
@@ -368,10 +379,32 @@ function LiveSessionPanel({ session, onSessionEnded }: {
             </Button>
           )}
         </div>
-        <Button variant="destructive" size="sm" onClick={endSession} disabled={isEnding} className="gap-1.5 text-xs shrink-0">
-          <Square className="h-3 w-3" />End Session
-        </Button>
+        <div className="flex items-center gap-2 shrink-0">
+          {isListening && !isEnding && (
+            <Button variant="ghost" size="sm" onClick={handlePause} className="gap-1.5 text-xs">
+              <Pause className="h-3 w-3" />Pause
+            </Button>
+          )}
+          <Button variant="destructive" size="sm" onClick={() => setShowCompleteConfirm(true)} disabled={isEnding} className="gap-1.5 text-xs">
+            <Square className="h-3 w-3" />Complete Session
+          </Button>
+        </div>
       </div>
+
+      <Dialog open={showCompleteConfirm} onOpenChange={setShowCompleteConfirm}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Complete this session?</DialogTitle>
+          </DialogHeader>
+          <p className="text-sm text-zinc-400">
+            This will finalize the session and run the Chronicler&apos;s synthesis. You won&apos;t be able to resume recording after this.
+          </p>
+          <DialogFooter>
+            <Button variant="ghost" size="sm" onClick={() => setShowCompleteConfirm(false)}>Cancel</Button>
+            <Button variant="destructive" size="sm" onClick={completeSession}>Complete Session</Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
 
       {micError && (
         <div className="flex items-center gap-2 px-3 py-2 rounded-lg bg-crimson/10 border border-crimson/20 text-xs text-crimson-light">
@@ -539,10 +572,8 @@ interface EditDraft {
   checklist: string[];
 }
 
-function SessionDetail({ session, onStartSession, onSessionEnded, onSave }: {
+function SessionDetail({ session, onSave }: {
   session: SessionData;
-  onStartSession: () => void;
-  onSessionEnded: (synthesis: SessionSynthesis) => void;
   onSave: (updated: SessionData) => void;
 }) {
   const [isEditing, setIsEditing] = useState(false);
@@ -598,11 +629,8 @@ function SessionDetail({ session, onStartSession, onSessionEnded, onSave }: {
   const improvPrompts = parseExtractedItems(session.improvPrompts);
   const reminders = isEditing ? draft.reminders : parseExtractedItems(session.reminders);
   const checklist = isEditing ? draft.checklist : parseExtractedItems(session.checklist);
-  const keyEvents = parseJsonField<KeyEvent>(session.keyEvents ?? null);
-
   const isInProgress = session.status === "in_progress";
   const isCompleted = session.status === "completed";
-  const canStart = ["ready", "planning", "draft"].includes(session.status);
 
   return (
     <motion.div
@@ -610,52 +638,29 @@ function SessionDetail({ session, onStartSession, onSessionEnded, onSave }: {
       animate={{ opacity: 1, y: 0 }}
       className="space-y-4"
     >
-      {/* Header */}
-      <div className="flex items-start justify-between gap-3">
-        <div className="flex-1 min-w-0">
-          {isEditing ? (
-            <div className="space-y-2">
-              <input
-                value={draft.title}
-                onChange={(e) => setDraft((d) => ({ ...d, title: e.target.value }))}
-                className="w-full text-xl font-heading font-semibold bg-white/[0.03] border border-white/[0.08] rounded-lg px-3 py-1.5 text-white focus:outline-none focus:border-white/[0.2]"
-              />
-              <select
-                value={draft.status}
-                onChange={(e) => setDraft((d) => ({ ...d, status: e.target.value }))}
-                className="text-xs bg-[#141416] border border-white/[0.08] rounded-md px-2 py-1 text-zinc-300 focus:outline-none"
-              >
-                <option value="draft">Draft</option>
-                <option value="planning">Planning</option>
-                <option value="ready">Ready</option>
-              </select>
-            </div>
-          ) : (
-            <>
-              <h2 className="text-xl font-heading font-semibold text-foreground dark:text-white">
-                {session.title.toLowerCase().startsWith(`session ${session.sessionNumber}`)
-                  ? session.title
-                  : `Session ${session.sessionNumber}: ${session.title}`}
-              </h2>
-              <div className="flex items-center gap-3 mt-2">
-                {session.date && (
-                  <span className="text-sm text-muted-foreground dark:text-zinc-400 flex items-center gap-1">
-                    <Clock className="h-3.5 w-3.5" />
-                    {formatDate(session.date)}
-                  </span>
-                )}
-                <StatusBadge status={session.status} />
-                {session.template && (
-                  <Badge variant="outline" className="text-xs gap-1">
-                    {templateIcons[session.template]}
-                    {session.template}
-                  </Badge>
-                )}
-              </div>
-            </>
-          )}
-        </div>
-
+      {/* Edit controls */}
+      <div className="flex items-center justify-between gap-3">
+        {isEditing ? (
+          <div className="flex-1 space-y-2">
+            <input
+              value={draft.title}
+              onChange={(e) => setDraft((d) => ({ ...d, title: e.target.value }))}
+              className="w-full text-sm font-medium bg-white/[0.03] border border-white/[0.08] rounded-lg px-3 py-2 text-zinc-200 placeholder:text-zinc-600 focus:outline-none focus:border-white/[0.15]"
+              placeholder="Session title…"
+            />
+            <select
+              value={draft.status}
+              onChange={(e) => setDraft((d) => ({ ...d, status: e.target.value }))}
+              className="text-xs bg-[#141416] border border-white/[0.08] rounded-md px-2 py-1 text-zinc-300 focus:outline-none"
+            >
+              <option value="draft">Draft</option>
+              <option value="planning">Planning</option>
+              <option value="ready">Ready</option>
+            </select>
+          </div>
+        ) : (
+          <div />
+        )}
         <div className="flex items-center gap-2 shrink-0">
           {isEditing ? (
             <>
@@ -668,66 +673,15 @@ function SessionDetail({ session, onStartSession, onSessionEnded, onSave }: {
             </>
           ) : (
             <>
-              {!isInProgress && (
+              {!isInProgress && !isCompleted && (
                 <Button variant="ghost" size="sm" onClick={() => setIsEditing(true)} className="gap-1.5 text-xs h-8 text-zinc-400 hover:text-zinc-200">
                   <Pencil className="h-3.5 w-3.5" />Edit Plan
-                </Button>
-              )}
-              {canStart && (
-                <Button variant="gold" size="sm" onClick={onStartSession} className="gap-1.5">
-                  <Play className="h-3.5 w-3.5" />Start Session
                 </Button>
               )}
             </>
           )}
         </div>
       </div>
-
-      {/* Live session panel */}
-      {isInProgress && (
-        <div className="rounded-xl border border-crimson/20 bg-crimson/[0.03] p-5">
-          <LiveSessionPanel session={session} onSessionEnded={onSessionEnded} />
-        </div>
-      )}
-
-      {/* Completed recap */}
-      {isCompleted && session.recapForNext && (
-        <div className="space-y-3">
-          <div className="flex items-center gap-2 text-gold">
-            <Sparkles className="h-4 w-4" />
-            <span className="text-sm font-medium font-heading">Chronicler Summary</span>
-          </div>
-          <div className="p-4 rounded-lg bg-gold/5 border border-gold/20">
-            <p className="text-xs text-gold/60 font-mono mb-2 uppercase tracking-wider">Previously on...</p>
-            <p className="text-sm text-zinc-200 leading-relaxed italic">{session.recapForNext}</p>
-          </div>
-          {keyEvents.length > 0 && (
-            <div className="space-y-2">
-              <p className="text-xs text-zinc-500 uppercase tracking-wider font-mono">Key Events</p>
-              {keyEvents.map((e, i) => {
-                const cfg = eventConfig[e.type as EventType];
-                return (
-                  <div key={i} className={cn("flex items-start gap-2 px-3 py-2 rounded-lg border text-sm", cfg.className)}>
-                    {cfg.icon}<span>{e.description}</span>
-                  </div>
-                );
-              })}
-            </div>
-          )}
-        </div>
-      )}
-
-      {/* Session Transcript (completed sessions) */}
-      {isCompleted && session.transcript && (
-        <CollapsibleSection
-          title="Session Transcript"
-          icon={<Scroll className="h-4 w-4 text-zinc-500" />}
-        >
-          <p className="text-xs text-zinc-400 leading-relaxed font-mono whitespace-pre-wrap max-h-64 overflow-y-auto">
-            {session.transcript}
-          </p>
-        </CollapsibleSection>
-      )}
 
       {/* Checklist */}
       {(isEditing || checklist.length > 0) && (
@@ -1110,6 +1064,9 @@ export function SessionsClient({ campaign }: { campaign: CampaignData }) {
         throw new Error(data.error || "Extraction failed");
       }
       const data = await res.json();
+      if (data.warning) {
+        setExtractError(data.warning);
+      }
       const updatedSession: SessionData = {
         ...selectedSession,
         checklist: JSON.stringify(data.checklist),
@@ -1250,9 +1207,92 @@ export function SessionsClient({ campaign }: { campaign: CampaignData }) {
         </div>
 
         {/* Session Detail */}
-        <div className="lg:col-span-8">
+        <div className="lg:col-span-8 lg:max-h-[calc(100vh-10rem)] lg:overflow-y-auto lg:scrollbar-thin">
           {selectedSession ? (
-            <Card className="p-6">
+            <Card className="p-6 space-y-4">
+              {/* Title & Status */}
+              <div className="flex items-start justify-between gap-3">
+                <div className="flex-1 min-w-0">
+                  <h2 className="text-xl font-heading font-semibold text-foreground dark:text-white">
+                    {selectedSession.title.toLowerCase().startsWith(`session ${selectedSession.sessionNumber}`)
+                      ? selectedSession.title
+                      : `Session ${selectedSession.sessionNumber}: ${selectedSession.title}`}
+                  </h2>
+                  <div className="flex items-center gap-3 mt-2">
+                    {selectedSession.date && (
+                      <span className="text-sm text-muted-foreground dark:text-zinc-400 flex items-center gap-1">
+                        <Clock className="h-3.5 w-3.5" />
+                        {formatDate(selectedSession.date)}
+                      </span>
+                    )}
+                    <StatusBadge status={selectedSession.status} />
+                    {selectedSession.template && (
+                      <Badge variant="outline" className="text-xs gap-1">
+                        {templateIcons[selectedSession.template]}
+                        {selectedSession.template}
+                      </Badge>
+                    )}
+                  </div>
+                </div>
+                <div className="flex items-center gap-2 shrink-0">
+                  {["ready", "planning", "draft"].includes(selectedSession.status) && (
+                    <Button variant="gold" size="sm" onClick={handleStartSession} className="gap-1.5">
+                      <Play className="h-3.5 w-3.5" />Start Session
+                    </Button>
+                  )}
+                </div>
+              </div>
+
+              {/* Live recording panel (in-progress sessions) */}
+              {selectedSession.status === "in_progress" && (
+                <div className="rounded-xl border border-crimson/20 bg-crimson/[0.03] p-5">
+                  <LiveSessionPanel session={selectedSession} onSessionEnded={handleSessionEnded} />
+                </div>
+              )}
+
+              {/* Completed recap */}
+              {selectedSession.status === "completed" && selectedSession.recapForNext && (
+                <div className="space-y-3">
+                  <div className="flex items-center gap-2 text-gold">
+                    <Sparkles className="h-4 w-4" />
+                    <span className="text-sm font-medium font-heading">Chronicler Summary</span>
+                  </div>
+                  <div className="p-4 rounded-lg bg-gold/5 border border-gold/20">
+                    <p className="text-xs text-gold/60 font-mono mb-2 uppercase tracking-wider">Previously on...</p>
+                    <p className="text-sm text-zinc-200 leading-relaxed italic">{selectedSession.recapForNext}</p>
+                  </div>
+                  {(() => {
+                    const keyEvents = parseJsonField<KeyEvent>(selectedSession.keyEvents ?? null);
+                    return keyEvents.length > 0 ? (
+                      <div className="space-y-2">
+                        <p className="text-xs text-zinc-500 uppercase tracking-wider font-mono">Key Events</p>
+                        {keyEvents.map((e, i) => {
+                          const cfg = eventConfig[e.type as EventType];
+                          return (
+                            <div key={i} className={cn("flex items-start gap-2 px-3 py-2 rounded-lg border text-sm", cfg.className)}>
+                              {cfg.icon}<span>{e.description}</span>
+                            </div>
+                          );
+                        })}
+                      </div>
+                    ) : null;
+                  })()}
+                </div>
+              )}
+
+              {/* Session Transcript (completed sessions) */}
+              {selectedSession.status === "completed" && selectedSession.transcript && (
+                <CollapsibleSection
+                  title="Session Transcript"
+                  icon={<Scroll className="h-4 w-4 text-zinc-500" />}
+                >
+                  <p className="text-xs text-zinc-400 leading-relaxed font-mono whitespace-pre-wrap max-h-64 overflow-y-auto">
+                    {selectedSession.transcript}
+                  </p>
+                </CollapsibleSection>
+              )}
+
+              {/* Planning / Outline Tabs */}
               <Tabs defaultValue="planning">
                 <TabsList className="mb-4">
                   <TabsTrigger value="planning" className="gap-1.5">
@@ -1296,14 +1336,22 @@ export function SessionsClient({ campaign }: { campaign: CampaignData }) {
                   )}
                   <SessionDetail
                     session={selectedSession}
-                    onStartSession={handleStartSession}
-                    onSessionEnded={handleSessionEnded}
                     onSave={handleSaveSession}
                   />
                 </TabsContent>
                 <TabsContent value="outline">
                   {outlineDoc ? (
-                    <TipTapReadonlyViewer content={outlineDoc.content} />
+                    <div>
+                      <div className="flex justify-end mb-3">
+                        <Button variant="outline" size="sm" asChild className="gap-1.5 text-xs">
+                          <Link href={`/notes?doc=${outlineDoc.id}`}>
+                            <ExternalLink className="h-3.5 w-3.5" />
+                            Edit in Tome of Schemes
+                          </Link>
+                        </Button>
+                      </div>
+                      <TipTapReadonlyViewer content={outlineDoc.content} />
+                    </div>
                   ) : (
                     <div className="text-center py-12 text-muted-foreground dark:text-zinc-500">
                       <FileText className="h-8 w-8 mx-auto mb-3 opacity-50" />
