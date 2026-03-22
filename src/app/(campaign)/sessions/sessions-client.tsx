@@ -1229,7 +1229,14 @@ export function SessionsClient({ campaign }: { campaign: CampaignData }) {
   };
 
   const handleSaveSession = (updated: SessionData) => {
-    setSessions((prev) => prev.map((s) => (s.id === updated.id ? updated : s)));
+    setSessions((prev) => prev.map((s) => {
+      if (s.id === updated.id) return updated;
+      // Cascade: mark prior sessions as completed
+      if (updated.status === "completed" && s.sessionNumber < updated.sessionNumber && s.status !== "completed") {
+        return { ...s, status: "completed" };
+      }
+      return s;
+    }));
     setSelectedSession((prev) => (prev?.id === updated.id ? updated : prev));
   };
 
@@ -1248,11 +1255,16 @@ export function SessionsClient({ campaign }: { campaign: CampaignData }) {
 
   const handleSessionEnded = (synthesis: SessionSynthesis) => {
     if (!selectedSession) return;
-    const updated = sessions.map((s) =>
-      s.id === selectedSession.id
-        ? { ...s, status: "completed", summary: synthesis.session_summary, keyEvents: JSON.stringify(synthesis.key_events_final), recapForNext: synthesis.previously_on, title: synthesis.session_title || s.title, synthesis: JSON.stringify(synthesis) }
-        : s
-    );
+    const updated = sessions.map((s) => {
+      if (s.id === selectedSession.id) {
+        return { ...s, status: "completed", summary: synthesis.session_summary, keyEvents: JSON.stringify(synthesis.key_events_final), recapForNext: synthesis.previously_on, title: synthesis.session_title || s.title, synthesis: JSON.stringify(synthesis) };
+      }
+      // Mark all prior sessions as completed
+      if (s.sessionNumber < selectedSession.sessionNumber && s.status !== "completed") {
+        return { ...s, status: "completed" };
+      }
+      return s;
+    });
     setSessions(updated);
     setSelectedSession(updated.find((s) => s.id === selectedSession.id) ?? selectedSession);
   };
