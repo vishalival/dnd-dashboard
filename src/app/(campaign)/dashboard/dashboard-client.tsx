@@ -1,6 +1,6 @@
 "use client";
 
-import React from "react";
+import React, { useState } from "react";
 import Link from "next/link";
 import { motion } from "framer-motion";
 import {
@@ -21,12 +21,13 @@ import {
   Bell,
   MoreVertical,
   TrendingDown,
-  TrendingUp,
+  Pencil,
 } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
+import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { PageHeader } from "@/components/shared/page-header";
 import { StatusBadge } from "@/components/shared/status-badge";
 import { Progress } from "@/components/ui/progress";
@@ -160,11 +161,7 @@ export function DashboardClient({ campaign }: { campaign: CampaignData }) {
           </Dialog>
           
           {/* User Avatar */}
-          <div className="h-9 w-9 rounded-full bg-gradient-to-br from-amber-500 to-amber-700 flex items-center justify-center border border-white/10 shrink-0 cursor-pointer shadow-lg shadow-amber-900/20">
-            <span className="text-xs font-bold text-white shadow-sm">
-              {(campaign.dmName || "DM").split(" ").map(w => w[0]).join("").toUpperCase().slice(0, 2)}
-            </span>
-          </div>
+          <ProfileAvatar campaign={campaign} />
         </div>
       </div>
 
@@ -468,5 +465,81 @@ export function DashboardClient({ campaign }: { campaign: CampaignData }) {
         </div>
       </motion.div>
     </div>
+  );
+}
+
+function ProfileAvatar({ campaign }: { campaign: any }) {
+  const [isEditing, setIsEditing] = useState(false);
+  const [name, setName] = useState(campaign.dmName || "DM");
+  const [saving, setSaving] = useState(false);
+  const initials = (name || "DM").split(" ").map((w: string) => w[0]).join("").toUpperCase().slice(0, 2);
+
+  const handleSave = async () => {
+    setSaving(true);
+    try {
+      await fetch("/api/onboard", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ dmName: name, campaignId: campaign.id }),
+      });
+      setIsEditing(false);
+      window.location.reload();
+    } catch {
+      // ignore
+    } finally {
+      setSaving(false);
+    }
+  };
+
+  return (
+    <Popover>
+      <PopoverTrigger asChild>
+        <button className="h-9 w-9 rounded-full bg-gradient-to-br from-amber-500 to-amber-700 flex items-center justify-center border border-white/10 shrink-0 cursor-pointer shadow-lg shadow-amber-900/20 hover:scale-105 transition-transform">
+          <span className="text-xs font-bold text-white">{initials}</span>
+        </button>
+      </PopoverTrigger>
+      <PopoverContent align="end" className="w-64 p-0">
+        <div className="p-4 border-b border-border">
+          <div className="flex items-center gap-3">
+            <div className="h-10 w-10 rounded-full bg-gradient-to-br from-amber-500 to-amber-700 flex items-center justify-center shrink-0">
+              <span className="text-sm font-bold text-white">{initials}</span>
+            </div>
+            <div className="min-w-0">
+              <p className="text-sm font-semibold text-foreground truncate">{name}</p>
+              <p className="text-xs text-muted-foreground">Dungeon Master</p>
+            </div>
+          </div>
+        </div>
+        <div className="p-3 space-y-2">
+          {isEditing ? (
+            <>
+              <label className="text-xs text-muted-foreground font-medium">Display Name</label>
+              <input
+                value={name}
+                onChange={(e) => setName(e.target.value)}
+                className="w-full text-sm bg-accent/50 border border-border rounded-lg px-3 py-1.5 text-foreground focus:outline-none focus:ring-1 focus:ring-amber-500/50"
+                autoFocus
+              />
+              <div className="flex gap-2 pt-1">
+                <Button size="sm" className="flex-1 h-7 text-xs" onClick={handleSave} disabled={saving}>
+                  {saving ? "Saving..." : "Save"}
+                </Button>
+                <Button size="sm" variant="outline" className="flex-1 h-7 text-xs" onClick={() => { setIsEditing(false); setName(campaign.dmName || "DM"); }}>
+                  Cancel
+                </Button>
+              </div>
+            </>
+          ) : (
+            <button
+              onClick={() => setIsEditing(true)}
+              className="w-full flex items-center gap-2 px-3 py-2 rounded-lg text-sm text-foreground hover:bg-accent transition-colors"
+            >
+              <Pencil className="h-3.5 w-3.5 text-muted-foreground" />
+              Edit Profile
+            </button>
+          )}
+        </div>
+      </PopoverContent>
+    </Popover>
   );
 }
