@@ -10,6 +10,7 @@ const inter = Inter({
 });
 
 export const metadata: Metadata = {
+  metadataBase: new URL("https://arcmind-dnd.vercel.app"),
   title: "ArcMind — Dungeon Master Command Center",
   description:
     "A premium Dungeon Master operating system for campaign management, session planning, NPC tracking, and storyline orchestration.",
