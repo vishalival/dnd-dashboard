@@ -1,6 +1,6 @@
 import { create } from "zustand";
 
-export type ChroniclerPhase = "idle" | "recording" | "processing" | "done" | "error";
+export type ChroniclerPhase = "idle" | "recording" | "paused" | "processing" | "done" | "error";
 
 export interface LiveExtractions {
   session_outline_updates: string[];
@@ -10,19 +10,42 @@ export interface LiveExtractions {
   inventory_changes: Array<{ character: string; item: string; action: "gained" | "lost" }>;
 }
 
+export interface PlanItemStatus {
+  description: string;
+  status: "completed" | "skipped" | "partially";
+  note: string;
+}
+
+export interface NewNpc {
+  name: string;
+  race?: string;
+  role?: string;
+  disposition: string;
+  status: string;
+  faction?: string;
+  description: string;
+}
+
 export interface SessionSynthesis {
   session_summary: string;
   previously_on: string;
   key_events_final: Array<{ type: string; description: string }>;
   npc_status_changes: Array<{ name: string; old_status: string; new_status: string; reason: string }>;
+  new_npcs: NewNpc[];
+  resolved_storylines: string[];
+  revealed_secrets: string[];
   unresolved_threads: string[];
   items_gained: string[];
   session_title: string;
+  plan_beats_status: PlanItemStatus[];
+  plan_encounters_status: PlanItemStatus[];
+  unexpected_events: string[];
 }
 
 export interface AgentLogEntry {
   message: string;
   timestamp: Date;
+  elapsedMs: number;
 }
 
 export function emptyExtractions(): LiveExtractions {
@@ -65,6 +88,7 @@ interface ChroniclerState {
   agentLog: AgentLogEntry[];
   synthesis: SessionSynthesis | null;
   micError: string | null;
+  sessionStartTime: number | null;
 
   // Actions
   setPhase: (phase: ChroniclerPhase) => void;
@@ -74,6 +98,7 @@ interface ChroniclerState {
   mergeIncomingExtractions: (incoming: LiveExtractions) => void;
   setSynthesis: (s: SessionSynthesis) => void;
   setMicError: (err: string | null) => void;
+  setSessionStartTime: (t: number) => void;
   resetSession: () => void;
 }
 
@@ -85,17 +110,28 @@ export const useChroniclerStore = create<ChroniclerState>((set, get) => ({
   agentLog: [],
   synthesis: null,
   micError: null,
+  sessionStartTime: null,
 
   setPhase: (phase) => set({ phase }),
   setActiveSession: (id) => set({ activeSessionId: id }),
   appendTranscript: (text) =>
     set((s) => ({ transcriptBuffer: s.transcriptBuffer ? `${s.transcriptBuffer} ${text}` : text })),
   addAgentLog: (message) =>
-    set((s) => ({ agentLog: [...s.agentLog, { message, timestamp: new Date() }] })),
+    set((s) => ({
+      agentLog: [
+        ...s.agentLog,
+        {
+          message,
+          timestamp: new Date(),
+          elapsedMs: s.sessionStartTime ? Date.now() - s.sessionStartTime : 0,
+        },
+      ],
+    })),
   mergeIncomingExtractions: (incoming) =>
     set((s) => ({ extractions: mergeExtractions(s.extractions, incoming) })),
   setSynthesis: (synthesis) => set({ synthesis }),
   setMicError: (micError) => set({ micError }),
+  setSessionStartTime: (t) => set({ sessionStartTime: t }),
   resetSession: () =>
     set({
       phase: "idle",
@@ -105,5 +141,6 @@ export const useChroniclerStore = create<ChroniclerState>((set, get) => ({
       agentLog: [],
       synthesis: null,
       micError: null,
+      sessionStartTime: null,
     }),
 }));

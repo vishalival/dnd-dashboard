@@ -20,7 +20,14 @@ export async function POST(req: NextRequest) {
 
     const session = await prisma.sessionPlan.findUnique({
       where: { id: sessionId },
-      include: {
+      select: {
+        id: true,
+        sessionNumber: true,
+        transcript: true,
+        liveExtractions: true,
+        runningSummary: true,
+        keyBeats: true,
+        encounters: true,
         campaign: {
           select: {
             id: true,
@@ -48,10 +55,20 @@ export async function POST(req: NextRequest) {
       status: n.status,
     }));
 
-    // Run Claude extraction
-    const extraction = await processChunk(chunk, session.sessionNumber, knownNpcs);
+    // Build plan context from session's prepared content
+    const keyBeats = session.keyBeats ? (JSON.parse(session.keyBeats) as string[]) : [];
+    const encounters = session.encounters ? (JSON.parse(session.encounters) as string[]) : [];
+    let planContext: string | undefined;
+    if (keyBeats.length > 0 || encounters.length > 0) {
+      const parts: string[] = [];
+      if (keyBeats.length > 0)
+        parts.push(`Acts:\n${keyBeats.map((b, i) => `${i + 1}. ${b}`).join("\n")}`);
+      if (encounters.length > 0)
+        parts.push(`Planned Encounters:\n${encounters.map((e) => `- ${e}`).join("\n")}`);
+      planContext = parts.join("\n\n");
+    }
 
-    // Merge into existing liveExtractions
+    // Parse existing extractions for context
     const existing: ChunkExtraction = session.liveExtractions
       ? JSON.parse(session.liveExtractions)
       : {
@@ -61,6 +78,16 @@ export async function POST(req: NextRequest) {
           key_events: [],
           inventory_changes: [],
         };
+
+    // Run Claude extraction with sliding window context
+    const { extraction, updatedSummary } = await processChunk(
+      chunk,
+      session.sessionNumber,
+      knownNpcs,
+      planContext,
+      existing,
+      session.runningSummary ?? undefined,
+    );
 
     const merged: ChunkExtraction = {
       session_outline_updates: [
@@ -76,50 +103,126 @@ export async function POST(req: NextRequest) {
       ],
     };
 
-    // Update NPCs in DB
+    // Update NPCs in DB (or create new ones)
     const npcChanges: string[] = [];
     for (const update of extraction.npc_updates) {
       const match = knownNpcs.find(
         (n) => n.name.toLowerCase() === update.name.toLowerCase()
       );
-      if (!match) continue;
 
-      const updateData: Record<string, string | number> = {
-        lastAppearance: session.sessionNumber,
-      };
-      if (update.disposition_change) updateData.disposition = update.disposition_change;
-      if (update.status_change) updateData.status = update.status_change;
+      if (match) {
+        const updateData: Record<string, string | number> = {
+          lastAppearance: session.sessionNumber,
+        };
+        if (update.disposition_change) updateData.disposition = update.disposition_change;
+        if (update.status_change) updateData.status = update.status_change;
 
-      await prisma.nPC.update({ where: { id: match.id }, data: updateData as Record<string, string | number> });
+        await prisma.nPC.update({ where: { id: match.id }, data: updateData as Record<string, string | number> });
 
-      const changes: string[] = [];
-      if (update.disposition_change) changes.push(`disposition → ${update.disposition_change}`);
-      if (update.status_change) changes.push(`status → ${update.status_change}`);
-      if (changes.length) npcChanges.push(`${update.name}: ${changes.join(", ")}`);
+        const changes: string[] = [];
+        if (update.disposition_change) changes.push(`disposition → ${update.disposition_change}`);
+        if (update.status_change) changes.push(`status → ${update.status_change}`);
+        if (changes.length) npcChanges.push(`${update.name}: ${changes.join(", ")}`);
+      } else {
+        // Create new NPC discovered during the session
+        await prisma.nPC.create({
+          data: {
+            name: update.name,
+            disposition: update.disposition_change || "neutral",
+            status: update.status_change || "alive",
+            dmNotes: update.reason || null,
+            firstAppearance: session.sessionNumber,
+            lastAppearance: session.sessionNumber,
+            campaignId: session.campaign.id,
+          },
+        });
+        npcChanges.push(`${update.name}: created (new NPC)`);
+      }
     }
 
-    // Persist transcript + live extractions
+    // Persist transcript + live extractions + running summary
     await prisma.sessionPlan.update({
       where: { id: sessionId },
       data: {
         transcript: updatedTranscript,
         liveExtractions: JSON.stringify(merged),
+        runningSummary: updatedSummary,
       },
     });
 
-    // Build human-readable summary for agent log
-    const parts: string[] = [];
-    if (extraction.key_events.length)
-      parts.push(`${extraction.key_events.length} key event${extraction.key_events.length > 1 ? "s" : ""}`);
-    if (npcChanges.length)
-      parts.push(`${npcChanges.length} NPC update${npcChanges.length > 1 ? "s" : ""}`);
-    if (extraction.plot_threads.length)
-      parts.push(`${extraction.plot_threads.length} plot thread${extraction.plot_threads.length > 1 ? "s" : ""}`);
+    // Emit one "processing" event so the live world-state panel updates
+    emitAgentEvent(sessionId, {
+      agent: "chronicler",
+      state: "processing",
+      message: "chunk processed",
+      data: extraction as unknown as Record<string, unknown>,
+    });
 
-    const message =
-      parts.length > 0
-        ? `processed audio chunk — ${parts.join(", ")} detected`
-        : "processed audio chunk — no new events detected";
+    // Emit individual specific "log" events for every world-state change
+    const logEntries: string[] = [];
+
+    for (const update of extraction.npc_updates) {
+      const isKnown = knownNpcs.some(
+        (n) => n.name.toLowerCase() === update.name.toLowerCase()
+      );
+      if (!isKnown) {
+        logEntries.push(`new NPC — ${update.name}`);
+      } else {
+        if (update.status_change) {
+          if (update.status_change.toLowerCase() === "dead") {
+            logEntries.push(`marked ${update.name} as dead`);
+          } else {
+            logEntries.push(`updated ${update.name} status → ${update.status_change}`);
+          }
+        }
+        if (update.disposition_change) {
+          logEntries.push(`updated ${update.name} disposition → ${update.disposition_change}`);
+        }
+      }
+    }
+
+    for (const thread of extraction.plot_threads) {
+      if (thread.status === "new") {
+        logEntries.push(`added plot thread — ${thread.title}`);
+      } else if (thread.status === "resolved") {
+        logEntries.push(`resolved plot thread — ${thread.title}`);
+      } else {
+        logEntries.push(`updated plot thread — ${thread.title}`);
+      }
+    }
+
+    for (const event of extraction.key_events) {
+      logEntries.push(`key event — ${event.type} — ${event.description}`);
+    }
+
+    for (const change of extraction.inventory_changes) {
+      if (change.action === "gained") {
+        logEntries.push(`added ${change.item} to ${change.character}'s inventory`);
+      } else {
+        logEntries.push(`removed ${change.item} from ${change.character}'s inventory`);
+      }
+    }
+
+    for (const outline of extraction.session_outline_updates) {
+      logEntries.push(`updated session outline — ${outline}`);
+    }
+
+    // If nothing specific happened, log word count as fallback
+    if (logEntries.length === 0) {
+      const wordCount = chunk.trim().split(/\s+/).length;
+      logEntries.push(`processed audio chunk — ${wordCount} words transcribed`);
+    }
+
+    for (const entry of logEntries) {
+      emitAgentEvent(sessionId, {
+        agent: "chronicler",
+        state: "log",
+        message: entry,
+        data: {},
+      });
+    }
+
+    const message = logEntries[0] ?? "processed audio chunk";
 
     // Create AgentLog
     await prisma.agentLog.create({
@@ -132,17 +235,9 @@ export async function POST(req: NextRequest) {
           keyEventCount: extraction.key_events.length,
           npcUpdateCount: npcChanges.length,
           plotThreadCount: extraction.plot_threads.length,
-          message,
+          logEntryCount: logEntries.length,
         }),
       },
-    });
-
-    // Emit SSE update
-    emitAgentEvent(sessionId, {
-      agent: "chronicler",
-      state: "processing",
-      message,
-      data: extraction as unknown as Record<string, unknown>,
     });
 
     return NextResponse.json({ ok: true, extraction, message });

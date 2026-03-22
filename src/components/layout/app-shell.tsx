@@ -4,15 +4,25 @@ import React from "react";
 import { motion } from "framer-motion";
 import { Sidebar } from "./sidebar";
 import { CommandPalette } from "./command-palette";
+import { OnboardingTour } from "./onboarding-tour";
 import { useCampaignStore } from "@/stores/campaign-store";
 
-export function AppShell({ children }: { children: React.ReactNode }) {
+export function AppShell({
+  children,
+  dmName,
+  campaignName,
+}: {
+  children: React.ReactNode;
+  dmName: string | null;
+  campaignName: string | null;
+}) {
   const { sidebarOpen } = useCampaignStore();
 
   return (
     <div className="min-h-screen">
-      <Sidebar />
+      <Sidebar dmName={dmName} campaignName={campaignName} />
       <CommandPalette />
+      <OnboardingTour />
       <motion.main
         initial={false}
         animate={{ marginLeft: sidebarOpen ? 260 : 72 }}

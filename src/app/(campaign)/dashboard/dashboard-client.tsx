@@ -53,7 +53,7 @@ export function DashboardClient({ campaign }: { campaign: CampaignData }) {
 
   const upcomingSession = [...campaign.sessions]
     .filter((s) => s.status !== "completed")
-    .sort((a, b) => a.sessionNumber - b.sessionNumber)[0];
+    .sort((a, b) => b.sessionNumber - a.sessionNumber)[0];
 
   const activeStorylines = campaign.storylines.filter(
     (s) => s.status === "active",
@@ -78,18 +78,20 @@ export function DashboardClient({ campaign }: { campaign: CampaignData }) {
   ).length;
 
   return (
-    <div>
+    <div data-tour-page="dashboard">
       {/* Custom Sleek Header */}
       <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 mb-10 bg-zinc-950/20 p-6 rounded-2xl border border-white/5">
         <div>
           <h1 className="text-2xl font-bold tracking-tight text-white mb-1.5 flex items-center gap-2">
-            Hello, Dungeon Master Rachel! 
+            Hello, {campaign.dmName ? `Dungeon Master ${campaign.dmName}` : "Dungeon Master"}!
             <span className="text-xl">👋</span>
           </h1>
           <p className="text-xs text-zinc-400 max-w-lg leading-relaxed">
-            {upcomingSession ? (
+            {upcomingSession?.aiNarrative ? (
+              <span>{upcomingSession.aiNarrative}</span>
+            ) : upcomingSession ? (
               <>
-                The corruption in <span className="text-purple-400 font-medium">{upcomingSession.title}</span> deepens. 
+                The corruption in <span className="text-purple-400 font-medium">{upcomingSession.title}</span> deepens.
                 {pinnedNPCs.some(n => n.status === 'missing') && (
                   <> With <span className="text-emerald-400 font-medium">{pinnedNPCs.find(n => n.status === 'missing')?.name}</span> still missing, your preparation for Session {upcomingSession.sessionNumber} is critical.</>
                 )}
@@ -150,7 +152,9 @@ export function DashboardClient({ campaign }: { campaign: CampaignData }) {
           
           {/* User Avatar */}
           <div className="h-9 w-9 rounded-full bg-gradient-to-br from-amber-500 to-amber-700 flex items-center justify-center border border-white/10 shrink-0 cursor-pointer shadow-lg shadow-amber-900/20">
-            <span className="text-xs font-bold text-white shadow-sm">DR</span>
+            <span className="text-xs font-bold text-white shadow-sm">
+              {(campaign.dmName || "DM").split(" ").map(w => w[0]).join("").toUpperCase().slice(0, 2)}
+            </span>
           </div>
         </div>
       </div>
@@ -166,7 +170,7 @@ export function DashboardClient({ campaign }: { campaign: CampaignData }) {
           {upcomingSession && (
             <motion.div variants={item}>
               <Link href={`/sessions`}>
-                <Card className="group hover:border-gold/20 transition-all duration-300 glow-gold cursor-pointer h-full border-white/5 bg-[#141416] min-h-[280px] max-h-[280px]">
+                <Card className="group hover:border-gold/20 transition-all duration-300 glow-gold cursor-pointer h-full border-white/5 bg-[#141416]">
                   <CardHeader className="pb-3">
                     <div className="flex items-center justify-between">
                       <div className="flex items-center gap-2">
@@ -175,7 +179,15 @@ export function DashboardClient({ campaign }: { campaign: CampaignData }) {
                           Next Session
                         </CardTitle>
                       </div>
-                      <StatusBadge status={upcomingSession.status} />
+                      <div className="flex items-center gap-2">
+                        <StatusBadge status={upcomingSession.status} />
+                        {upcomingSession.aiBadge && (
+                          <Badge variant="outline" className="text-[10px] px-2 py-0 text-amber-400 border-amber-400/30">
+                            <Sparkles className="h-3 w-3 mr-1" />
+                            {upcomingSession.aiBadge}
+                          </Badge>
+                        )}
+                      </div>
                     </div>
                   </CardHeader>
                   <CardContent>
@@ -194,9 +206,9 @@ export function DashboardClient({ campaign }: { campaign: CampaignData }) {
                         )}
                       </div>
                       
-                      {upcomingSession.summary && (
+                      {((upcomingSession.summary && upcomingSession.summary !== "Session summary unavailable.") || upcomingSession.aiSummary) && (
                         <p className="text-sm text-foreground/80 dark:text-zinc-300 line-clamp-3 leading-relaxed">
-                          {upcomingSession.summary}
+                          {upcomingSession.summary || upcomingSession.aiSummary}
                         </p>
                       )}
 

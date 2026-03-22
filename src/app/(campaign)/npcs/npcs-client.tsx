@@ -22,6 +22,7 @@ import {
   X,
   Network,
   List,
+  Plus,
 } from "lucide-react";
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
@@ -31,6 +32,7 @@ import { PageHeader } from "@/components/shared/page-header";
 import { StatusBadge } from "@/components/shared/status-badge";
 import { NPCWeb } from "@/components/shared/npc-web";
 import { Separator } from "@/components/ui/separator";
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
 import { cn } from "@/lib/utils";
 import type { CampaignData, NPCData } from "@/lib/data";
 
@@ -282,23 +284,67 @@ function NPCDetail({ npc, onClose }: { npc: NPCData; onClose: () => void }) {
   );
 }
 
+interface NewNPCForm {
+  name: string;
+  race: string;
+  role: string;
+  faction: string;
+  disposition: string;
+  status: string;
+  location: string;
+  goals: string;
+  dmNotes: string;
+  isPlayerKnown: boolean;
+}
+
+const emptyForm = (): NewNPCForm => ({
+  name: "", race: "", role: "", faction: "", disposition: "neutral",
+  status: "alive", location: "", goals: "", dmNotes: "", isPlayerKnown: true,
+});
+
 export function NPCsClient({ campaign }: { campaign: CampaignData }) {
+  const [npcs, setNpcs] = useState<NPCData[]>(campaign.npcs);
   const [selectedNPC, setSelectedNPC] = useState<NPCData | null>(null);
   const [search, setSearch] = useState("");
   const [statusFilter, setStatusFilter] = useState<string>("all");
   const [factionFilter, setFactionFilter] = useState<string>("all");
   const [viewMode, setViewMode] = useState<"list" | "web">("list");
+  const [newNPCOpen, setNewNPCOpen] = useState(false);
+  const [form, setForm] = useState<NewNPCForm>(emptyForm());
+  const [isCreating, setIsCreating] = useState(false);
+
+  const handleCreateNPC = async () => {
+    if (!form.name.trim()) return;
+    setIsCreating(true);
+    try {
+      const res = await fetch("/api/npcs/create", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ campaignId: campaign.id, ...form }),
+      });
+      if (!res.ok) throw new Error("Failed to create NPC");
+      const newNPC = await res.json();
+      setNpcs((prev) => [...prev, newNPC]);
+      setSelectedNPC(newNPC);
+      setForm(emptyForm());
+      setNewNPCOpen(false);
+    } catch (err) {
+      console.error(err);
+    } finally {
+      setIsCreating(false);
+    }
+  };
 
   const factions = useMemo(() => {
     const set = new Set<string>();
-    campaign.npcs.forEach((n) => {
+    npcs.forEach((n) => {
       if (n.faction) set.add(n.faction);
     });
     return Array.from(set).sort();
-  }, [campaign.npcs]);
+  }, [npcs]);
 
   const filtered = useMemo(() => {
-    return campaign.npcs.filter((npc) => {
+    return npcs.filter((npc) => {
       if (
         search &&
         !npc.name.toLowerCase().includes(search.toLowerCase()) &&
@@ -316,12 +362,83 @@ export function NPCsClient({ campaign }: { campaign: CampaignData }) {
 
   return (
     <div>
+      {/* New NPC Dialog */}
+      <Dialog open={newNPCOpen} onOpenChange={setNewNPCOpen}>
+        <DialogContent className="sm:max-w-lg">
+          <DialogHeader>
+            <DialogTitle className="font-heading">Add NPC</DialogTitle>
+          </DialogHeader>
+          <div className="grid grid-cols-2 gap-3 py-2">
+            <div className="col-span-2">
+              <label className="text-xs text-zinc-400 mb-1 block">Name *</label>
+              <Input placeholder="Character name" value={form.name} onChange={(e) => setForm((f) => ({ ...f, name: e.target.value }))} autoFocus />
+            </div>
+            <div>
+              <label className="text-xs text-zinc-400 mb-1 block">Race / Species</label>
+              <Input placeholder="e.g. Human, Elf" value={form.race} onChange={(e) => setForm((f) => ({ ...f, race: e.target.value }))} />
+            </div>
+            <div>
+              <label className="text-xs text-zinc-400 mb-1 block">Role / Class</label>
+              <Input placeholder="e.g. Merchant, Guard" value={form.role} onChange={(e) => setForm((f) => ({ ...f, role: e.target.value }))} />
+            </div>
+            <div>
+              <label className="text-xs text-zinc-400 mb-1 block">Faction</label>
+              <Input placeholder="e.g. The Guild" value={form.faction} onChange={(e) => setForm((f) => ({ ...f, faction: e.target.value }))} />
+            </div>
+            <div>
+              <label className="text-xs text-zinc-400 mb-1 block">Location</label>
+              <Input placeholder="e.g. Waterdeep" value={form.location} onChange={(e) => setForm((f) => ({ ...f, location: e.target.value }))} />
+            </div>
+            <div>
+              <label className="text-xs text-zinc-400 mb-1 block">Disposition</label>
+              <select value={form.disposition} onChange={(e) => setForm((f) => ({ ...f, disposition: e.target.value }))} className="w-full text-sm bg-[#141416] border border-white/[0.08] rounded-md px-3 py-2 text-zinc-300 focus:outline-none">
+                <option value="friendly">Friendly</option>
+                <option value="neutral">Neutral</option>
+                <option value="hostile">Hostile</option>
+                <option value="unknown">Unknown</option>
+              </select>
+            </div>
+            <div>
+              <label className="text-xs text-zinc-400 mb-1 block">Status</label>
+              <select value={form.status} onChange={(e) => setForm((f) => ({ ...f, status: e.target.value }))} className="w-full text-sm bg-[#141416] border border-white/[0.08] rounded-md px-3 py-2 text-zinc-300 focus:outline-none">
+                <option value="alive">Alive</option>
+                <option value="dead">Dead</option>
+                <option value="missing">Missing</option>
+                <option value="hostile">Hostile</option>
+                <option value="ally">Ally</option>
+              </select>
+            </div>
+            <div className="col-span-2">
+              <label className="text-xs text-zinc-400 mb-1 block">Goals</label>
+              <Input placeholder="What does this character want?" value={form.goals} onChange={(e) => setForm((f) => ({ ...f, goals: e.target.value }))} />
+            </div>
+            <div className="col-span-2">
+              <label className="text-xs text-zinc-400 mb-1 block">DM Notes</label>
+              <Input placeholder="Private notes (DM only)" value={form.dmNotes} onChange={(e) => setForm((f) => ({ ...f, dmNotes: e.target.value }))} />
+            </div>
+            <div className="col-span-2 flex items-center gap-2">
+              <input type="checkbox" id="isPlayerKnown" checked={form.isPlayerKnown} onChange={(e) => setForm((f) => ({ ...f, isPlayerKnown: e.target.checked }))} className="accent-emerald-500" />
+              <label htmlFor="isPlayerKnown" className="text-xs text-zinc-400">Players know this NPC exists</label>
+            </div>
+          </div>
+          <DialogFooter>
+            <Button variant="ghost" size="sm" onClick={() => { setNewNPCOpen(false); setForm(emptyForm()); }}>Cancel</Button>
+            <Button variant="gold" size="sm" onClick={handleCreateNPC} disabled={!form.name.trim() || isCreating}>
+              {isCreating ? "Adding…" : "Add NPC"}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
       <div className="flex items-center justify-between mb-2">
         <PageHeader
           title="NPC Tracker"
-          subtitle={`${campaign.npcs.length} characters in your world`}
+          subtitle={`${npcs.length} characters in your world`}
           icon={<Users className="h-5 w-5 text-emerald-600 dark:text-emerald-400" />}
         />
+        <div className="flex items-center gap-2">
+        <Button variant="gold" size="sm" onClick={() => setNewNPCOpen(true)} className="gap-1.5 text-xs">
+          <Plus className="h-3.5 w-3.5" />Add NPC
+        </Button>
         <div className="flex gap-1 p-1 rounded-lg bg-white/[0.03] border border-white/[0.06]">
           <Button
             variant={viewMode === "list" ? "gold" : "ghost"}
@@ -341,6 +458,7 @@ export function NPCsClient({ campaign }: { campaign: CampaignData }) {
             <Network className="h-3.5 w-3.5" />
             Web
           </Button>
+        </div>
         </div>
       </div>
 

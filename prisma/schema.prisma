@@ -12,6 +12,7 @@ datasource db {
 model Campaign {
   id          String   @id @default(cuid())
   name        String
+  dmName      String?
   description String?
   currentArc  String?
   startDate   DateTime @default(now())
@@ -39,6 +40,9 @@ model SessionPlan {
   date             DateTime?
   status           String   @default("draft") // draft, planning, ready, in_progress, completed
   summary          String?
+  aiNarrative      String?  // AI-generated dashboard header narrative
+  aiBadge          String?  // AI-generated thematic badge label
+  aiSummary        String?  // AI-generated session summary fallback
   keyBeats         String?  // JSON array
   encounters       String?  // JSON array
   hooks            String?  // JSON array
@@ -53,8 +57,10 @@ model SessionPlan {
   liveLog          String?  // JSON array of {timestamp, entry} — legacy typed notes
   transcript       String?  // accumulated Deepgram transcript (appended per chunk)
   liveExtractions  String?  // JSON — accumulated real-time chunk extraction results
+  runningSummary   String?  // AI-maintained rolling summary of the session so far
   keyEvents        String?  // JSON array of {type, description} — final synthesis output
   recapForNext     String?  // "Previously on..." paragraph — final synthesis output
+  synthesis        String?  // Full SessionSynthesis JSON — persisted at session end
   campaignId       String
   campaign         Campaign @relation(fields: [campaignId], references: [id])
   createdAt        DateTime @default(now())

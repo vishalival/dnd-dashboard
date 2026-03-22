@@ -5,22 +5,24 @@ export async function POST(request: NextRequest) {
   try {
     const { folderId, title, campaignId } = await request.json();
 
-    if (!folderId || !title || !campaignId) {
+    if (!title || !campaignId) {
       return NextResponse.json(
-        { error: "folderId, title, and campaignId are required" },
+        { error: "title and campaignId are required" },
         { status: 400 }
       );
     }
 
-    const folder = await prisma.noteFolder.findUnique({
-      where: { id: folderId },
-    });
+    if (folderId) {
+      const folder = await prisma.noteFolder.findUnique({
+        where: { id: folderId },
+      });
 
-    if (!folder || !folder.allowNewDocs) {
-      return NextResponse.json(
-        { error: "Cannot add documents to this folder" },
-        { status: 403 }
-      );
+      if (!folder || !folder.allowNewDocs) {
+        return NextResponse.json(
+          { error: "Cannot add documents to this folder" },
+          { status: 403 }
+        );
+      }
     }
 
     const slug = title
@@ -29,7 +31,7 @@ export async function POST(request: NextRequest) {
       .replace(/^-|-$/g, "");
 
     const docCount = await prisma.noteDocument.count({
-      where: { folderId },
+      where: folderId ? { folderId } : { campaignId, folderId: null },
     });
 
     const document = await prisma.noteDocument.create({
@@ -37,7 +39,7 @@ export async function POST(request: NextRequest) {
         title,
         slug: `${slug}-${Date.now()}`,
         campaignId,
-        folderId,
+        folderId: folderId || null,
         sortOrder: docCount,
         isDeletable: true,
       },

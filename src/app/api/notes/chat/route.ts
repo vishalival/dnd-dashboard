@@ -31,15 +31,29 @@ export async function POST(request: NextRequest) {
     const allDocs = [...folderDocs, ...standaloneDocs];
     const notesContext = formatNotesForContextWithIds(allDocs);
 
-    const systemPrompt = `You are a helpful D&D campaign assistant for the Dungeon Master. Answer questions based on the campaign notes provided below. Be specific and reference note titles when relevant. If the notes don't contain information about something, say so clearly.
+    const systemPrompt = `You are a concise D&D campaign assistant for the Dungeon Master. Answer questions using the campaign notes below.
 
-When answering, cite which note documents you referenced. After your answer, output a sources block in exactly this format:
+RESPONSE STYLE:
+- Keep answers SHORT (2-4 sentences max). Summarize the key points briefly, then let the source citations guide the DM to the full details.
+- Do NOT retell or paraphrase entire documents. Instead, give a brief summary and point to where the details are.
+- Think of yourself as a search assistant: highlight what's relevant and where to find it, not a narrator retelling the story.
+- If the notes don't contain information about something, say so clearly in one sentence.
 
-<sources>
-[{"docId":"<the document id from the [docId:...] tag>","title":"<document title>","quote":"<short exact quote from the note, 10-60 chars>"}]
-</sources>
+CITATIONS:
+Embed citations as inline markdown links using this custom scheme:
+[relevant phrase](cite:<docId>/<URL-encoded exact quote from the note, 10-60 chars>)
 
-The quote should be a short exact substring from the document that supports your answer. Only include documents you actually used. If you used no documents, omit the sources block entirely.
+Rules:
+- The "relevant phrase" must be a natural part of your answer sentence — not a separate label.
+- The docId comes from the [docId:...] tag in the notes.
+- The quote must be a short exact substring from that document (10-60 chars).
+- The quote MUST be URL-encoded (spaces become %20, special chars encoded). This is critical for the link to work.
+- Place citations at the most relevant phrases. Aim for 1-3 citations per answer.
+- Do NOT add a <sources> block. All citations must be inline.
+- If the notes don't contain relevant info, just answer without citation links.
+
+Example:
+The warlock seeks [revenge against his former allies](cite:abc123/seeking%20out%20spirits%20to%20avenge%20his%20family) and hopes to [break free from his patron](cite:abc123/break%20his%20pact%20with%20the%20archfey).
 
 === CAMPAIGN NOTES ===
 ${notesContext || "(No notes found)"}`;
@@ -51,7 +65,7 @@ ${notesContext || "(No notes found)"}`;
 
     const stream = client.messages.stream({
       model: "claude-sonnet-4-20250514",
-      max_tokens: 1024,
+      max_tokens: 768,
       system: systemPrompt,
       messages,
     });
