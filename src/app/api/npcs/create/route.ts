@@ -19,6 +19,8 @@ export async function POST(req: NextRequest) {
       data: {
         campaignId,
         name: name.trim(),
+        age: body.age || null,
+        appearance: body.appearance || null,
         race: body.race || null,
         role: body.role || null,
         faction: body.faction || null,

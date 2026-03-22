@@ -15,7 +15,7 @@ export async function PATCH(req: NextRequest) {
     // Build data object from provided fields
     const data: Record<string, unknown> = {};
     const allowedFields = [
-      "name", "race", "role", "faction", "disposition", "status",
+      "name", "age", "appearance", "race", "role", "faction", "disposition", "status",
       "location", "goals", "secrets", "dmNotes", "voiceNotes",
       "storyRelevance", "isPlayerKnown", "isPinned",
     ];

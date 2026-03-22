@@ -132,10 +132,10 @@ function NPCDetail({ npc, onClose, onDelete, onUpdate, onEdit }: { npc: NPCData;
               <div className="grid grid-cols-2 gap-2">
                 <div><span className="font-medium text-foreground/80 dark:text-zinc-300">Race/Species:</span> {npc.race || "—"}</div>
                 <div><span className="font-medium text-foreground/80 dark:text-zinc-300">Class:</span> {npc.role || "—"}</div>
-                <div><span className="font-medium text-foreground/80 dark:text-zinc-300">Age:</span> —</div>
+                <div><span className="font-medium text-foreground/80 dark:text-zinc-300">Age:</span> {npc.age || "—"}</div>
               </div>
               <div className="mt-2 text-xs">
-                 <span className="font-medium text-foreground/80 dark:text-zinc-300">Physical Appearance:</span> —
+                 <span className="font-medium text-foreground/80 dark:text-zinc-300">Physical Appearance:</span> {npc.appearance || "—"}
               </div>
             </div>
           </div>
@@ -377,6 +377,8 @@ function NPCDetail({ npc, onClose, onDelete, onUpdate, onEdit }: { npc: NPCData;
 interface NPCFormState {
   id?: string;
   name: string;
+  age: string;
+  appearance: string;
   race: string;
   role: string;
   faction: string;
@@ -389,7 +391,7 @@ interface NPCFormState {
 }
 
 const emptyForm = (): NPCFormState => ({
-  name: "", race: "", role: "", faction: "", disposition: "neutral",
+  name: "", age: "", appearance: "", race: "", role: "", faction: "", disposition: "neutral",
   status: "alive", location: "", goals: "", dmNotes: "", isPlayerKnown: true,
 });
 
@@ -484,8 +486,16 @@ export function NPCsClient({ campaign }: { campaign: CampaignData }) {
               <Input placeholder="Character name" value={form.name} onChange={(e) => setForm((f) => ({ ...f, name: e.target.value }))} autoFocus />
             </div>
             <div>
+              <label className="text-xs text-zinc-400 mb-1 block">Age</label>
+              <Input placeholder="e.g. 24, Ancient" value={form.age} onChange={(e) => setForm((f) => ({ ...f, age: e.target.value }))} />
+            </div>
+            <div>
               <label className="text-xs text-zinc-400 mb-1 block">Race / Species</label>
               <Input placeholder="e.g. Human, Elf" value={form.race} onChange={(e) => setForm((f) => ({ ...f, race: e.target.value }))} />
+            </div>
+            <div className="col-span-2">
+              <label className="text-xs text-zinc-400 mb-1 block">Physical Appearance</label>
+              <Input placeholder="Brief visual description" value={form.appearance} onChange={(e) => setForm((f) => ({ ...f, appearance: e.target.value }))} />
             </div>
             <div>
               <label className="text-xs text-zinc-400 mb-1 block">Role / Class</label>
@@ -713,6 +723,8 @@ export function NPCsClient({ campaign }: { campaign: CampaignData }) {
                     setForm({
                       id: n.id,
                       name: n.name,
+                      age: n.age || "",
+                      appearance: n.appearance || "",
                       race: n.race || "",
                       role: n.role || "",
                       faction: n.faction || "",

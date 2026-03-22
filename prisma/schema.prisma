@@ -121,6 +121,8 @@ model StoryEvent {
 model NPC {
   id              String   @id @default(cuid())
   name            String
+  age             String?
+  appearance      String?
   race            String?
   role            String?
   faction         String?
