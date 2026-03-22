@@ -2,6 +2,7 @@
 
 import React, { useState, useEffect, useMemo } from "react";
 import Link from "next/link";
+import { useRouter } from "next/navigation";
 import { motion, AnimatePresence } from "framer-motion";
 import {
   CalendarClock,
@@ -1125,6 +1126,7 @@ function SessionDetail({ session, onSave }: {
 }
 
 export function SessionsClient({ campaign }: { campaign: CampaignData }) {
+  const router = useRouter();
   const [sessions, setSessions] = useState(campaign.sessions);
   const [selectedSession, setSelectedSession] = useState<SessionData | null>(
     [...campaign.sessions].sort((a, b) => b.sessionNumber - a.sessionNumber)[0] ?? null,
@@ -1163,6 +1165,7 @@ export function SessionsClient({ campaign }: { campaign: CampaignData }) {
       setSelectedSession(newSession);
       setNewSessionTitle("");
       setNewSessionOpen(false);
+      router.refresh();
     } catch (err) {
       console.error(err);
     } finally {
@@ -1182,6 +1185,7 @@ export function SessionsClient({ campaign }: { campaign: CampaignData }) {
       if (selectedSession?.id === sessionId) {
         setSelectedSession(sessions.find((s) => s.id !== sessionId) ?? null);
       }
+      router.refresh();
     } catch (err) {
       console.error(err);
     } finally {

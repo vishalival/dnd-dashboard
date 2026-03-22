@@ -57,6 +57,7 @@ model SessionPlan {
   liveLog          String?  // JSON array of {timestamp, entry} — legacy typed notes
   transcript       String?  // accumulated Deepgram transcript (appended per chunk)
   liveExtractions  String?  // JSON — accumulated real-time chunk extraction results
+  runningSummary   String?  // AI-maintained rolling summary of the session so far
   keyEvents        String?  // JSON array of {type, description} — final synthesis output
   recapForNext     String?  // "Previously on..." paragraph — final synthesis output
   campaignId       String
