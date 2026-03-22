@@ -5,6 +5,7 @@ const prisma = new PrismaClient();
 const toJson = (value: unknown) => JSON.stringify(value);
 
 async function clearExistingData() {
+  await prisma.agentLog.deleteMany();
   await prisma.noteDocument.deleteMany();
   await prisma.noteFolder.deleteMany();
 
@@ -1646,8 +1647,11 @@ async function main() {
         sessionId: session3.id,
         type: "prep_notes",
         title: "Rachel Prep: Session 3 Decision Engine",
-        content:
-          "Priority beats: Prismatic Reef sale, Bells vs Flynt map confrontation, and Rose Cottage doppelganger branch. Ensure Garie's 'help a stranger' goal is meaningfully testable via Elara scene. Keep the departure clock visible so players feel momentum toward Rosport.",
+        content: `
+- Priority beats: Prismatic Reef sale, Bells vs Flynt map confrontation, and Rose Cottage doppelganger branch.
+- Ensure Garie's 'help a stranger' goal is meaningfully testable via Elara scene.
+- Keep the departure clock visible so players feel momentum toward Rosport.
+`.trim(),
         tags: toJson([
           "rachel-journal",
           "session-3-prep",
@@ -1660,8 +1664,11 @@ async function main() {
         campaignId: campaign.id,
         type: "worldbuilding",
         title: "Rachel World Notes: Misty Market, Clove, and Tri-Kingdom Tension",
-        content:
-          "Misty Market remains the shared artery between Avila, Briani, and Clove but now shows fracture lines from plague policy and hidden intelligence trade. Clove's visual opulence should contrast with its political paranoia and moral blind spots. Keep Joe, Zoheyr, and Saesis active in world texture, not just lore dumps.",
+        content: `
+- Misty Market remains the shared artery between Avila, Briani, and Clove but now shows fracture lines from plague policy and hidden intelligence trade.
+- Clove's visual opulence should contrast with its political paranoia and moral blind spots.
+- Keep Joe, Zoheyr, and Saesis active in world texture, not just lore dumps.
+`.trim(),
         tags: toJson([
           "rachel-journal",
           "worldbuilding",
@@ -1689,8 +1696,11 @@ async function main() {
         campaignId: campaign.id,
         type: "prep_notes",
         title: "DM Secret Notes: Table Rules and Encounter Guardrails",
-        content:
-          "Enforce Star-Burn Con-save mechanics, avoid early-session TPK spikes, and maintain encounter pacing through explicit warnings. Keep one meaningful NPC per location and reward player curiosity whenever possible. Use doppelganger, mimic, and trap motifs sparingly but with strong payoff.",
+        content: `
+- Enforce Star-Burn Con-save mechanics, avoid early-session TPK spikes, and maintain encounter pacing through explicit warnings.
+- Keep one meaningful NPC per location and reward player curiosity whenever possible.
+- Use doppelganger, mimic, and trap motifs sparingly but with strong payoff.
+`.trim(),
         tags: toJson([
           "dm-secrets",
           "encounter-design",
