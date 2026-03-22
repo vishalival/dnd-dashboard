@@ -23,6 +23,7 @@ export interface SessionSynthesis {
 export interface AgentLogEntry {
   message: string;
   timestamp: Date;
+  elapsedMs: number;
 }
 
 export function emptyExtractions(): LiveExtractions {
@@ -65,6 +66,7 @@ interface ChroniclerState {
   agentLog: AgentLogEntry[];
   synthesis: SessionSynthesis | null;
   micError: string | null;
+  sessionStartTime: number | null;
 
   // Actions
   setPhase: (phase: ChroniclerPhase) => void;
@@ -74,6 +76,7 @@ interface ChroniclerState {
   mergeIncomingExtractions: (incoming: LiveExtractions) => void;
   setSynthesis: (s: SessionSynthesis) => void;
   setMicError: (err: string | null) => void;
+  setSessionStartTime: (t: number) => void;
   resetSession: () => void;
 }
 
@@ -85,17 +88,28 @@ export const useChroniclerStore = create<ChroniclerState>((set, get) => ({
   agentLog: [],
   synthesis: null,
   micError: null,
+  sessionStartTime: null,
 
   setPhase: (phase) => set({ phase }),
   setActiveSession: (id) => set({ activeSessionId: id }),
   appendTranscript: (text) =>
     set((s) => ({ transcriptBuffer: s.transcriptBuffer ? `${s.transcriptBuffer} ${text}` : text })),
   addAgentLog: (message) =>
-    set((s) => ({ agentLog: [...s.agentLog, { message, timestamp: new Date() }] })),
+    set((s) => ({
+      agentLog: [
+        ...s.agentLog,
+        {
+          message,
+          timestamp: new Date(),
+          elapsedMs: s.sessionStartTime ? Date.now() - s.sessionStartTime : 0,
+        },
+      ],
+    })),
   mergeIncomingExtractions: (incoming) =>
     set((s) => ({ extractions: mergeExtractions(s.extractions, incoming) })),
   setSynthesis: (synthesis) => set({ synthesis }),
   setMicError: (micError) => set({ micError }),
+  setSessionStartTime: (t) => set({ sessionStartTime: t }),
   resetSession: () =>
     set({
       phase: "idle",
@@ -105,5 +119,6 @@ export const useChroniclerStore = create<ChroniclerState>((set, get) => ({
       agentLog: [],
       synthesis: null,
       micError: null,
+      sessionStartTime: null,
     }),
 }));
