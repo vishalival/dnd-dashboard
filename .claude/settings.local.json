@@ -32,7 +32,8 @@
       "Bash(lsof -iTCP -sTCP:LISTEN -P -n)",
       "mcp__plugin_chrome-devtools-mcp_chrome-devtools__wait_for",
       "Bash(node:*)",
-      "Bash(lsof -iTCP:3000 -sTCP:LISTEN -P -n)"
+      "Bash(lsof -iTCP:3000 -sTCP:LISTEN -P -n)",
+      "Bash(git add:*)"
     ]
   }
 }

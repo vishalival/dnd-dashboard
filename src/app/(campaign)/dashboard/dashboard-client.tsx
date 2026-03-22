@@ -53,7 +53,7 @@ export function DashboardClient({ campaign }: { campaign: CampaignData }) {
 
   const upcomingSession = [...campaign.sessions]
     .filter((s) => s.status !== "completed")
-    .sort((a, b) => a.sessionNumber - b.sessionNumber)[0];
+    .sort((a, b) => b.sessionNumber - a.sessionNumber)[0];
 
   const activeStorylines = campaign.storylines.filter(
     (s) => s.status === "active",
@@ -87,9 +87,11 @@ export function DashboardClient({ campaign }: { campaign: CampaignData }) {
             <span className="text-xl">👋</span>
           </h1>
           <p className="text-xs text-zinc-400 max-w-lg leading-relaxed">
-            {upcomingSession ? (
+            {upcomingSession?.aiNarrative ? (
+              <span>{upcomingSession.aiNarrative}</span>
+            ) : upcomingSession ? (
               <>
-                The corruption in <span className="text-purple-400 font-medium">{upcomingSession.title}</span> deepens. 
+                The corruption in <span className="text-purple-400 font-medium">{upcomingSession.title}</span> deepens.
                 {pinnedNPCs.some(n => n.status === 'missing') && (
                   <> With <span className="text-emerald-400 font-medium">{pinnedNPCs.find(n => n.status === 'missing')?.name}</span> still missing, your preparation for Session {upcomingSession.sessionNumber} is critical.</>
                 )}
@@ -177,7 +179,15 @@ export function DashboardClient({ campaign }: { campaign: CampaignData }) {
                           Next Session
                         </CardTitle>
                       </div>
-                      <StatusBadge status={upcomingSession.status} />
+                      <div className="flex items-center gap-2">
+                        <StatusBadge status={upcomingSession.status} />
+                        {upcomingSession.aiBadge && (
+                          <Badge variant="outline" className="text-[10px] px-2 py-0 text-amber-400 border-amber-400/30">
+                            <Sparkles className="h-3 w-3 mr-1" />
+                            {upcomingSession.aiBadge}
+                          </Badge>
+                        )}
+                      </div>
                     </div>
                   </CardHeader>
                   <CardContent>
@@ -196,9 +206,9 @@ export function DashboardClient({ campaign }: { campaign: CampaignData }) {
                         )}
                       </div>
                       
-                      {upcomingSession.summary && upcomingSession.summary !== "Session summary unavailable." && (
+                      {((upcomingSession.summary && upcomingSession.summary !== "Session summary unavailable.") || upcomingSession.aiSummary) && (
                         <p className="text-sm text-foreground/80 dark:text-zinc-300 line-clamp-3 leading-relaxed">
-                          {upcomingSession.summary}
+                          {upcomingSession.summary || upcomingSession.aiSummary}
                         </p>
                       )}
 

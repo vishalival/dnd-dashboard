@@ -44,6 +44,25 @@ export function parseJsonField<T>(
   }
 }
 
+export function parseExtractedItems(
+  field: string | null | undefined,
+): Array<{ text: string; source?: string }> {
+  if (!field) return [];
+  try {
+    const parsed = JSON.parse(field);
+    if (!Array.isArray(parsed)) return [];
+    return parsed.map((item: unknown) => {
+      if (typeof item === "string") return { text: item };
+      if (typeof item === "object" && item !== null && "text" in item) {
+        return item as { text: string; source?: string };
+      }
+      return { text: String(item) };
+    });
+  } catch {
+    return [];
+  }
+}
+
 export function getStatusColor(status: string): string {
   const colors: Record<string, string> = {
     active: "text-emerald-600 bg-emerald-50 border-emerald-200 dark:text-emerald-400 dark:bg-emerald-400/10 dark:border-emerald-400/20",

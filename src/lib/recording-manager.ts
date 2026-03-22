@@ -75,6 +75,8 @@ export async function startRecording(sessionId: string): Promise<void> {
 
     _recorder.ondataavailable = (e) => {
       if (e.data.size < 100) return;
+      // Guard: don't transcribe if we're no longer in recording phase
+      if (useChroniclerStore.getState().phase !== "recording") return;
       if (!_headerBlob) {
         // First chunk has container headers — save and skip sending
         _headerBlob = e.data;
@@ -101,6 +103,9 @@ export async function startRecording(sessionId: string): Promise<void> {
 }
 
 export function stopRecording(): void {
+  // Set phase BEFORE stopping recorder so the ondataavailable guard
+  // rejects the final chunk that MediaRecorder fires on stop().
+  useChroniclerStore.getState().setPhase("idle");
   if (_chunkTimer) { clearInterval(_chunkTimer); _chunkTimer = null; }
   if (_recorder && _recorder.state !== "inactive") {
     _recorder.stop();
@@ -113,7 +118,23 @@ export function stopRecording(): void {
   _headerBlob = null;
   // Flush any remaining accumulated text
   _sendChunk();
-  useChroniclerStore.getState().setPhase("idle");
+}
+
+export function pauseRecording(): void {
+  // Set phase BEFORE stopping recorder so the ondataavailable guard
+  // rejects the final chunk that MediaRecorder fires on stop().
+  useChroniclerStore.getState().setPhase("paused");
+  if (_chunkTimer) { clearInterval(_chunkTimer); _chunkTimer = null; }
+  if (_recorder && _recorder.state !== "inactive") {
+    _recorder.stop();
+    _recorder = null;
+  }
+  if (_stream) {
+    _stream.getTracks().forEach((t) => t.stop());
+    _stream = null;
+  }
+  _headerBlob = null;
+  _sendChunk();
 }
 
 export function flushChunk(): void {
