@@ -11,15 +11,18 @@ import {
 	GitBranch,
 	KeyRound,
 	LayoutDashboard,
+	Moon,
 	NotebookPen,
 	RotateCcw,
 	Search,
 	Shield,
+	Sun,
 	Users,
 } from "lucide-react";
 import Image from "next/image";
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
+import { useTheme } from "next-themes";
 import type { LucideIcon } from "lucide-react";
 import React, { useState } from "react";
 import { cn } from "@/lib/utils";
@@ -104,6 +107,7 @@ export function Sidebar({
 	const { sidebarOpen, toggleSidebar, toggleCommandPalette } =
 		useCampaignStore();
 	const isRecording = useChroniclerStore((s) => s.phase === "recording");
+	const { theme, setTheme } = useTheme();
 	const [showResetConfirm, setShowResetConfirm] = useState(false);
 	const [resetting, setResetting] = useState(false);
 	const [sessionPlannerOpen, setSessionPlannerOpen] = useState(true);
@@ -134,7 +138,7 @@ export function Sidebar({
 			initial={false}
 			animate={{ width: sidebarOpen ? 260 : 72 }}
 			transition={{ duration: 0.3, ease: [0.4, 0, 0.2, 1] }}
-			className="fixed left-0 top-0 z-40 h-screen border-r border-[#1F1F22] bg-[#0A0A0B] flex flex-col overflow-hidden"
+			className="fixed left-0 top-0 z-40 h-screen border-r border-border bg-secondary dark:bg-[#0A0A0B] flex flex-col overflow-hidden"
 		>
 			{/* Header / Logo */}
 			<div className="flex items-center h-20 px-4 mb-4 shrink-0">
@@ -142,17 +146,26 @@ export function Sidebar({
 					<Image src="/logo.svg" alt="Logo" width={140} height={33} priority />
 				</a>
 
-				<button
-					onClick={toggleSidebar}
-					className="ml-auto flex items-center justify-center w-7 h-7 rounded-md text-zinc-500 hover:text-zinc-300 hover:bg-white/[0.06] transition-all shrink-0"
-					title={sidebarOpen ? "Collapse sidebar" : "Expand sidebar"}
-				>
-					{sidebarOpen ? (
-						<ChevronLeft className="h-4 w-4" />
-					) : (
-						<ChevronRight className="h-4 w-4" />
-					)}
-				</button>
+				<div className="ml-auto flex items-center gap-1 shrink-0">
+					<button
+						onClick={() => setTheme(theme === "dark" ? "light" : "dark")}
+						className="flex items-center justify-center w-7 h-7 rounded-md text-zinc-500 hover:text-zinc-300 hover:bg-black/[0.06] dark:hover:bg-white/[0.06] transition-all"
+						title={theme === "dark" ? "Switch to light mode" : "Switch to dark mode"}
+					>
+						{theme === "dark" ? <Sun className="h-3.5 w-3.5" /> : <Moon className="h-3.5 w-3.5" />}
+					</button>
+					<button
+						onClick={toggleSidebar}
+						className="flex items-center justify-center w-7 h-7 rounded-md text-zinc-500 hover:text-zinc-300 hover:bg-black/[0.06] dark:hover:bg-white/[0.06] transition-all"
+						title={sidebarOpen ? "Collapse sidebar" : "Expand sidebar"}
+					>
+						{sidebarOpen ? (
+							<ChevronLeft className="h-4 w-4" />
+						) : (
+							<ChevronRight className="h-4 w-4" />
+						)}
+					</button>
+				</div>
 			</div>
 
 			{/* Search — hidden when collapsed */}
@@ -167,7 +180,7 @@ export function Sidebar({
 					>
 						<button
 							onClick={toggleCommandPalette}
-							className="w-full h-10 px-3 flex items-center gap-3 rounded-lg bg-transparent border border-[#1F1F22] text-zinc-500 hover:text-zinc-300 hover:border-[#2A2A2D] transition-all"
+							className="w-full h-10 px-3 flex items-center gap-3 rounded-lg bg-transparent border border-border text-muted-foreground hover:text-foreground transition-all"
 						>
 							<Search className="h-4 w-4 shrink-0" />
 							<span className="text-sm font-medium flex-1 text-left">
@@ -203,11 +216,11 @@ export function Sidebar({
 											!sidebarOpen && "justify-center px-0 rounded-lg border-l-0",
 											isActive
 												? cn(
-														"bg-gradient-to-r from-white/[0.08] to-transparent text-white",
+														"bg-gradient-to-r from-black/[0.06] dark:from-white/[0.08] to-transparent text-foreground dark:text-white",
 														sidebarOpen && "border-l-2 border-indigo-400",
 													)
 												: cn(
-														"text-zinc-400 hover:text-zinc-200 hover:bg-white/[0.03]",
+														"text-foreground/60 dark:text-zinc-400 hover:text-foreground dark:hover:text-zinc-200 hover:bg-black/[0.06] dark:hover:bg-white/[0.03]",
 														sidebarOpen && "border-l-2 border-transparent",
 													),
 										)}
@@ -217,7 +230,7 @@ export function Sidebar({
 												"h-4 w-4 transition-colors duration-300 shrink-0",
 												isActive
 													? item.color
-													: "text-zinc-500 group-hover:text-zinc-300",
+													: "text-foreground/40 dark:text-zinc-500 group-hover:text-foreground/70 dark:group-hover:text-zinc-300",
 											)}
 										/>
 
@@ -228,7 +241,7 @@ export function Sidebar({
 													animate={{ opacity: 1, width: "auto" }}
 													exit={{ opacity: 0, width: 0 }}
 													transition={{ duration: 0.15 }}
-													className="text-sm font-medium tracking-wide truncate flex-1 overflow-hidden whitespace-nowrap"
+													className="text-xs font-semibold tracking-widest uppercase truncate flex-1 overflow-hidden whitespace-nowrap"
 												>
 													{item.label}
 												</motion.span>
@@ -247,7 +260,7 @@ export function Sidebar({
 								{hasChildren && sidebarOpen && (
 									<button
 										onClick={() => setSessionPlannerOpen((prev) => !prev)}
-										className="flex items-center justify-center w-7 h-7 rounded-md text-zinc-500 hover:text-zinc-300 hover:bg-white/[0.06] transition-all shrink-0 mr-1"
+										className="flex items-center justify-center w-7 h-7 rounded-md text-foreground/40 dark:text-zinc-500 hover:text-foreground dark:hover:text-zinc-300 hover:bg-black/[0.06] dark:hover:bg-white/[0.06] transition-all shrink-0 mr-1"
 									>
 										<motion.div
 											animate={{ rotate: sessionPlannerOpen ? 0 : -90 }}
@@ -284,8 +297,8 @@ export function Sidebar({
 															className={cn(
 																"flex items-center gap-3 w-full h-10 pl-9 pr-3 rounded-xl transition-all duration-300 group",
 																isChildActive
-																	? "bg-gradient-to-r from-white/[0.06] to-transparent text-white"
-																	: "text-zinc-400 hover:text-zinc-200 hover:bg-white/[0.03]",
+																	? "bg-gradient-to-r from-black/[0.06] dark:from-white/[0.06] to-transparent text-foreground dark:text-white"
+																	: "text-foreground/60 dark:text-zinc-400 hover:text-foreground dark:hover:text-zinc-200 hover:bg-black/[0.06] dark:hover:bg-white/[0.03]",
 															)}
 														>
 															<child.icon
@@ -293,10 +306,10 @@ export function Sidebar({
 																	"h-3.5 w-3.5 transition-colors duration-300 shrink-0",
 																	isChildActive
 																		? child.color
-																		: "text-zinc-500 group-hover:text-zinc-300",
+																		: "text-foreground/40 dark:text-zinc-500 group-hover:text-foreground/70 dark:group-hover:text-zinc-300",
 																)}
 															/>
-															<span className="text-sm font-medium tracking-wide truncate flex-1">
+															<span className="text-xs font-semibold tracking-widest uppercase truncate flex-1">
 																{child.label}
 															</span>
 														</div>
@@ -324,7 +337,7 @@ export function Sidebar({
 						exit={{ opacity: 0 }}
 						className="absolute inset-0 z-50 bg-black/80 backdrop-blur-sm flex items-center justify-center p-4"
 					>
-						<div className="bg-[#141416] border border-red-500/30 rounded-xl p-5 max-w-[220px] space-y-3 text-center">
+						<div className="bg-card border border-red-500/30 rounded-xl p-5 max-w-[220px] space-y-3 text-center">
 							<p className="text-sm font-semibold text-white">
 								Reset Campaign?
 							</p>
@@ -359,7 +372,7 @@ export function Sidebar({
 					onClick={() => setShowResetConfirm(true)}
 					title="Reset campaign & re-onboard"
 					className={cn(
-						"flex items-center gap-3 w-full h-9 px-3 rounded-lg text-zinc-500 hover:text-red-400 hover:bg-red-500/10 transition-all text-sm",
+						"flex items-center gap-3 w-full h-9 px-3 rounded-lg text-foreground/50 dark:text-zinc-500 hover:text-red-500 hover:bg-red-500/10 transition-all text-sm",
 						!sidebarOpen && "justify-center px-0",
 					)}
 				>
@@ -381,7 +394,7 @@ export function Sidebar({
 
 				<div
 					className={cn(
-						"flex items-center gap-3 p-3 rounded-xl bg-[#141416] border border-[#1F1F22]",
+						"flex items-center gap-3 p-3 rounded-xl bg-card border border-border",
 						!sidebarOpen && "justify-center p-2",
 					)}
 				>
@@ -397,10 +410,10 @@ export function Sidebar({
 								transition={{ duration: 0.15 }}
 								className="min-w-0 flex-1 overflow-hidden"
 							>
-								<p className="text-sm font-medium text-white truncate whitespace-nowrap">
+								<p className="text-xs font-bold uppercase tracking-widest text-foreground truncate whitespace-nowrap">
 									{displayName}
 								</p>
-								<p className="text-[10px] text-zinc-500 truncate whitespace-nowrap">
+								<p className="text-[10px] text-zinc-500 uppercase tracking-widest truncate whitespace-nowrap">
 									Dungeon Master
 								</p>
 							</motion.div>

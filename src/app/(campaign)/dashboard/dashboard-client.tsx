@@ -80,13 +80,13 @@ export function DashboardClient({ campaign }: { campaign: CampaignData }) {
   return (
     <div data-tour-page="dashboard">
       {/* Custom Sleek Header */}
-      <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 mb-10 bg-zinc-950/20 p-6 rounded-2xl border border-white/5">
+      <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 mb-10 bg-amber-50/60 dark:bg-zinc-950/20 p-6 rounded-2xl border border-amber-200/60 dark:border-white/5">
         <div>
-          <h1 className="text-2xl font-bold tracking-tight text-white mb-1.5 flex items-center gap-2">
+          <h1 className="text-2xl font-bold tracking-tight text-foreground mb-1.5 flex items-center gap-2">
             Hello, {campaign.dmName ? `Dungeon Master ${campaign.dmName}` : "Dungeon Master"}!
             <span className="text-xl">👋</span>
           </h1>
-          <p className="text-xs text-zinc-400 max-w-lg leading-relaxed">
+          <p className="text-xs text-muted-foreground max-w-lg leading-relaxed">
             {upcomingSession?.aiNarrative ? (
               <span>{upcomingSession.aiNarrative}</span>
             ) : upcomingSession ? (
@@ -111,14 +111,14 @@ export function DashboardClient({ campaign }: { campaign: CampaignData }) {
               readOnly
               onClick={toggleCommandPalette}
               placeholder="Search Anything... (Cmd+K)"
-              className="w-full md:w-64 h-9 pl-9 pr-4 text-xs font-medium rounded-full bg-white/[0.02] border border-white/10 text-white placeholder:text-zinc-600 focus:outline-none focus:ring-1 focus:ring-amber-500/50 transition-all hover:bg-white/[0.04] cursor-text"
+              className="w-full md:w-64 h-9 pl-9 pr-4 text-xs font-medium rounded-full bg-black/[0.04] dark:bg-white/[0.02] border border-black/10 dark:border-white/10 text-foreground dark:text-white placeholder:text-muted-foreground focus:outline-none focus:ring-1 focus:ring-amber-500/50 transition-all hover:bg-black/[0.06] dark:hover:bg-white/[0.04] cursor-text"
             />
           </div>
           
           {/* Notifications */}
           <Dialog>
             <DialogTrigger asChild>
-              <button className="relative h-9 w-9 rounded-full bg-white/[0.02] border border-white/10 flex items-center justify-center text-zinc-400 hover:text-white hover:bg-white/[0.04] transition-colors">
+              <button className="relative h-9 w-9 rounded-full bg-black/[0.04] dark:bg-white/[0.02] border border-black/10 dark:border-white/10 flex items-center justify-center text-muted-foreground hover:text-foreground dark:hover:text-white hover:bg-black/[0.06] dark:hover:bg-white/[0.04] transition-colors">
                 <Bell className="h-4 w-4" />
                 <span className="absolute top-2 right-2 w-2 h-2 rounded-full bg-red-500 border border-zinc-950" />
               </button>
@@ -170,7 +170,7 @@ export function DashboardClient({ campaign }: { campaign: CampaignData }) {
           {upcomingSession && (
             <motion.div variants={item}>
               <Link href={`/sessions`}>
-                <Card className="group hover:border-gold/20 transition-all duration-300 glow-gold cursor-pointer h-full border-white/5 bg-[#141416]">
+                <Card className="group hover:border-gold/20 transition-all duration-300 glow-gold cursor-pointer h-full border-border bg-card">
                   <CardHeader className="pb-3">
                     <div className="flex items-center justify-between">
                       <div className="flex items-center gap-2">
@@ -259,25 +259,25 @@ export function DashboardClient({ campaign }: { campaign: CampaignData }) {
         {/* Triple Column Tracking Row */}
         <div className="col-span-12 lg:col-span-4">
           <motion.div variants={item} className="h-full">
-            <Card className="h-full border-white/5 bg-[#141416]">
+            <Card className="h-full border-border bg-card">
               <CardHeader className="pb-3 flex-row items-center justify-between space-y-0">
-                <CardTitle className="text-sm font-bold text-zinc-400 flex items-center gap-2">
+                <CardTitle className="text-sm font-bold text-muted-foreground flex items-center gap-2">
                   <GitBranch className="h-4 w-4 text-indigo-400" />
                   Active Plots
                 </CardTitle>
                 <Link href="/storylines">
-                  <Button variant="ghost" size="sm" className="h-7 text-[10px] text-zinc-500 hover:text-white px-2">
+                  <Button variant="ghost" size="sm" className="h-7 text-[10px] text-muted-foreground hover:text-foreground dark:hover:text-white px-2">
                     View All
                   </Button>
                 </Link>
               </CardHeader>
               <CardContent className="space-y-2">
                 {activeStorylines.slice(0, 4).map((storyline) => (
-                  <div key={storyline.id} className="p-3 rounded-xl bg-zinc-800/30 border border-white/[0.03] hover:border-white/10 transition-all cursor-pointer group">
+                  <div key={storyline.id} className="p-3 rounded-xl bg-muted/60 dark:bg-zinc-800/30 border border-border dark:border-white/[0.03] hover:bg-muted dark:hover:border-white/10 transition-all cursor-pointer group">
                     <div className="flex items-start justify-between gap-2">
                       <div className="min-w-0">
-                        <p className="text-sm font-medium text-white truncate group-hover:text-indigo-400 transition-colors">{storyline.title}</p>
-                        <p className="text-[10px] text-zinc-500 mt-0.5">{storyline.arcName || "Main Story"}</p>
+                        <p className="text-sm font-medium text-foreground truncate group-hover:text-indigo-400 transition-colors">{storyline.title}</p>
+                        <p className="text-[10px] text-muted-foreground mt-0.5">{storyline.arcName || "Main Story"}</p>
                       </div>
                       <StatusBadge status={storyline.urgency} type="urgency" className="whitespace-nowrap" />
                     </div>
@@ -290,25 +290,25 @@ export function DashboardClient({ campaign }: { campaign: CampaignData }) {
 
         <div className="col-span-12 lg:col-span-4">
           <motion.div variants={item} className="h-full">
-            <Card className="h-full border-white/5 bg-[#141416]">
+            <Card className="h-full border-border bg-card">
               <CardHeader className="pb-3 flex-row items-center justify-between space-y-0">
-                <CardTitle className="text-sm font-bold text-zinc-400 flex items-center gap-2">
+                <CardTitle className="text-sm font-bold text-muted-foreground flex items-center gap-2">
                   <KeyRound className="h-4 w-4 text-purple-400" />
                   Critical Secrets
                 </CardTitle>
                 <Link href="/secrets">
-                  <Button variant="ghost" size="sm" className="h-7 text-[10px] text-zinc-500 hover:text-white px-2">
+                  <Button variant="ghost" size="sm" className="h-7 text-[10px] text-muted-foreground hover:text-foreground dark:hover:text-white px-2">
                     View All
                   </Button>
                 </Link>
               </CardHeader>
               <CardContent className="space-y-2">
                 {criticalSecrets.slice(0, 4).map((secret) => (
-                  <div key={secret.id} className="p-3 rounded-xl bg-zinc-800/30 border border-white/[0.03] hover:border-white/10 transition-all cursor-pointer group">
+                  <div key={secret.id} className="p-3 rounded-xl bg-muted/60 dark:bg-zinc-800/30 border border-border dark:border-white/[0.03] hover:bg-muted dark:hover:border-white/10 transition-all cursor-pointer group">
                     <div className="flex items-start justify-between gap-2">
                       <div className="min-w-0">
-                        <p className="text-sm font-medium text-white truncate group-hover:text-purple-400 transition-colors tracking-tight">{secret.title}</p>
-                        <p className="text-[10px] text-zinc-500 mt-0.5">{secret.owner || "Universal"}</p>
+                        <p className="text-sm font-medium text-foreground truncate group-hover:text-purple-400 transition-colors tracking-tight">{secret.title}</p>
+                        <p className="text-[10px] text-muted-foreground mt-0.5">{secret.owner || "Universal"}</p>
                       </div>
                       <StatusBadge status={secret.urgency} type="urgency" className="whitespace-nowrap" />
                     </div>
@@ -321,14 +321,14 @@ export function DashboardClient({ campaign }: { campaign: CampaignData }) {
 
         <div className="col-span-12 lg:col-span-4">
           <motion.div variants={item} className="h-full">
-            <Card className="h-full border-white/5 bg-[#141416]">
+            <Card className="h-full border-border bg-card">
               <CardHeader className="pb-3 flex-row items-center justify-between space-y-0">
-                <CardTitle className="text-sm font-bold text-zinc-400 flex items-center gap-2">
+                <CardTitle className="text-sm font-bold text-muted-foreground flex items-center gap-2">
                   <Users className="h-4 w-4 text-emerald-400" />
                   Active NPCs
                 </CardTitle>
                 <Link href="/npcs">
-                  <Button variant="ghost" size="sm" className="h-7 text-[10px] text-zinc-500 hover:text-white px-2">
+                  <Button variant="ghost" size="sm" className="h-7 text-[10px] text-muted-foreground hover:text-foreground dark:hover:text-white px-2">
                     View All
                   </Button>
                 </Link>
@@ -336,23 +336,23 @@ export function DashboardClient({ campaign }: { campaign: CampaignData }) {
               <CardContent className="space-y-2 flex-1 flex flex-col">
                 <div className="space-y-2 flex-1">
                   {(pinnedNPCs.length > 0 ? pinnedNPCs : recentNPCs).slice(0, 6).map((npc) => (
-                    <div key={npc.id} className="flex items-center gap-3 p-3 rounded-xl bg-zinc-800/30 border border-white/[0.03] hover:border-white/10 transition-all cursor-pointer group">
+                    <div key={npc.id} className="flex items-center gap-3 p-3 rounded-xl bg-muted/60 dark:bg-zinc-800/30 border border-border dark:border-white/[0.03] hover:bg-muted dark:hover:border-white/10 transition-all cursor-pointer group">
                       <div className="w-8 h-8 rounded-full bg-emerald-500/10 border border-emerald-500/20 flex items-center justify-center shrink-0">
                         <span className="text-xs font-bold text-emerald-400">{npc.name.charAt(0)}</span>
                       </div>
                       <div className="min-w-0 flex-1">
-                        <p className="text-sm font-medium text-white truncate group-hover:text-emerald-400 transition-colors">{npc.name}</p>
-                        <p className="text-[10px] text-zinc-500">{npc.role || npc.race}</p>
+                        <p className="text-sm font-medium text-foreground truncate group-hover:text-emerald-400 transition-colors">{npc.name}</p>
+                        <p className="text-[10px] text-muted-foreground">{npc.role || npc.race}</p>
                       </div>
                       <StatusBadge status={npc.status} className="whitespace-nowrap" />
                     </div>
                   ))}
                 </div>
-                
+
                 {/* Visual filler / NPC context summary if list is short */}
                 {(pinnedNPCs.length > 0 ? pinnedNPCs : recentNPCs).length < 4 && (
-                  <div className="mt-4 p-3 rounded-xl border border-dashed border-white/5 bg-white/[0.01]">
-                    <p className="text-[10px] text-zinc-600 italic leading-relaxed">
+                  <div className="mt-4 p-3 rounded-xl border border-dashed border-border dark:border-white/5 bg-muted/30 dark:bg-white/[0.01]">
+                    <p className="text-[10px] text-muted-foreground italic leading-relaxed">
                       &quot;The shadows of the past cling to the residents of this world. Every face hides a secret, and every ally carries a price.&quot;
                     </p>
                   </div>
@@ -365,14 +365,14 @@ export function DashboardClient({ campaign }: { campaign: CampaignData }) {
         {/* Bottom Row - Journals & Quick Actions */}
         <div className="col-span-12 lg:col-span-8">
           <motion.div variants={item} className="h-full">
-            <Card className="h-full border-white/5 bg-[#141416]">
+            <Card className="h-full border-border bg-card">
               <CardHeader className="pb-3 flex-row items-center justify-between space-y-0">
-                <CardTitle className="text-sm font-bold text-zinc-400 flex items-center gap-2">
+                <CardTitle className="text-sm font-bold text-muted-foreground flex items-center gap-2">
                   <BookOpen className="h-4 w-4 text-rose-400" />
                   Recent Journal Entries
                 </CardTitle>
                 <Link href="/journal">
-                  <Button variant="ghost" size="sm" className="h-7 text-[10px] text-zinc-500 hover:text-white px-2">
+                  <Button variant="ghost" size="sm" className="h-7 text-[10px] text-muted-foreground hover:text-foreground dark:hover:text-white px-2">
                     Full Journal <ArrowRight className="ml-1 h-3 w-3" />
                   </Button>
                 </Link>
@@ -381,20 +381,20 @@ export function DashboardClient({ campaign }: { campaign: CampaignData }) {
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                   {recentJournals.map((entry) => (
                     <Link key={entry.id} href="/journal">
-                      <div className="p-4 rounded-xl bg-zinc-800/20 border border-white/[0.03] hover:border-white/10 transition-all cursor-pointer group h-full">
+                      <div className="p-4 rounded-xl bg-muted/60 dark:bg-zinc-800/20 border border-border dark:border-white/[0.03] hover:bg-muted dark:hover:border-white/10 transition-all cursor-pointer group h-full">
                         <div className="flex items-center gap-2 mb-3">
                           <span className="px-2 py-0.5 rounded-full bg-rose-500/10 border border-rose-500/20 text-rose-400 text-[10px] font-semibold capitalize tracking-wide">
                             {entry.type.replace(/_/g, " ")}
                           </span>
                           {entry.isPinned && <Pin className="h-3 w-3 text-amber-500" />}
                         </div>
-                        <h4 className="text-sm font-bold text-white mb-2 group-hover:text-rose-400 transition-colors truncate">
+                        <h4 className="text-sm font-bold text-foreground mb-2 group-hover:text-rose-400 transition-colors truncate">
                           {entry.title}
                         </h4>
-                        <p className="text-xs text-zinc-500 line-clamp-2 leading-relaxed mb-3">
+                        <p className="text-xs text-muted-foreground line-clamp-2 leading-relaxed mb-3">
                           {entry.content}
                         </p>
-                        <p className="text-[10px] text-zinc-600 font-medium">
+                        <p className="text-[10px] text-muted-foreground/70 font-medium">
                           {formatDate(entry.createdAt)}
                         </p>
                       </div>
@@ -408,9 +408,9 @@ export function DashboardClient({ campaign }: { campaign: CampaignData }) {
 
         <div className="col-span-12 lg:col-span-4 flex flex-col gap-6">
           <motion.div variants={item}>
-            <Card className="border-white/5 bg-[#141416]">
+            <Card className="border-border bg-card">
               <CardHeader className="pb-3">
-                <CardTitle className="text-sm font-bold text-zinc-400 flex items-center gap-2">
+                <CardTitle className="text-sm font-bold text-muted-foreground flex items-center gap-2">
                   <AlertTriangle className="h-4 w-4 text-amber-400" />
                   Party Goals
                 </CardTitle>
@@ -419,8 +419,8 @@ export function DashboardClient({ campaign }: { campaign: CampaignData }) {
                 {partyGoals.slice(0, 3).map((goal) => (
                   <div key={goal.id} className="space-y-1.5">
                     <div className="flex justify-between text-[11px] font-medium">
-                      <span className="text-zinc-300 truncate">{goal.title}</span>
-                      <span className="text-zinc-500">{goal.progress}%</span>
+                      <span className="text-foreground truncate">{goal.title}</span>
+                      <span className="text-muted-foreground">{goal.progress}%</span>
                     </div>
                     <Progress value={goal.progress} className="h-1 bg-white/5" indicatorClassName="bg-amber-500/80" />
                   </div>
@@ -430,9 +430,9 @@ export function DashboardClient({ campaign }: { campaign: CampaignData }) {
           </motion.div>
 
           <motion.div variants={item} className="flex-1">
-            <Card className="h-full border-white/5 bg-[#141416]">
+            <Card className="h-full border-border bg-card">
               <CardHeader className="pb-3">
-                <CardTitle className="text-sm font-bold text-zinc-400 flex items-center gap-2">
+                <CardTitle className="text-sm font-bold text-muted-foreground flex items-center gap-2">
                   <Sparkles className="h-4 w-4 text-amber-400" />
                   Quick Navigation
                 </CardTitle>
@@ -446,10 +446,10 @@ export function DashboardClient({ campaign }: { campaign: CampaignData }) {
                   { label: "Campaign Journal", href: "/journal", icon: BookOpen, color: "text-rose-400" },
                 ].map((link) => (
                   <Link key={link.href} href={link.href}>
-                    <div className="flex items-center gap-3 p-2.5 rounded-lg hover:bg-white/[0.04] transition-colors group">
+                    <div className="flex items-center gap-3 p-2.5 rounded-lg hover:bg-muted/60 dark:hover:bg-white/[0.04] transition-colors group">
                       <link.icon className={`h-4 w-4 ${link.color}`} />
-                      <span className="text-xs text-zinc-400 group-hover:text-white transition-colors flex-1">{link.label}</span>
-                      <ArrowRight className="h-3 w-3 text-zinc-600 group-hover:text-zinc-400 group-hover:translate-x-0.5 transition-all" />
+                      <span className="text-xs text-muted-foreground group-hover:text-foreground transition-colors flex-1">{link.label}</span>
+                      <ArrowRight className="h-3 w-3 text-muted-foreground/50 group-hover:text-muted-foreground group-hover:translate-x-0.5 transition-all" />
                     </div>
                   </Link>
                 ))}

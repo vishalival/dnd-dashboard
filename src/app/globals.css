@@ -2,27 +2,47 @@
 @tailwind components;
 @tailwind utilities;
 
+html {
+  font-size: 17px;
+}
+
+body {
+  line-height: 1.6;
+}
+
+h1, h2, h3, h4, h5, h6 {
+  line-height: 1.15;
+}
+
+/* Small caps label style */
+.label-caps {
+  font-size: 0.65rem;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  font-weight: 600;
+}
+
 @layer base {
   :root {
-    --background: 0 0% 100%;
-    --foreground: 0 0% 10%;
-    --card: 0 0% 100%;
-    --card-foreground: 0 0% 15%;
-    --popover: 0 0% 100%;
-    --popover-foreground: 0 0% 15%;
-    --primary: 0 0% 9%;
-    --primary-foreground: 0 0% 98%;
-    --secondary: 0 0% 96.1%;
-    --secondary-foreground: 0 0% 9%;
-    --muted: 0 0% 96.1%;
-    --muted-foreground: 0 0% 35%;
-    --accent: 0 0% 96.1%;
-    --accent-foreground: 0 0% 9%;
-    --destructive: 0 84.2% 60.2%;
-    --destructive-foreground: 0 0% 98%;
-    --border: 0 0% 92%;
-    --input: 0 0% 92%;
-    --ring: 0 0% 3.9%;
+    --background: 35 28% 93%;
+    --foreground: 20 12% 12%;
+    --card: 35 22% 97%;
+    --card-foreground: 20 12% 12%;
+    --popover: 35 22% 97%;
+    --popover-foreground: 20 12% 12%;
+    --primary: 0 60% 30%;
+    --primary-foreground: 35 28% 95%;
+    --secondary: 35 18% 88%;
+    --secondary-foreground: 20 12% 12%;
+    --muted: 35 18% 88%;
+    --muted-foreground: 20 8% 38%;
+    --accent: 35 18% 88%;
+    --accent-foreground: 20 12% 12%;
+    --destructive: 0 72% 40%;
+    --destructive-foreground: 35 28% 95%;
+    --border: 35 15% 82%;
+    --input: 35 15% 82%;
+    --ring: 0 60% 30%;
     --radius: 0.75rem;
   }
 
@@ -150,27 +170,27 @@
 }
 
 .ProseMirror h1 {
-  @apply text-2xl font-heading font-bold text-zinc-100 mb-3 mt-6;
+  @apply text-2xl font-heading font-bold text-foreground mb-3 mt-6;
 }
 
 .ProseMirror h2 {
-  @apply text-xl font-heading font-semibold text-zinc-200 mb-2 mt-5;
+  @apply text-xl font-heading font-semibold text-foreground mb-2 mt-5;
 }
 
 .ProseMirror h3 {
-  @apply text-lg font-heading font-medium text-zinc-300 mb-2 mt-4;
+  @apply text-lg font-heading font-medium text-foreground mb-2 mt-4;
 }
 
 .ProseMirror p {
-  @apply text-sm text-zinc-300 leading-relaxed mb-2;
+  @apply text-sm text-foreground/80 leading-relaxed mb-2;
 }
 
 .ProseMirror ul {
-  @apply list-disc pl-5 mb-3 text-sm text-zinc-300;
+  @apply list-disc pl-5 mb-3 text-sm text-foreground/80;
 }
 
 .ProseMirror ol {
-  @apply list-decimal pl-5 mb-3 text-sm text-zinc-300;
+  @apply list-decimal pl-5 mb-3 text-sm text-foreground/80;
 }
 
 .ProseMirror li {
@@ -178,27 +198,27 @@
 }
 
 .ProseMirror blockquote {
-  @apply border-l-2 border-orange-400/40 pl-4 italic text-zinc-400 my-3;
+  @apply border-l-2 border-orange-400/40 pl-4 italic text-foreground/60 my-3;
 }
 
 .ProseMirror code {
-  @apply bg-zinc-800 text-orange-300 px-1.5 py-0.5 rounded text-xs font-mono;
+  @apply bg-muted text-orange-600 dark:text-orange-300 px-1.5 py-0.5 rounded text-xs font-mono;
 }
 
 .ProseMirror pre {
-  @apply bg-zinc-900 rounded-lg p-4 my-3 overflow-x-auto;
+  @apply bg-muted dark:bg-zinc-900 rounded-lg p-4 my-3 overflow-x-auto;
 }
 
 .ProseMirror pre code {
-  @apply bg-transparent p-0 text-zinc-300;
+  @apply bg-transparent p-0 text-foreground/80;
 }
 
 .ProseMirror hr {
-  @apply border-white/[0.08] my-6;
+  @apply border-border my-6;
 }
 
 .ProseMirror strong {
-  @apply font-semibold text-zinc-100;
+  @apply font-semibold text-foreground;
 }
 
 .ProseMirror em {
@@ -213,7 +233,7 @@
 }
 
 .ProseMirror p.is-editor-empty:first-child::before {
-  @apply text-zinc-600;
+  @apply text-muted-foreground/50;
   content: attr(data-placeholder);
   float: left;
   height: 0;
