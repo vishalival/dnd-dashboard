@@ -16,6 +16,43 @@ import {
   ArrowRight,
 } from "lucide-react";
 import { useRouter } from "next/navigation";
+import JSZip from "jszip";
+import mammoth from "mammoth";
+
+async function extractTextFromZipClient(file: File): Promise<{ text: string; fileCount: number }> {
+  const buffer = await file.arrayBuffer();
+  const zip = await JSZip.loadAsync(buffer);
+  const texts: string[] = [];
+  let fileCount = 0;
+
+  for (const [filename, entry] of Object.entries(zip.files)) {
+    if (entry.dir) continue;
+    const lowerName = filename.toLowerCase();
+
+    if (lowerName.endsWith(".docx")) {
+      try {
+        const docxBuffer = await entry.async("arraybuffer");
+        const result = await mammoth.extractRawText({ arrayBuffer: docxBuffer });
+        const cleanName = filename.split("/").pop() || filename;
+        texts.push(`\n=== FILE: ${cleanName} ===\n${result.value}`);
+        fileCount++;
+      } catch (e) {
+        console.warn(`Failed to parse ${filename}:`, e);
+      }
+    } else if (lowerName.endsWith(".txt") || lowerName.endsWith(".md")) {
+      try {
+        const content = await entry.async("text");
+        const cleanName = filename.split("/").pop() || filename;
+        texts.push(`\n=== FILE: ${cleanName} ===\n${content}`);
+        fileCount++;
+      } catch (e) {
+        console.warn(`Failed to read ${filename}:`, e);
+      }
+    }
+  }
+
+  return { text: texts.join("\n\n"), fileCount };
+}
 
 type Step = "processing" | "analyzing" | "creating" | "finishing" | "done";
 
@@ -82,18 +119,28 @@ export function OnboardClient() {
     setError(null);
     setStarted(true);
     setCurrentStep("processing");
-    setDetail("Uploading your campaign archive...");
+    setDetail("Unpacking your campaign archive...");
 
     try {
-      const formData = new FormData();
-      formData.append("file", file);
-      formData.append("dmName", dmName || "Dungeon Master");
+      // Extract text client-side to avoid Vercel's 4.5 MB body limit
+      const { text: documentText, fileCount } = await extractTextFromZipClient(file);
+
+      if (!documentText.trim()) {
+        throw new Error("No readable documents found in zip. Include .docx, .txt, or .md files.");
+      }
+
+      setDetail(`Found ${fileCount} document${fileCount !== 1 ? "s" : ""} — sending to ArcMind...`);
 
       abortRef.current = new AbortController();
 
       const response = await fetch("/api/onboard", {
         method: "POST",
-        body: formData,
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          documentText,
+          fileCount,
+          dmName: dmName || "Dungeon Master",
+        }),
         signal: abortRef.current.signal,
       });
 
