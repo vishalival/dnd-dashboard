@@ -106,10 +106,12 @@ function NPCDetail({ npc, onClose }: { npc: NPCData; onClose: () => void }) {
       {/* Status Row */}
       <div className="flex flex-wrap gap-2">
         <StatusBadge status={npc.status} />
-        <Badge variant="outline" className="text-xs gap-1">
-          {dispositionIcons[npc.disposition]}
-          {npc.disposition}
-        </Badge>
+        {npc.disposition.toLowerCase() !== npc.status.toLowerCase() && (
+          <Badge variant="outline" className="text-xs gap-1">
+            {dispositionIcons[npc.disposition]}
+            {npc.disposition}
+          </Badge>
+        )}
         {npc.faction && (
           <Badge variant="gold" className="text-xs gap-1">
             <Shield className="h-3 w-3" />

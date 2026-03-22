@@ -2,6 +2,7 @@
 
 import React from "react";
 import Link from "next/link";
+import Image from "next/image";
 import { usePathname } from "next/navigation";
 import { motion } from "framer-motion";
 import {
@@ -101,13 +102,14 @@ export function Sidebar({
       className="fixed left-0 top-0 z-40 h-screen border-r border-[#1F1F22] bg-[#0A0A0B] flex flex-col"
     >
       {/* Header / Logo */}
-      <div className="flex items-center gap-3 px-6 h-20 mb-4">
-        <div className="w-8 h-8 rounded-full bg-gradient-to-br from-indigo-400 to-purple-500 flex items-center justify-center shrink-0">
-          <span className="font-heading font-black text-xs text-white">DM</span>
-        </div>
-        <span className="font-heading font-semibold text-base text-white tracking-wide truncate">
-          {campaignName || "D&D Campaign"}
-        </span>
+      <div className="flex items-center px-6 h-20 mb-4">
+        <Image
+          src="/logo.svg"
+          alt="Logo"
+          width={140}
+          height={33}
+          priority
+        />
       </div>
 
       {/* Command */}
