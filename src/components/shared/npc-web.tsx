@@ -454,8 +454,8 @@ export function NPCWeb({ campaign }: { campaign: CampaignData }) {
               onClick={() => toggleEdgeFilter(type)}
               className={`px-3 py-1.5 rounded-full text-xs font-medium border transition-all ${
                 activeEdgeFilters.has(type)
-                  ? "border-white/20 text-white bg-white/[0.06]"
-                  : "border-white/[0.06] text-zinc-600 bg-transparent"
+                  ? "border-zinc-900 text-white bg-zinc-900 dark:border-white/20 dark:text-white dark:bg-white/[0.06]"
+                  : "border-zinc-200 text-zinc-600 bg-transparent hover:bg-zinc-100 dark:border-white/[0.06] dark:text-zinc-400 dark:hover:bg-white/[0.02]"
               }`}
             >
               <span
@@ -467,7 +467,7 @@ export function NPCWeb({ campaign }: { campaign: CampaignData }) {
           )
         )}
 
-        <span className="w-px h-4 bg-white/10 mx-1" />
+        <span className="w-px h-4 bg-zinc-300 dark:bg-white/10 mx-1" />
 
         {/* Status filters */}
         {(["alive", "dead", "missing", "hostile"] as const).map((status) => (
@@ -476,8 +476,8 @@ export function NPCWeb({ campaign }: { campaign: CampaignData }) {
             onClick={() => toggleStatusFilter(status)}
             className={`px-3 py-1.5 rounded-full text-xs font-medium border transition-all ${
               activeStatusFilters.has(status)
-                ? "border-white/20 text-white bg-white/[0.06]"
-                : "border-white/[0.06] text-zinc-600 bg-transparent"
+                  ? "border-zinc-900 text-white bg-zinc-900 dark:border-white/20 dark:text-white dark:bg-white/[0.06]"
+                  : "border-zinc-200 text-zinc-600 bg-transparent hover:bg-zinc-100 dark:border-white/[0.06] dark:text-zinc-400 dark:hover:bg-white/[0.02]"
             }`}
           >
             <span
@@ -495,7 +495,7 @@ export function NPCWeb({ campaign }: { campaign: CampaignData }) {
         className="relative w-full h-[calc(100vh-14rem)] rounded-xl border border-white/[0.06] bg-[#0d0d18] overflow-hidden"
       >
         {/* Factions legend — bottom left */}
-        <div className="absolute bottom-4 left-4 z-10 p-3 rounded-lg bg-[#0d0d18]/80 backdrop-blur-sm border border-white/[0.08] text-[11px] space-y-1.5">
+        <div className="absolute bottom-4 left-4 z-10 p-3 rounded-lg bg-white/80 dark:bg-[#0d0d18]/80 backdrop-blur-sm border border-border dark:border-white/[0.08] text-[11px] space-y-1.5">
           <span className="text-zinc-500 font-semibold uppercase tracking-wider text-[10px]">
             Factions
           </span>
@@ -505,7 +505,7 @@ export function NPCWeb({ campaign }: { campaign: CampaignData }) {
                 className="w-2.5 h-2.5 rounded-full"
                 style={{ backgroundColor: getFactionColor(f) }}
               />
-              <span className="text-zinc-400">{f}</span>
+              <span className="text-zinc-600 dark:text-zinc-400">{f}</span>
             </div>
           ))}
         </div>
@@ -521,7 +521,7 @@ export function NPCWeb({ campaign }: { campaign: CampaignData }) {
         {/* Tooltip */}
         {tooltip && (
           <div
-            className="absolute z-20 p-4 rounded-xl bg-zinc-900/95 backdrop-blur-md border border-white/[0.1] shadow-2xl min-w-[220px] animate-in fade-in zoom-in-95 duration-150"
+            className="absolute z-20 p-4 rounded-xl bg-white/95 dark:bg-zinc-900/95 backdrop-blur-md border border-border dark:border-white/[0.1] shadow-2xl min-w-[220px] animate-in fade-in zoom-in-95 duration-150"
             style={{
               left: Math.min(tooltip.x, dimensions.width - 240),
               top: Math.min(tooltip.y, dimensions.height - 200),
@@ -531,7 +531,7 @@ export function NPCWeb({ campaign }: { campaign: CampaignData }) {
               <div
                 className="w-10 h-10 rounded-full flex items-center justify-center text-lg font-semibold"
                 style={{
-                  backgroundColor: "#141420",
+                  backgroundColor: "var(--background)",
                   color: getFactionColor(tooltip.npc.faction),
                   border: `2px solid ${getFactionColor(tooltip.npc.faction)}`,
                 }}
@@ -539,7 +539,7 @@ export function NPCWeb({ campaign }: { campaign: CampaignData }) {
                 {tooltip.npc.name.charAt(0)}
               </div>
               <div>
-                <h3 className="text-sm font-semibold text-white">
+                <h3 className="text-sm font-semibold text-foreground">
                   {tooltip.npc.name}
                 </h3>
                 <p className="text-[11px] text-zinc-500">
@@ -553,24 +553,24 @@ export function NPCWeb({ campaign }: { campaign: CampaignData }) {
               {tooltip.npc.faction && (
                 <div className="flex justify-between">
                   <span className="text-zinc-500">Faction</span>
-                  <span className="text-zinc-300">{tooltip.npc.faction}</span>
+                  <span className="text-zinc-700 dark:text-zinc-300">{tooltip.npc.faction}</span>
                 </div>
               )}
               <div className="flex justify-between">
                 <span className="text-zinc-500">Status</span>
-                <span className="text-zinc-300 capitalize">
+                <span className="text-zinc-700 dark:text-zinc-300 capitalize">
                   {tooltip.npc.status}
                 </span>
               </div>
               <div className="flex justify-between">
                 <span className="text-zinc-500">Disposition</span>
-                <span className="text-zinc-300 capitalize">
+                <span className="text-zinc-700 dark:text-zinc-300 capitalize">
                   {tooltip.npc.disposition}
                 </span>
               </div>
               <div className="flex justify-between">
                 <span className="text-zinc-500">Connections</span>
-                <span className="text-zinc-300">
+                <span className="text-zinc-700 dark:text-zinc-300">
                   {tooltip.npc.connectionCount}
                 </span>
               </div>
