@@ -138,7 +138,9 @@ export function Sidebar({
 		>
 			{/* Header / Logo */}
 			<div className="flex items-center h-20 px-4 mb-4 shrink-0">
-				<Image src="/logo.svg" alt="Logo" width={140} height={33} priority />
+				<a href="https://arcmind-dnd.vercel.app/dashboard">
+					<Image src="/logo.svg" alt="Logo" width={140} height={33} priority />
+				</a>
 
 				<button
 					onClick={toggleSidebar}
