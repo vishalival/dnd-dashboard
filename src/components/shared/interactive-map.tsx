@@ -133,6 +133,7 @@ export function InteractiveMap({ src, className, initialScale = 1 }: Interactive
           onDragEnd={() => setIsDragging(false)}
           className="relative transition-shadow duration-300"
         >
+          {/* eslint-disable-next-line @next/next/no-img-element */}
           <img
             ref={imgRef}
             src={src}

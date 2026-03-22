@@ -84,7 +84,7 @@ export function DashboardClient({ campaign }: { campaign: CampaignData }) {
       <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 mb-10 bg-amber-50/60 dark:bg-zinc-950/20 p-6 rounded-2xl border border-amber-200/60 dark:border-white/5">
         <div>
           <h1 className="text-2xl font-bold tracking-tight text-foreground mb-1.5 flex items-center gap-2">
-            Hello, {campaign.dmName ? `Dungeon Master ${campaign.dmName}` : "Dungeon Master"}!
+            Hello, {(campaign as any).dmName ? `Dungeon Master ${(campaign as any).dmName}` : "Dungeon Master"}!
             <span className="text-xl">👋</span>
           </h1>
           <div className="mt-2 p-3 bg-amber-500/10 border border-amber-500/20 rounded-lg max-w-2xl">
@@ -187,10 +187,10 @@ export function DashboardClient({ campaign }: { campaign: CampaignData }) {
                       </div>
                       <div className="flex items-center gap-2">
                         <StatusBadge status={upcomingSession.status} />
-                        {upcomingSession.aiBadge && (
+                        {(upcomingSession as any).aiBadge && (
                           <Badge variant="outline" className="text-[10px] px-2 py-0 text-amber-400 border-amber-400/30">
                             <Sparkles className="h-3 w-3 mr-1" />
-                            {upcomingSession.aiBadge}
+                            {(upcomingSession as any).aiBadge}
                           </Badge>
                         )}
                       </div>
@@ -212,9 +212,9 @@ export function DashboardClient({ campaign }: { campaign: CampaignData }) {
                         )}
                       </div>
                       
-                      {((upcomingSession.summary && upcomingSession.summary !== "Session summary unavailable.") || upcomingSession.aiSummary) && (
+                      {((upcomingSession.summary && upcomingSession.summary !== "Session summary unavailable.") || (upcomingSession as any).aiSummary) && (
                         <p className="text-sm text-foreground/80 dark:text-zinc-300 line-clamp-3 leading-relaxed">
-                          {upcomingSession.summary || upcomingSession.aiSummary}
+                          {upcomingSession.summary || (upcomingSession as any).aiSummary}
                         </p>
                       )}
 
@@ -252,7 +252,7 @@ export function DashboardClient({ campaign }: { campaign: CampaignData }) {
                   </div>
                   <h3 className="text-lg font-semibold text-foreground dark:text-zinc-200 mb-2">No Upcoming Sessions</h3>
                   <p className="text-sm text-muted-foreground max-w-[250px]">
-                    You don't have any upcoming sessions planned. Click to visit the session planner.
+                    You don&apos;t have any upcoming sessions planned. Click to visit the session planner.
                   </p>
                 </Card>
               </Link>

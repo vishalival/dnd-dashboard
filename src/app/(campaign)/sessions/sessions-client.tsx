@@ -531,7 +531,7 @@ function LiveSessionPanel({ session, characters, onSessionEnded }: {
     };
     document.addEventListener("visibilitychange", onVisibilityChange);
     return () => document.removeEventListener("visibilitychange", onVisibilityChange);
-  }, [session.id, activeSessionId, phase]);
+  }, [session.id, activeSessionId, phase, keywords, isRecording, startRecording]);
 
   const handlePause = () => {
     pauseRecording();
