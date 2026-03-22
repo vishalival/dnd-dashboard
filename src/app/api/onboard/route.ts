@@ -252,7 +252,8 @@ Important extraction rules:
 - Set appropriate urgency levels based on context
 - Pin critical journal entries and secrets
 - Create storyline events from session recaps and timeline info
-- Extract faction and location data from world-building documents`;
+- Extract faction and location data from world-building documents
+- For journal entries of type "prep_notes" and "worldbuilding", format their "content" as instructive bullet point lists.`;
 
   const response = await client.messages.create({
     model: "claude-sonnet-4-20250514",

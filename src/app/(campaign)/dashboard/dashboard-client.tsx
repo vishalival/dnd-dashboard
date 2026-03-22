@@ -86,20 +86,29 @@ export function DashboardClient({ campaign }: { campaign: CampaignData }) {
             Hello, {campaign.dmName ? `Dungeon Master ${campaign.dmName}` : "Dungeon Master"}!
             <span className="text-xl">👋</span>
           </h1>
-          <p className="text-xs text-zinc-400 max-w-lg leading-relaxed">
-            {upcomingSession?.aiNarrative ? (
-              <span>{upcomingSession.aiNarrative}</span>
-            ) : upcomingSession ? (
-              <>
-                The corruption in <span className="text-purple-400 font-medium">{upcomingSession.title}</span> deepens.
-                {pinnedNPCs.some(n => n.status === 'missing') && (
-                  <> With <span className="text-emerald-400 font-medium">{pinnedNPCs.find(n => n.status === 'missing')?.name}</span> still missing, your preparation for Session {upcomingSession.sessionNumber} is critical.</>
-                )}
-              </>
-            ) : (
-              "Manage your campaign flow, track critical storylines, and prepare for your next epic adventure."
-            )}
-          </p>
+          <div className="mt-2 p-3 bg-amber-500/10 border border-amber-500/20 rounded-lg max-w-2xl">
+            <h2 className="text-amber-400 font-bold flex items-center gap-1.5 mb-1 text-sm">
+              <Sparkles className="h-4 w-4" /> 
+              Fae, Campaign Assistant
+            </h2>
+            <p className="text-xs text-zinc-300 leading-relaxed mb-3">
+              Hey there! I see Session 4 is scheduled for tomorrow at 7:00 PM — I can help you review your prep materials, or we can start by updating Garrick's missing location tag. Let me know what you'd like to tackle!
+            </p>
+            <div className="flex flex-wrap gap-2">
+              <Link href="/sessions">
+                <Button variant="outline" size="sm" className="h-7 text-[11px] bg-amber-500/10 hover:bg-amber-500/20 text-amber-300 border-amber-500/30">
+                  <CalendarClock className="h-3 w-3 mr-1.5" />
+                  Review Session 4 plan
+                </Button>
+              </Link>
+              <Link href="/npcs">
+                <Button variant="outline" size="sm" className="h-7 text-[11px] bg-emerald-500/10 hover:bg-emerald-500/20 text-emerald-300 border-emerald-500/30">
+                  <Users className="h-3 w-3 mr-1.5" />
+                  Update Garrick's location
+                </Button>
+              </Link>
+            </div>
+          </div>
         </div>
         
         <div className="flex items-center gap-3">
@@ -201,7 +210,7 @@ export function DashboardClient({ campaign }: { campaign: CampaignData }) {
                         {upcomingSession.date && (
                           <p className="text-sm text-muted-foreground dark:text-zinc-400 mt-1 flex items-center gap-1.5">
                             <Clock className="h-3.5 w-3.5" />
-                            {formatRelativeDate(upcomingSession.date)} — {formatDate(upcomingSession.date)}
+                            {formatDate(upcomingSession.date)}
                           </p>
                         )}
                       </div>
