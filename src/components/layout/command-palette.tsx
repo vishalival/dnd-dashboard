@@ -29,7 +29,6 @@ const staticPages = [
   { name: "Secrets & Goals", href: "/secrets", icon: KeyRound, type: "Page" },
   { name: "DM Journal", href: "/journal", icon: BookOpen, type: "Page" },
   { name: "Party Hub", href: "/party", icon: Shield, type: "Page" },
-  { name: "Magic Items", href: "/wishlists", icon: Sparkles, type: "Page" },
 ];
 
 export function CommandPalette() {
