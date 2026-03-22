@@ -495,7 +495,7 @@ function LiveSessionPanel({ session, characters, onSessionEnded }: {
       const msg = JSON.parse(e.data);
       if (msg.state === "log") {
         addAgentLog(msg.message);
-      } else if (msg.state === "processing" && msg.data && Array.isArray(msg.data.key_events)) {
+      } else if (msg.state === "processing" && msg.data) {
         mergeIncomingExtractions(msg.data as LiveExtractions);
       } else if (msg.state === "done" && msg.data?.session_summary) {
         setSynthesis(msg.data as SessionSynthesis);
