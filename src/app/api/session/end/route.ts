@@ -84,6 +84,7 @@ export async function POST(req: NextRequest) {
           keyEvents: JSON.stringify(synthesis.key_events_final),
           recapForNext: synthesis.previously_on,
           title: synthesis.session_title || session.title,
+          synthesis: JSON.stringify(synthesis),
         },
       });
 
