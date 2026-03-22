@@ -32,6 +32,7 @@ interface NavItem {
 	href: string;
 	icon: LucideIcon;
 	color: string;
+	dataTour?: string;
 	children?: NavItem[];
 }
 
@@ -41,18 +42,21 @@ const navItems: NavItem[] = [
 		href: "/dashboard",
 		icon: LayoutDashboard,
 		color: "text-indigo-400",
+		dataTour: "nav-dashboard",
 	},
 	{
 		label: "Tome of Schemes",
 		href: "/notes",
 		icon: NotebookPen,
 		color: "text-orange-400",
+		dataTour: "nav-notes",
 	},
 	{
 		label: "Session Planner",
 		href: "/sessions",
 		icon: CalendarClock,
 		color: "text-sky-400",
+		dataTour: "nav-sessions",
 		children: [
 			{
 				label: "Story Timeline",
@@ -190,6 +194,7 @@ export function Sidebar({
 							<div className="flex items-center w-full">
 								<Link href={item.href} className="block flex-1 min-w-0">
 									<div
+										data-tour={item.dataTour}
 										title={!sidebarOpen ? item.label : undefined}
 										className={cn(
 											"flex items-center gap-3 w-full h-11 px-3 rounded-xl transition-all duration-300 group",

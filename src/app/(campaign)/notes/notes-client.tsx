@@ -138,7 +138,7 @@ export function NotesClient({ campaign }: { campaign: CampaignData }) {
   );
 
   return (
-    <div className="flex flex-col h-[calc(100vh-48px)] overflow-hidden">
+    <div data-tour-page="notes" className="flex flex-col h-[calc(100vh-48px)] overflow-hidden">
       <PageHeader
         title="The Tome of Schemes"
         subtitle="Ink your machinations and session blueprints — the Chronicle consults these pages when fate unfolds at the table"
