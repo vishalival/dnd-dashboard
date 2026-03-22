@@ -76,7 +76,7 @@ const navItems = [
     color: "text-amber-300",
   },
   {
-    label: "DM Notes",
+    label: "Tome of Schemes",
     href: "/notes",
     icon: NotebookPen,
     color: "text-orange-400",

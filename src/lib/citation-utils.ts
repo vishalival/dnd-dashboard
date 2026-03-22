@@ -9,6 +9,19 @@ export interface ParsedResponse {
   citations: Citation[];
 }
 
+export function parseCiteUri(
+  href: string
+): { docId: string; quote: string } | null {
+  if (!href.startsWith("cite:")) return null;
+  const rest = href.slice(5);
+  const slashIndex = rest.indexOf("/");
+  if (slashIndex === -1) return null;
+  const docId = decodeURIComponent(rest.slice(0, slashIndex));
+  const quote = decodeURIComponent(rest.slice(slashIndex + 1));
+  if (!docId || !quote) return null;
+  return { docId, quote };
+}
+
 export function parseAssistantResponse(raw: string): ParsedResponse {
   const sourcesMatch = raw.match(/<sources>\s*([\s\S]*?)\s*<\/sources>/);
   if (!sourcesMatch) {
