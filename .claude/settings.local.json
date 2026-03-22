@@ -25,7 +25,14 @@
       "Bash(cat:*)",
       "Bash(git checkout:*)",
       "WebFetch(domain:github.com)",
-      "Bash(npx tsc:*)"
+      "Bash(npx tsc:*)",
+      "Bash(cat /Users/eganbisma/Projects/dnd-dashboard/src/app/\\\\\\(campaign\\\\\\)/sessions/sessions-client.tsx)",
+      "mcp__plugin_chrome-devtools-mcp_chrome-devtools__fill",
+      "mcp__plugin_chrome-devtools-mcp_chrome-devtools__press_key",
+      "Bash(lsof -iTCP -sTCP:LISTEN -P -n)",
+      "mcp__plugin_chrome-devtools-mcp_chrome-devtools__wait_for",
+      "Bash(node:*)",
+      "Bash(lsof -iTCP:3000 -sTCP:LISTEN -P -n)"
     ]
   }
 }

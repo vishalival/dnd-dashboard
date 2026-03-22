@@ -31,14 +31,14 @@ export function CreateDocDialog({
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!title.trim() || !folderId) return;
+    if (!title.trim()) return;
 
     setLoading(true);
     try {
       const res = await fetch("/api/notes", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ folderId, title: title.trim(), campaignId }),
+        body: JSON.stringify({ folderId: folderId || undefined, title: title.trim(), campaignId }),
       });
 
       if (res.ok) {
