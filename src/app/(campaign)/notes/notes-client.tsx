@@ -1,9 +1,8 @@
 "use client";
 
-import React, { useState, useCallback, useMemo } from "react";
+import React, { useState, useCallback, useMemo, useEffect } from "react";
 import { useSearchParams, useRouter } from "next/navigation";
-import { AnimatePresence } from "framer-motion";
-import { NotebookPen, MessageSquare } from "lucide-react";
+import { NotebookPen } from "lucide-react";
 import { CampaignData, NoteDocumentData } from "@/lib/data";
 import { PageHeader } from "@/components/shared/page-header";
 import { FileTree } from "@/components/notes/file-tree";
@@ -20,25 +19,24 @@ export function NotesClient({ campaign }: { campaign: CampaignData }) {
   const docParam = searchParams.get("doc");
   const [selectedDocId, setSelectedDocIdState] = useState<string | null>(docParam);
 
-  const setSelectedDocId = useCallback(
-    (id: string | null) => {
-      setSelectedDocIdState(id);
+  // Sync selectedDocId state to URL
+  useEffect(() => {
+    const currentDoc = searchParams.get("doc");
+    if (selectedDocId !== currentDoc) {
       const params = new URLSearchParams(searchParams.toString());
-      if (id) {
-        params.set("doc", id);
+      if (selectedDocId) {
+        params.set("doc", selectedDocId);
       } else {
         params.delete("doc");
       }
       router.replace(`/notes?${params.toString()}`, { scroll: false });
-    },
-    [searchParams, router]
-  );
+    }
+  }, [selectedDocId, searchParams, router]);
   const [saveStatus, setSaveStatus] = useState<"saved" | "saving" | "unsaved">(
     "saved"
   );
   const [createDialogOpen, setCreateDialogOpen] = useState(false);
   const [createFolderId, setCreateFolderId] = useState<string | null>(null);
-  const [chatOpen, setChatOpen] = useState(false);
   const [highlightText, setHighlightText] = useState<string | null>(null);
 
 
@@ -53,16 +51,23 @@ export function NotesClient({ campaign }: { campaign: CampaignData }) {
   }, [selectedDocId, folders, standaloneDocs]);
 
   const handleSelectDoc = useCallback((doc: NoteDocumentData) => {
-    setSelectedDocId(doc.id);
+    setSelectedDocIdState(doc.id);
     setHighlightText(null);
   }, []);
 
   const handleCitationClick = useCallback(
     (docId: string, quote: string) => {
-      setSelectedDocId(docId);
+      const docExists =
+        folders.some((f) => f.documents.some((d) => d.id === docId)) ||
+        standaloneDocs.some((d) => d.id === docId);
+      if (!docExists) {
+        console.warn("[Citation] Document not found:", docId);
+        return;
+      }
+      setSelectedDocIdState(docId);
       setHighlightText(quote);
     },
-    []
+    [folders, standaloneDocs]
   );
 
   const handleAddDoc = useCallback((folderId: string) => {
@@ -70,16 +75,25 @@ export function NotesClient({ campaign }: { campaign: CampaignData }) {
     setCreateDialogOpen(true);
   }, []);
 
+  const handleAddRootDoc = useCallback(() => {
+    setCreateFolderId(null);
+    setCreateDialogOpen(true);
+  }, []);
+
   const handleDocCreated = useCallback(
     (doc: NoteDocumentData) => {
-      setFolders((prev) =>
-        prev.map((f) =>
-          f.id === doc.folderId
-            ? { ...f, documents: [...f.documents, doc] }
-            : f
-        )
-      );
-      setSelectedDocId(doc.id);
+      if (doc.folderId) {
+        setFolders((prev) =>
+          prev.map((f) =>
+            f.id === doc.folderId
+              ? { ...f, documents: [...f.documents, doc] }
+              : f
+          )
+        );
+      } else {
+        setStandaloneDocs((prev) => [...prev, doc]);
+      }
+      setSelectedDocIdState(doc.id);
     },
     []
   );
@@ -114,7 +128,7 @@ export function NotesClient({ campaign }: { campaign: CampaignData }) {
           }))
         );
         if (selectedDocId === docId) {
-          setSelectedDocId(null);
+          setSelectedDocIdState(null);
         }
       }
     },
@@ -122,24 +136,11 @@ export function NotesClient({ campaign }: { campaign: CampaignData }) {
   );
 
   return (
-    <div className="flex flex-col h-full">
+    <div className="flex flex-col h-[calc(100vh-48px)] overflow-hidden">
       <PageHeader
-        title="DM Notes"
-        subtitle="Campaign notes, ideas, and secrets"
+        title="The Tome of Schemes"
+        subtitle="Ink your machinations and session blueprints — the Chronicle consults these pages when fate unfolds at the table"
         icon={<NotebookPen className="h-5 w-5 text-orange-400" />}
-        actions={
-          <button
-            onClick={() => setChatOpen((prev) => !prev)}
-            className={`p-2 rounded-lg border transition-colors ${
-              chatOpen
-                ? "bg-orange-500/20 border-orange-500/30 text-orange-400"
-                : "bg-white/[0.04] border-white/[0.06] text-zinc-400 hover:text-zinc-200 hover:bg-white/[0.06]"
-            }`}
-            title="Ask about your notes"
-          >
-            <MessageSquare className="h-4 w-4" />
-          </button>
-        }
       />
 
       <div className="flex flex-1 min-h-0 mt-6">
@@ -151,12 +152,13 @@ export function NotesClient({ campaign }: { campaign: CampaignData }) {
             selectedDocId={selectedDocId}
             onSelectDoc={handleSelectDoc}
             onAddDoc={handleAddDoc}
+            onAddRootDoc={handleAddRootDoc}
             onDeleteDoc={handleDeleteDoc}
           />
         </div>
 
         {/* Editor Area */}
-        <div className="flex-1 min-w-0">
+        <div className="flex-1 min-w-0 overflow-hidden">
           {selectedDoc ? (
             <div className="h-full flex flex-col">
               <div className="px-6 py-3 border-b border-white/[0.06]">
@@ -187,16 +189,11 @@ export function NotesClient({ campaign }: { campaign: CampaignData }) {
           )}
         </div>
 
-        {/* Chat Panel */}
-        <AnimatePresence>
-          {chatOpen && (
-            <NotesChatPanel
-              campaignId={campaign.id}
-              onClose={() => setChatOpen(false)}
-              onCitationClick={handleCitationClick}
-            />
-          )}
-        </AnimatePresence>
+        {/* Chat Panel - Always visible */}
+        <NotesChatPanel
+          campaignId={campaign.id}
+          onCitationClick={handleCitationClick}
+        />
       </div>
 
       <CreateDocDialog

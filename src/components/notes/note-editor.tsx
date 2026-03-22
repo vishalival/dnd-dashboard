@@ -33,21 +33,86 @@ function buildDecorations(
   if (!searchText) return DecorationSet.empty;
 
   const decorations: Decoration[] = [];
-  const searchLower = searchText.toLowerCase();
+  // Normalize: collapse whitespace, smart quotes, and trim
+  const normalizeQuotes = (s: string) =>
+    s
+      .replace(/[\u2018\u2019\u201A\u2032]/g, "'")
+      .replace(/[\u201C\u201D\u201E\u2033]/g, '"')
+      .replace(/[\u2014]/g, "—")
+      .replace(/[\u2013]/g, "–");
+  const searchNorm = normalizeQuotes(
+    searchText.toLowerCase().replace(/\s+/g, " ").trim()
+  );
 
-  doc.descendants((node, pos) => {
-    if (!node.isText || !node.text) return;
-    const textLower = node.text.toLowerCase();
-    let index = textLower.indexOf(searchLower);
-    while (index !== -1) {
-      decorations.push(
-        Decoration.inline(pos + index, pos + index + searchText.length, {
-          class: "citation-highlight",
-        })
+  // Try exact match first, then progressively shorter prefixes
+  const candidates = [searchNorm];
+  // If full quote doesn't match, try first ~60% of words as a fallback
+  const words = searchNorm.split(" ");
+  if (words.length > 4) {
+    candidates.push(words.slice(0, Math.ceil(words.length * 0.6)).join(" "));
+  }
+
+  for (const candidate of candidates) {
+    // Search across text nodes within each block to handle matches
+    // that span across formatting boundaries (e.g., bold + regular text)
+    doc.descendants((node, pos) => {
+      if (!node.isBlock || node.childCount === 0) return;
+
+      // Collect all text segments with their positions in this block
+      const segments: { text: string; pos: number }[] = [];
+      node.forEach((child, offset) => {
+        if (child.isText && child.text) {
+          segments.push({ text: child.text, pos: pos + 1 + offset });
+        }
+      });
+
+      if (segments.length === 0) return;
+
+      // Concatenate all text in this block
+      const fullText = normalizeQuotes(
+        segments.map((s) => s.text).join("").toLowerCase().replace(/\s+/g, " ")
       );
-      index = textLower.indexOf(searchLower, index + 1);
-    }
-  });
+
+      let index = fullText.indexOf(candidate);
+      while (index !== -1) {
+        const matchStart = index;
+        const matchEnd = index + candidate.length;
+
+        // Map match positions back to document positions
+        let charOffset = 0;
+        for (const seg of segments) {
+          const segNorm = normalizeQuotes(
+            seg.text.toLowerCase().replace(/\s+/g, " ")
+          );
+          const segStart = charOffset;
+          const segEnd = charOffset + segNorm.length;
+
+          // Check if this segment overlaps with the match
+          const overlapStart = Math.max(matchStart, segStart);
+          const overlapEnd = Math.min(matchEnd, segEnd);
+
+          if (overlapStart < overlapEnd) {
+            const docStart = seg.pos + (overlapStart - segStart);
+            const docEnd = seg.pos + (overlapEnd - segStart);
+            decorations.push(
+              Decoration.inline(docStart, docEnd, {
+                class: "citation-highlight",
+              })
+            );
+          }
+
+          charOffset = segEnd;
+        }
+
+        index = fullText.indexOf(candidate, index + 1);
+      }
+
+      // Don't descend into child blocks (we handle them at their own level)
+      return false;
+    });
+    // If we found matches with this candidate, stop
+    if (decorations.length > 0) break;
+  }
 
   return DecorationSet.create(doc, decorations);
 }
@@ -165,16 +230,16 @@ export function NoteEditor({
 
   // Recompute highlight decorations and scroll to match
   useEffect(() => {
-    if (!editor) return;
-    const tr = editor.state.tr.setMeta(citationHighlightKey, true);
-    editor.view.dispatch(tr);
-
-    if (highlightText) {
-      setTimeout(() => {
+    if (!editor || !highlightText) return;
+    const timer = setTimeout(() => {
+      const tr = editor.state.tr.setMeta(citationHighlightKey, true);
+      editor.view.dispatch(tr);
+      requestAnimationFrame(() => {
         const el = editor.view.dom.querySelector(".citation-highlight");
         el?.scrollIntoView({ behavior: "smooth", block: "center" });
-      }, 50);
-    }
+      });
+    }, 100);
+    return () => clearTimeout(timer);
   }, [highlightText, editor]);
 
   // Handle document switching
@@ -227,75 +292,77 @@ export function NoteEditor({
   return (
     <div className="flex flex-col h-full">
       {/* Toolbar */}
-      <div className="flex items-center gap-0.5 px-4 py-2 border-b border-white/[0.06] flex-wrap">
-        <ToolbarButton
-          onClick={() => editor.chain().focus().toggleBold().run()}
-          isActive={editor.isActive("bold")}
-          icon={Bold}
-        />
-        <ToolbarButton
-          onClick={() => editor.chain().focus().toggleItalic().run()}
-          isActive={editor.isActive("italic")}
-          icon={Italic}
-        />
-        <div className="w-px h-5 bg-white/[0.08] mx-1" />
-        <ToolbarButton
-          onClick={() =>
-            editor.chain().focus().toggleHeading({ level: 1 }).run()
-          }
-          isActive={editor.isActive("heading", { level: 1 })}
-          icon={Heading1}
-        />
-        <ToolbarButton
-          onClick={() =>
-            editor.chain().focus().toggleHeading({ level: 2 }).run()
-          }
-          isActive={editor.isActive("heading", { level: 2 })}
-          icon={Heading2}
-        />
-        <ToolbarButton
-          onClick={() =>
-            editor.chain().focus().toggleHeading({ level: 3 }).run()
-          }
-          isActive={editor.isActive("heading", { level: 3 })}
-          icon={Heading3}
-        />
-        <div className="w-px h-5 bg-white/[0.08] mx-1" />
-        <ToolbarButton
-          onClick={() => editor.chain().focus().toggleBulletList().run()}
-          isActive={editor.isActive("bulletList")}
-          icon={List}
-        />
-        <ToolbarButton
-          onClick={() => editor.chain().focus().toggleOrderedList().run()}
-          isActive={editor.isActive("orderedList")}
-          icon={ListOrdered}
-        />
-        <ToolbarButton
-          onClick={() => editor.chain().focus().toggleBlockquote().run()}
-          isActive={editor.isActive("blockquote")}
-          icon={Quote}
-        />
-        <ToolbarButton
-          onClick={() => editor.chain().focus().toggleCodeBlock().run()}
-          isActive={editor.isActive("codeBlock")}
-          icon={Code2}
-        />
-        <div className="w-px h-5 bg-white/[0.08] mx-1" />
-        <ToolbarButton
-          onClick={() => editor.chain().focus().undo().run()}
-          isActive={false}
-          icon={Undo}
-          disabled={!editor.can().undo()}
-        />
-        <ToolbarButton
-          onClick={() => editor.chain().focus().redo().run()}
-          isActive={false}
-          icon={Redo}
-          disabled={!editor.can().redo()}
-        />
+      <div className="flex items-center border-b border-white/[0.06]">
+        <div className="flex items-center gap-0.5 px-4 py-2 overflow-x-auto scrollbar-thin">
+          <ToolbarButton
+            onClick={() => editor.chain().focus().toggleBold().run()}
+            isActive={editor.isActive("bold")}
+            icon={Bold}
+          />
+          <ToolbarButton
+            onClick={() => editor.chain().focus().toggleItalic().run()}
+            isActive={editor.isActive("italic")}
+            icon={Italic}
+          />
+          <div className="w-px h-5 bg-white/[0.08] mx-1 shrink-0" />
+          <ToolbarButton
+            onClick={() =>
+              editor.chain().focus().toggleHeading({ level: 1 }).run()
+            }
+            isActive={editor.isActive("heading", { level: 1 })}
+            icon={Heading1}
+          />
+          <ToolbarButton
+            onClick={() =>
+              editor.chain().focus().toggleHeading({ level: 2 }).run()
+            }
+            isActive={editor.isActive("heading", { level: 2 })}
+            icon={Heading2}
+          />
+          <ToolbarButton
+            onClick={() =>
+              editor.chain().focus().toggleHeading({ level: 3 }).run()
+            }
+            isActive={editor.isActive("heading", { level: 3 })}
+            icon={Heading3}
+          />
+          <div className="w-px h-5 bg-white/[0.08] mx-1 shrink-0" />
+          <ToolbarButton
+            onClick={() => editor.chain().focus().toggleBulletList().run()}
+            isActive={editor.isActive("bulletList")}
+            icon={List}
+          />
+          <ToolbarButton
+            onClick={() => editor.chain().focus().toggleOrderedList().run()}
+            isActive={editor.isActive("orderedList")}
+            icon={ListOrdered}
+          />
+          <ToolbarButton
+            onClick={() => editor.chain().focus().toggleBlockquote().run()}
+            isActive={editor.isActive("blockquote")}
+            icon={Quote}
+          />
+          <ToolbarButton
+            onClick={() => editor.chain().focus().toggleCodeBlock().run()}
+            isActive={editor.isActive("codeBlock")}
+            icon={Code2}
+          />
+          <div className="w-px h-5 bg-white/[0.08] mx-1 shrink-0" />
+          <ToolbarButton
+            onClick={() => editor.chain().focus().undo().run()}
+            isActive={false}
+            icon={Undo}
+            disabled={!editor.can().undo()}
+          />
+          <ToolbarButton
+            onClick={() => editor.chain().focus().redo().run()}
+            isActive={false}
+            icon={Redo}
+            disabled={!editor.can().redo()}
+          />
+        </div>
 
-        <div className="ml-auto text-xs text-zinc-500">
+        <div className="shrink-0 ml-auto pr-4 text-xs text-zinc-500">
           {saveStatus === "saving" && "Saving..."}
           {saveStatus === "saved" && "Saved"}
           {saveStatus === "unsaved" && "Unsaved"}
@@ -328,7 +395,7 @@ function ToolbarButton({
       onClick={onClick}
       disabled={disabled}
       className={cn(
-        "h-7 w-7 p-0",
+        "h-7 w-7 p-0 shrink-0",
         isActive
           ? "bg-white/[0.1] text-white"
           : "text-zinc-400 hover:text-zinc-200"
