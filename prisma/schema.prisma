@@ -12,6 +12,7 @@ datasource db {
 model Campaign {
   id          String   @id @default(cuid())
   name        String
+  dmName      String?
   description String?
   currentArc  String?
   startDate   DateTime @default(now())
