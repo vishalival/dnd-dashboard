@@ -19,6 +19,9 @@ import {
   Clock,
   Bookmark,
   FileText,
+  Plus,
+  Wand2,
+  Loader2,
 } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
@@ -26,9 +29,14 @@ import { Button } from "@/components/ui/button";
 import { Separator } from "@/components/ui/separator";
 import { PageHeader } from "@/components/shared/page-header";
 import { StatusBadge } from "@/components/shared/status-badge";
-import { formatDate, parseJsonField } from "@/lib/utils";
+import { formatDate, parseExtractedItems } from "@/lib/utils";
 import { cn } from "@/lib/utils";
 import type { CampaignData, SessionData } from "@/lib/data";
+import { CreateSessionDialog } from "@/components/sessions/create-session-dialog";
+import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
+import { TipTapReadonlyViewer } from "@/components/sessions/tiptap-readonly-viewer";
+import { SourceSnippet } from "@/components/sessions/source-snippet";
+import { ExtractionProgress } from "@/components/sessions/extraction-progress";
 
 const templateIcons: Record<string, React.ReactNode> = {
   tavern: <MapPin className="h-3.5 w-3.5" />,
@@ -91,15 +99,15 @@ function CollapsibleSection({
 }
 
 function SessionDetail({ session }: { session: SessionData }) {
-  const keyBeats = parseJsonField<string>(session.keyBeats);
-  const encounters = parseJsonField<string>(session.encounters);
-  const hooks = parseJsonField<string>(session.hooks);
-  const locations = parseJsonField<string>(session.locations);
-  const playerNotes = parseJsonField<string>(session.playerNotes);
-  const contingencies = parseJsonField<string>(session.contingencies);
-  const improvPrompts = parseJsonField<string>(session.improvPrompts);
-  const reminders = parseJsonField<string>(session.reminders);
-  const checklist = parseJsonField<string>(session.checklist);
+  const keyBeats = parseExtractedItems(session.keyBeats);
+  const encounters = parseExtractedItems(session.encounters);
+  const hooks = parseExtractedItems(session.hooks);
+  const locations = parseExtractedItems(session.locations);
+  const playerNotes = parseExtractedItems(session.playerNotes);
+  const contingencies = parseExtractedItems(session.contingencies);
+  const improvPrompts = parseExtractedItems(session.improvPrompts);
+  const reminders = parseExtractedItems(session.reminders);
+  const checklist = parseExtractedItems(session.checklist);
 
   return (
     <motion.div
@@ -151,7 +159,9 @@ function SessionDetail({ session }: { session: SessionData }) {
                   type="checkbox"
                   className="mt-1 h-3.5 w-3.5 rounded border-gray-300 text-emerald-600 focus:ring-emerald-500"
                 />
-                <span className="group-hover:text-foreground">{item}</span>
+                <span className="group-hover:text-foreground">
+                  <SourceSnippet source={item.source}>{item.text}</SourceSnippet>
+                </span>
               </label>
             ))}
           </div>
@@ -173,7 +183,7 @@ function SessionDetail({ session }: { session: SessionData }) {
                 className="flex items-start gap-2 text-sm text-red-300/80"
               >
                 <AlertCircle className="h-3.5 w-3.5 text-red-400/50 mt-0.5 shrink-0" />
-                {r}
+                <SourceSnippet source={r.source}>{r.text}</SourceSnippet>
               </div>
             ))}
           </div>
@@ -250,7 +260,7 @@ function SessionDetail({ session }: { session: SessionData }) {
                     Act {i + 1}
                   </span>
                   <span className="text-sm text-foreground/80 dark:text-zinc-300 whitespace-pre-wrap">
-                    {beat}
+                    <SourceSnippet source={beat.source}>{beat.text}</SourceSnippet>
                   </span>
                 </div>
               ))}
@@ -273,7 +283,7 @@ function SessionDetail({ session }: { session: SessionData }) {
                   className="p-3 rounded-lg bg-card hover:bg-muted/50 dark:bg-white/[0.02] border-l-2 border-crimson/30"
                 >
                   <span className="text-sm text-foreground/80 dark:text-zinc-300">
-                    {enc}
+                    <SourceSnippet source={enc.source}>{enc.text}</SourceSnippet>
                   </span>
                 </div>
               ))}
@@ -295,7 +305,7 @@ function SessionDetail({ session }: { session: SessionData }) {
                   className="flex items-start gap-2 text-sm text-foreground/80 dark:text-zinc-300"
                 >
                   <Lightbulb className="h-3.5 w-3.5 text-amber-600 dark:text-amber-400/50 mt-0.5 shrink-0" />
-                  {hook}
+                  <SourceSnippet source={hook.source}>{hook.text}</SourceSnippet>
                 </div>
               ))}
             </div>
@@ -313,7 +323,7 @@ function SessionDetail({ session }: { session: SessionData }) {
               {locations.map((loc, i) => (
                 <Badge key={i} variant="outline" className="text-xs">
                   <MapPin className="h-3 w-3 mr-1" />
-                  {loc}
+                  {loc.text}
                 </Badge>
               ))}
             </div>
@@ -333,7 +343,7 @@ function SessionDetail({ session }: { session: SessionData }) {
                   key={i}
                   className="p-2.5 rounded-lg bg-card hover:bg-muted/50 dark:bg-white/[0.02] text-sm text-foreground/80 dark:text-zinc-300"
                 >
-                  {note}
+                  <SourceSnippet source={note.source}>{note.text}</SourceSnippet>
                 </div>
               ))}
             </div>
@@ -353,7 +363,7 @@ function SessionDetail({ session }: { session: SessionData }) {
                   key={i}
                   className="p-2.5 rounded-lg bg-orange-400/5 border border-orange-400/10 text-sm text-foreground/80 dark:text-zinc-300"
                 >
-                  {c}
+                  <SourceSnippet source={c.source}>{c.text}</SourceSnippet>
                 </div>
               ))}
             </div>
@@ -373,7 +383,7 @@ function SessionDetail({ session }: { session: SessionData }) {
                   key={i}
                   className="p-2.5 rounded-lg bg-purple-400/5 border border-purple-400/10 text-sm text-foreground/80 dark:text-zinc-300 italic"
                 >
-                  &ldquo;{p}&rdquo;
+                  &ldquo;<SourceSnippet source={p.source}>{p.text}</SourceSnippet>&rdquo;
                 </div>
               ))}
             </div>
@@ -385,23 +395,76 @@ function SessionDetail({ session }: { session: SessionData }) {
 }
 
 export function SessionsClient({ campaign }: { campaign: CampaignData }) {
+  const [sessions, setSessions] = useState<SessionData[]>(campaign.sessions);
   const [selectedSession, setSelectedSession] = useState<SessionData | null>(
-    campaign.sessions
+    sessions
       .filter((s) => s.status !== "completed")
       .sort((a, b) => a.sessionNumber - b.sessionNumber)[0] ||
-      campaign.sessions[0] ||
+      sessions[0] ||
       null,
   );
   const [statusFilter, setStatusFilter] = useState<string>("all");
+  const [createOpen, setCreateOpen] = useState(false);
+  const [extracting, setExtracting] = useState(false);
+  const [extractError, setExtractError] = useState<string | null>(null);
+
+  const outlineDoc = selectedSession
+    ? campaign.noteFolders
+        .find((f) => f.slug === "session-outlines")
+        ?.documents.find(
+          (d) => d.slug === `session-outline-${selectedSession.sessionNumber}`
+        ) ?? null
+    : null;
 
   const filteredSessions =
     statusFilter === "all"
-      ? campaign.sessions
-      : campaign.sessions.filter((s) => s.status === statusFilter);
+      ? sessions
+      : sessions.filter((s) => s.status === statusFilter);
 
   const sortedSessions = [...filteredSessions].sort(
     (a, b) => b.sessionNumber - a.sessionNumber,
   );
+
+  async function handleExtractFromOutline() {
+    if (!selectedSession) return;
+    setExtracting(true);
+    setExtractError(null);
+    try {
+      const res = await fetch("/api/session/extract", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ sessionId: selectedSession.id }),
+      });
+      if (!res.ok) {
+        const data = await res.json();
+        throw new Error(data.error || "Extraction failed");
+      }
+      const data = await res.json();
+      const updatedSession: SessionData = {
+        ...selectedSession,
+        checklist: JSON.stringify(data.checklist),
+        reminders: JSON.stringify(data.reminders),
+        keyBeats: JSON.stringify(data.keyBeats),
+        encounters: JSON.stringify(data.encounters),
+        hooks: JSON.stringify(data.hooks),
+        locations: JSON.stringify(data.locations),
+        playerNotes: JSON.stringify(data.playerNotes),
+        contingencies: JSON.stringify(data.contingencies),
+        improvPrompts: JSON.stringify(data.improvPrompts),
+        npcLinks: data.linkedNpcs ?? selectedSession.npcLinks,
+        storylineLinks: data.linkedStorylines ?? selectedSession.storylineLinks,
+        secretLinks: data.linkedSecrets ?? selectedSession.secretLinks,
+      };
+      setSessions((prev) =>
+        prev.map((s) => (s.id === selectedSession.id ? updatedSession : s)),
+      );
+      setSelectedSession(updatedSession);
+    } catch (err) {
+      setExtractError(err instanceof Error ? err.message : "Extraction failed");
+    } finally {
+      setExtracting(false);
+    }
+  }
 
   return (
     <div>
@@ -410,7 +473,17 @@ export function SessionsClient({ campaign }: { campaign: CampaignData }) {
         subtitle="Plan, organize, and track your campaign sessions"
         icon={<CalendarClock className="h-5 w-5 text-amber-600 dark:text-amber-400" />}
         actions={
-          <div className="flex gap-2">
+          <div className="flex items-center gap-2">
+            <Button
+              variant="gold"
+              size="sm"
+              onClick={() => setCreateOpen(true)}
+              className="text-xs gap-1"
+            >
+              <Plus className="h-3.5 w-3.5" />
+              New Session
+            </Button>
+            <Separator orientation="vertical" className="h-5" />
             {["all", "draft", "planning", "ready", "completed"].map((s) => (
               <Button
                 key={s}
@@ -501,7 +574,60 @@ export function SessionsClient({ campaign }: { campaign: CampaignData }) {
         <div className="lg:col-span-8">
           {selectedSession ? (
             <Card className="p-6">
-              <SessionDetail session={selectedSession} />
+              <Tabs defaultValue="planning">
+                <TabsList className="mb-4">
+                  <TabsTrigger value="planning" className="gap-1.5">
+                    <ListChecks className="h-3.5 w-3.5" />
+                    Planning
+                  </TabsTrigger>
+                  <TabsTrigger value="outline" className="gap-1.5">
+                    <FileText className="h-3.5 w-3.5" />
+                    Session Outline
+                  </TabsTrigger>
+                </TabsList>
+                <TabsContent value="planning">
+                  {outlineDoc && (
+                    <div className="mb-4">
+                      <div className="flex items-center gap-3">
+                        <Button
+                          variant="outline"
+                          size="sm"
+                          onClick={handleExtractFromOutline}
+                          disabled={extracting}
+                          className="gap-1.5 text-xs"
+                        >
+                          {extracting ? (
+                            <Loader2 className="h-3.5 w-3.5 animate-spin" />
+                          ) : (
+                            <Wand2 className="h-3.5 w-3.5" />
+                          )}
+                          {extracting ? "Extracting..." : "Extract from Outline"}
+                        </Button>
+                        {extractError && (
+                          <span className="text-xs text-red-400">{extractError}</span>
+                        )}
+                      </div>
+                      {extracting && selectedSession && (
+                        <ExtractionProgress
+                          sessionId={selectedSession.id}
+                          isActive={extracting}
+                        />
+                      )}
+                    </div>
+                  )}
+                  <SessionDetail session={selectedSession} />
+                </TabsContent>
+                <TabsContent value="outline">
+                  {outlineDoc ? (
+                    <TipTapReadonlyViewer content={outlineDoc.content} />
+                  ) : (
+                    <div className="text-center py-12 text-muted-foreground dark:text-zinc-500">
+                      <FileText className="h-8 w-8 mx-auto mb-3 opacity-50" />
+                      <p className="text-sm">No outline document found for this session.</p>
+                    </div>
+                  )}
+                </TabsContent>
+              </Tabs>
             </Card>
           ) : (
             <Card className="p-12">
@@ -513,6 +639,16 @@ export function SessionsClient({ campaign }: { campaign: CampaignData }) {
           )}
         </div>
       </div>
+
+      <CreateSessionDialog
+        open={createOpen}
+        onOpenChange={setCreateOpen}
+        campaignId={campaign.id}
+        onCreated={(session) => {
+          setSessions((prev) => [...prev, session]);
+          setSelectedSession(session);
+        }}
+      />
     </div>
   );
 }

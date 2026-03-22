@@ -40,6 +40,9 @@ model SessionPlan {
   date             DateTime?
   status           String   @default("draft") // draft, planning, ready, in_progress, completed
   summary          String?
+  aiNarrative      String?  // AI-generated dashboard header narrative
+  aiBadge          String?  // AI-generated thematic badge label
+  aiSummary        String?  // AI-generated session summary fallback
   keyBeats         String?  // JSON array
   encounters       String?  // JSON array
   hooks            String?  // JSON array

@@ -11,6 +11,17 @@ export async function PUT(
       where: { id: params.documentId },
       data: { content },
     });
+
+    // If this is a session outline, clear AI card fields so they regenerate
+    const match = document.slug?.match(/^session-outline-(\d+)$/);
+    if (match && document.campaignId) {
+      const sessionNumber = parseInt(match[1], 10);
+      await prisma.sessionPlan.updateMany({
+        where: { campaignId: document.campaignId, sessionNumber },
+        data: { aiNarrative: null, aiBadge: null, aiSummary: null },
+      });
+    }
+
     return NextResponse.json(document);
   } catch (error) {
     console.error("Failed to update note document:", error);
