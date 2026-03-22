@@ -196,7 +196,7 @@ export function DashboardClient({ campaign }: { campaign: CampaignData }) {
                         )}
                       </div>
                       
-                      {upcomingSession.summary && (
+                      {upcomingSession.summary && upcomingSession.summary !== "Session summary unavailable." && (
                         <p className="text-sm text-foreground/80 dark:text-zinc-300 line-clamp-3 leading-relaxed">
                           {upcomingSession.summary}
                         </p>
