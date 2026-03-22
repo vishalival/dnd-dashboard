@@ -95,26 +95,41 @@ export async function POST(req: NextRequest) {
       ],
     };
 
-    // Update NPCs in DB
+    // Update NPCs in DB (or create new ones)
     const npcChanges: string[] = [];
     for (const update of extraction.npc_updates) {
       const match = knownNpcs.find(
         (n) => n.name.toLowerCase() === update.name.toLowerCase()
       );
-      if (!match) continue;
 
-      const updateData: Record<string, string | number> = {
-        lastAppearance: session.sessionNumber,
-      };
-      if (update.disposition_change) updateData.disposition = update.disposition_change;
-      if (update.status_change) updateData.status = update.status_change;
+      if (match) {
+        const updateData: Record<string, string | number> = {
+          lastAppearance: session.sessionNumber,
+        };
+        if (update.disposition_change) updateData.disposition = update.disposition_change;
+        if (update.status_change) updateData.status = update.status_change;
 
-      await prisma.nPC.update({ where: { id: match.id }, data: updateData as Record<string, string | number> });
+        await prisma.nPC.update({ where: { id: match.id }, data: updateData as Record<string, string | number> });
 
-      const changes: string[] = [];
-      if (update.disposition_change) changes.push(`disposition → ${update.disposition_change}`);
-      if (update.status_change) changes.push(`status → ${update.status_change}`);
-      if (changes.length) npcChanges.push(`${update.name}: ${changes.join(", ")}`);
+        const changes: string[] = [];
+        if (update.disposition_change) changes.push(`disposition → ${update.disposition_change}`);
+        if (update.status_change) changes.push(`status → ${update.status_change}`);
+        if (changes.length) npcChanges.push(`${update.name}: ${changes.join(", ")}`);
+      } else {
+        // Create new NPC discovered during the session
+        await prisma.nPC.create({
+          data: {
+            name: update.name,
+            disposition: update.disposition_change || "neutral",
+            status: update.status_change || "alive",
+            dmNotes: update.reason || null,
+            firstAppearance: session.sessionNumber,
+            lastAppearance: session.sessionNumber,
+            campaignId: session.campaign.id,
+          },
+        });
+        npcChanges.push(`${update.name}: created (new NPC)`);
+      }
     }
 
     // Persist transcript + live extractions
@@ -138,15 +153,22 @@ export async function POST(req: NextRequest) {
     const logEntries: string[] = [];
 
     for (const update of extraction.npc_updates) {
-      if (update.status_change) {
-        if (update.status_change.toLowerCase() === "dead") {
-          logEntries.push(`marked ${update.name} as dead`);
-        } else {
-          logEntries.push(`updated ${update.name} status → ${update.status_change}`);
+      const isKnown = knownNpcs.some(
+        (n) => n.name.toLowerCase() === update.name.toLowerCase()
+      );
+      if (!isKnown) {
+        logEntries.push(`new NPC — ${update.name}`);
+      } else {
+        if (update.status_change) {
+          if (update.status_change.toLowerCase() === "dead") {
+            logEntries.push(`marked ${update.name} as dead`);
+          } else {
+            logEntries.push(`updated ${update.name} status → ${update.status_change}`);
+          }
         }
-      }
-      if (update.disposition_change) {
-        logEntries.push(`updated ${update.name} disposition → ${update.disposition_change}`);
+        if (update.disposition_change) {
+          logEntries.push(`updated ${update.name} disposition → ${update.disposition_change}`);
+        }
       }
     }
 

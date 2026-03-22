@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useMemo } from "react";
 import Link from "next/link";
 import { motion, AnimatePresence } from "framer-motion";
 import {
@@ -36,6 +36,8 @@ import {
   Package,
   Sparkles,
   Play,
+  Globe,
+  Target,
   Pencil,
   Check,
   X,
@@ -196,8 +198,35 @@ function LiveWorldState({ extractions }: { extractions: LiveExtractions }) {
 // ─── SessionClosingScreen ─────────────────────────────────────────────────────
 
 function SessionClosingScreen({ synthesis }: { synthesis: SessionSynthesis }) {
+  const allPlanItems = [...(synthesis.plan_beats_status ?? []), ...(synthesis.plan_encounters_status ?? [])];
+  const hasPlan = allPlanItems.length > 0;
+  const completedCount = allPlanItems.filter((p) => p.status === "completed").length;
+
+  const hasWorldChanges =
+    (synthesis.npc_status_changes?.length ?? 0) > 0 ||
+    (synthesis.new_npcs?.length ?? 0) > 0 ||
+    (synthesis.resolved_storylines?.length ?? 0) > 0 ||
+    (synthesis.revealed_secrets?.length ?? 0) > 0;
+
+  const planStatusIcon = (status: string) => {
+    switch (status) {
+      case "completed": return <CheckCircle2 className="h-3.5 w-3.5 text-emerald-400 shrink-0 mt-0.5" />;
+      case "partially": return <AlertCircle className="h-3.5 w-3.5 text-amber-400 shrink-0 mt-0.5" />;
+      default: return <X className="h-3.5 w-3.5 text-zinc-500 shrink-0 mt-0.5" />;
+    }
+  };
+
+  const planStatusStyle = (status: string) => {
+    switch (status) {
+      case "completed": return "border-emerald-500/30 bg-emerald-500/5";
+      case "partially": return "border-amber-500/30 bg-amber-500/5";
+      default: return "border-zinc-500/20 bg-zinc-500/5";
+    }
+  };
+
   return (
     <motion.div initial={{ opacity: 0, y: 16 }} animate={{ opacity: 1, y: 0 }} className="space-y-5">
+      {/* Header */}
       <div className="flex items-center gap-2 text-gold">
         <Sparkles className="h-5 w-5" />
         <span className="text-base font-heading font-semibold">{synthesis.session_title}</span>
@@ -210,6 +239,64 @@ function SessionClosingScreen({ synthesis }: { synthesis: SessionSynthesis }) {
         <p className="text-[10px] font-mono text-zinc-500 uppercase tracking-wider mb-2">Session Summary</p>
         <p className="text-sm text-zinc-300 leading-relaxed">{synthesis.session_summary}</p>
       </div>
+
+      {/* Plan vs Reality */}
+      {hasPlan && (
+        <div className="space-y-3">
+          <div className="flex items-center justify-between">
+            <div className="flex items-center gap-2">
+              <Target className="h-4 w-4 text-zinc-400" />
+              <p className="text-[10px] font-mono text-zinc-500 uppercase tracking-wider">Plan vs Reality</p>
+            </div>
+            <span className="text-[10px] font-mono text-zinc-500">
+              {completedCount}/{allPlanItems.length} completed
+            </span>
+          </div>
+          {synthesis.plan_beats_status?.length > 0 && (
+            <div className="space-y-1.5">
+              <p className="text-[10px] font-mono text-zinc-600 uppercase tracking-wider">Beats</p>
+              {synthesis.plan_beats_status.map((item, i) => (
+                <div key={i} className={cn("flex items-start gap-2 px-3 py-2 rounded-lg border text-sm", planStatusStyle(item.status))}>
+                  {planStatusIcon(item.status)}
+                  <div className="min-w-0">
+                    <span className="text-zinc-300 text-xs">{item.description}</span>
+                    {item.note && <p className="text-zinc-500 text-xs mt-0.5">{item.note}</p>}
+                  </div>
+                </div>
+              ))}
+            </div>
+          )}
+          {synthesis.plan_encounters_status?.length > 0 && (
+            <div className="space-y-1.5">
+              <p className="text-[10px] font-mono text-zinc-600 uppercase tracking-wider">Encounters</p>
+              {synthesis.plan_encounters_status.map((item, i) => (
+                <div key={i} className={cn("flex items-start gap-2 px-3 py-2 rounded-lg border text-sm", planStatusStyle(item.status))}>
+                  {planStatusIcon(item.status)}
+                  <div className="min-w-0">
+                    <span className="text-zinc-300 text-xs">{item.description}</span>
+                    {item.note && <p className="text-zinc-500 text-xs mt-0.5">{item.note}</p>}
+                  </div>
+                </div>
+              ))}
+            </div>
+          )}
+          {synthesis.unexpected_events?.length > 0 && (
+            <div className="space-y-1.5">
+              <p className="text-[10px] font-mono text-zinc-600 uppercase tracking-wider flex items-center gap-1.5">
+                <Zap className="h-3 w-3 text-amber-400" /> Off-Script
+              </p>
+              {synthesis.unexpected_events.map((event, i) => (
+                <div key={i} className="flex items-start gap-2 px-3 py-2 rounded-lg border border-amber-500/20 bg-amber-500/5 text-sm">
+                  <Zap className="h-3.5 w-3.5 text-amber-400 shrink-0 mt-0.5" />
+                  <span className="text-zinc-300 text-xs">{event}</span>
+                </div>
+              ))}
+            </div>
+          )}
+        </div>
+      )}
+
+      {/* Key Events */}
       {synthesis.key_events_final?.length > 0 && (
         <div className="space-y-2">
           <p className="text-[10px] font-mono text-zinc-500 uppercase tracking-wider">Key Events</p>
@@ -223,24 +310,74 @@ function SessionClosingScreen({ synthesis }: { synthesis: SessionSynthesis }) {
           })}
         </div>
       )}
-      {synthesis.npc_status_changes?.length > 0 && (
-        <div className="space-y-2">
-          <p className="text-[10px] font-mono text-zinc-500 uppercase tracking-wider">NPC Changes</p>
-          {synthesis.npc_status_changes.map((c, i) => (
-            <div key={i} className="flex items-start gap-2 px-3 py-2 rounded-lg bg-white/[0.03] border border-white/[0.05] text-sm">
-              <Users className="h-3.5 w-3.5 text-zinc-400 mt-0.5 shrink-0" />
-              <div>
-                <span className="text-zinc-200 font-medium">{c.name}</span>
-                <span className="text-zinc-500 mx-1.5">·</span>
-                <span className="text-zinc-500 line-through text-xs">{c.old_status}</span>
-                <span className="text-zinc-400 mx-1">→</span>
-                <span className={cn("text-xs font-medium", c.new_status === "dead" ? "text-zinc-400" : "text-emerald-400")}>{c.new_status}</span>
-                <p className="text-zinc-500 text-xs mt-0.5">{c.reason}</p>
-              </div>
+
+      {/* World State Changes */}
+      {hasWorldChanges && (
+        <div className="space-y-3">
+          <div className="flex items-center gap-2">
+            <Globe className="h-4 w-4 text-zinc-400" />
+            <p className="text-[10px] font-mono text-zinc-500 uppercase tracking-wider">World State Changes</p>
+          </div>
+          {synthesis.npc_status_changes?.length > 0 && (
+            <div className="space-y-1.5">
+              <p className="text-[10px] font-mono text-zinc-600 uppercase tracking-wider">NPCs Updated</p>
+              {synthesis.npc_status_changes.map((c, i) => (
+                <div key={i} className="flex items-start gap-2 px-3 py-2 rounded-lg bg-white/[0.03] border border-white/[0.05] text-sm">
+                  <Users className="h-3.5 w-3.5 text-zinc-400 mt-0.5 shrink-0" />
+                  <div>
+                    <span className="text-zinc-200 font-medium">{c.name}</span>
+                    <span className="text-zinc-500 mx-1.5">·</span>
+                    <span className="text-zinc-500 line-through text-xs">{c.old_status}</span>
+                    <span className="text-zinc-400 mx-1">→</span>
+                    <span className={cn("text-xs font-medium", c.new_status === "dead" ? "text-zinc-400" : "text-emerald-400")}>{c.new_status}</span>
+                    <p className="text-zinc-500 text-xs mt-0.5">{c.reason}</p>
+                  </div>
+                </div>
+              ))}
             </div>
-          ))}
+          )}
+          {synthesis.new_npcs?.length > 0 && (
+            <div className="space-y-1.5">
+              <p className="text-[10px] font-mono text-zinc-600 uppercase tracking-wider">New NPCs</p>
+              {synthesis.new_npcs.map((npc, i) => (
+                <div key={i} className="flex items-start gap-2 px-3 py-2 rounded-lg border border-gold/20 bg-gold/5 text-sm">
+                  <Plus className="h-3.5 w-3.5 text-gold shrink-0 mt-0.5" />
+                  <div>
+                    <span className="text-zinc-200 font-medium">{npc.name}</span>
+                    {npc.role && <span className="text-zinc-500 text-xs ml-1.5">· {npc.role}</span>}
+                    {npc.faction && <span className="text-zinc-500 text-xs ml-1.5">· {npc.faction}</span>}
+                    {npc.description && <p className="text-zinc-500 text-xs mt-0.5">{npc.description}</p>}
+                  </div>
+                </div>
+              ))}
+            </div>
+          )}
+          {synthesis.resolved_storylines?.length > 0 && (
+            <div className="space-y-1.5">
+              <p className="text-[10px] font-mono text-zinc-600 uppercase tracking-wider">Storylines Resolved</p>
+              {synthesis.resolved_storylines.map((title, i) => (
+                <div key={i} className="flex items-start gap-2 px-3 py-2 rounded-lg border border-emerald-500/20 bg-emerald-500/5 text-sm">
+                  <GitMerge className="h-3.5 w-3.5 text-emerald-400 shrink-0 mt-0.5" />
+                  <span className="text-emerald-300 text-xs">{title}</span>
+                </div>
+              ))}
+            </div>
+          )}
+          {synthesis.revealed_secrets?.length > 0 && (
+            <div className="space-y-1.5">
+              <p className="text-[10px] font-mono text-zinc-600 uppercase tracking-wider">Secrets Revealed</p>
+              {synthesis.revealed_secrets.map((secret, i) => (
+                <div key={i} className="flex items-start gap-2 px-3 py-2 rounded-lg border border-arcane/20 bg-arcane/5 text-sm">
+                  <Eye className="h-3.5 w-3.5 text-arcane-light shrink-0 mt-0.5" />
+                  <span className="text-arcane-light text-xs">{secret}</span>
+                </div>
+              ))}
+            </div>
+          )}
         </div>
       )}
+
+      {/* Footer grid */}
       <div className="grid grid-cols-2 gap-3">
         {synthesis.unresolved_threads?.length > 0 && (
           <div className="p-3 rounded-lg bg-white/[0.02] border border-white/[0.04]">
@@ -269,8 +406,39 @@ function SessionClosingScreen({ synthesis }: { synthesis: SessionSynthesis }) {
 
 // ─── LiveSessionPanel ─────────────────────────────────────────────────────────
 
-function LiveSessionPanel({ session, onSessionEnded }: {
+function buildSessionKeywords(
+  characters: { name: string; playerName: string | null }[],
+  sessionNpcs: { npc: { name: string } }[],
+): string[] {
+  const kw = new Map<string, number>();
+  const add = (raw: string | null | undefined, boost: number) => {
+    if (!raw?.trim()) return;
+    // Strip parenthetical nicknames but also add the nickname as a keyword
+    const parenMatch = raw.match(/\(([^)]+)\)/);
+    if (parenMatch) {
+      add(parenMatch[1], boost); // add nickname e.g. "Bells"
+    }
+    const clean = raw.replace(/\([^)]*\)/g, "").trim().toLowerCase();
+    if (!clean) return;
+    if (!kw.has(clean) || kw.get(clean)! < boost) kw.set(clean, boost);
+    // For multi-word names, also add individual distinctive words
+    const words = clean.split(/\s+/);
+    if (words.length >= 2) {
+      for (const w of words) {
+        if (w.length >= 4 && !kw.has(w)) kw.set(w, Math.max(1, boost - 0.5));
+      }
+    }
+  };
+  for (const c of characters) { add(c.name, 2); add(c.playerName, 1.5); }
+  for (const nl of sessionNpcs) { add(nl.npc.name, 1.5); }
+  const result: string[] = [];
+  kw.forEach((boost, name) => result.push(`${name}:${boost}`));
+  return result;
+}
+
+function LiveSessionPanel({ session, characters, onSessionEnded }: {
   session: SessionData;
+  characters: { name: string; playerName: string | null }[];
   onSessionEnded: (synthesis: SessionSynthesis) => void;
 }) {
   const {
@@ -283,6 +451,7 @@ function LiveSessionPanel({ session, onSessionEnded }: {
   const [isEnding, setIsEnding] = useState(false);
   const [showCompleteConfirm, setShowCompleteConfirm] = useState(false);
   const isListening = phase === "recording" && activeSessionId === session.id;
+  const keywords = useMemo(() => buildSessionKeywords(characters, session.npcLinks), [characters, session.npcLinks]);
 
   useEffect(() => {
     const es = new EventSource(`/api/session/updates?sessionId=${session.id}`);
@@ -321,7 +490,7 @@ function LiveSessionPanel({ session, onSessionEnded }: {
     const onVisibilityChange = () => {
       // Only auto-resume if we were actively recording when the tab lost focus
       if (!document.hidden && phase === "recording" && activeSessionId === session.id && !isRecording()) {
-        startRecording(session.id);
+        startRecording(session.id, keywords);
       }
     };
     document.addEventListener("visibilitychange", onVisibilityChange);
@@ -374,7 +543,7 @@ function LiveSessionPanel({ session, onSessionEnded }: {
             </>
           )}
           {!isListening && !isEnding && (
-            <Button size="sm" variant="ghost" onClick={() => startRecording(session.id)} className="text-xs h-7 gap-1">
+            <Button size="sm" variant="ghost" onClick={() => startRecording(session.id, keywords)} className="text-xs h-7 gap-1">
               <Mic className="h-3 w-3" /> Resume
             </Button>
           )}
@@ -1246,7 +1415,7 @@ export function SessionsClient({ campaign }: { campaign: CampaignData }) {
               {/* Live recording panel (in-progress sessions) */}
               {selectedSession.status === "in_progress" && (
                 <div className="rounded-xl border border-crimson/20 bg-crimson/[0.03] p-5">
-                  <LiveSessionPanel session={selectedSession} onSessionEnded={handleSessionEnded} />
+                  <LiveSessionPanel session={selectedSession} characters={campaign.characters} onSessionEnded={handleSessionEnded} />
                 </div>
               )}
 
