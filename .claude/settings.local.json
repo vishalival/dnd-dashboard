@@ -32,7 +32,13 @@
       "Bash(lsof -iTCP -sTCP:LISTEN -P -n)",
       "mcp__plugin_chrome-devtools-mcp_chrome-devtools__wait_for",
       "Bash(node:*)",
-      "Bash(lsof -iTCP:3000 -sTCP:LISTEN -P -n)"
+      "Bash(lsof -iTCP:3000 -sTCP:LISTEN -P -n)",
+      "Bash(git add:*)",
+      "WebSearch",
+      "WebFetch(domain:developers.deepgram.com)",
+      "WebFetch(domain:deepgram.com)",
+      "Bash(find \"/Users/eganbisma/Projects/dnd-dashboard/src/app/\\(campaign\\)\" -name \"layout.tsx\")",
+      "Bash(find /Users/eganbisma/Projects/dnd-dashboard -name next.config.* -o -name tsconfig.json -o -name .env*)"
     ]
   }
 }

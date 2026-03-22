@@ -31,6 +31,18 @@ export async function PATCH(req: NextRequest) {
       },
     });
 
+    // When a session is marked completed, cascade to all prior sessions
+    if (status === "completed") {
+      await prisma.sessionPlan.updateMany({
+        where: {
+          campaignId: session.campaignId,
+          sessionNumber: { lt: session.sessionNumber },
+          status: { not: "completed" },
+        },
+        data: { status: "completed" },
+      });
+    }
+
     return NextResponse.json(session);
   } catch (error) {
     console.error("[session/update]", error);
