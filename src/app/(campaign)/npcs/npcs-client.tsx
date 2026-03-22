@@ -20,6 +20,8 @@ import {
   MessageSquare,
   FileText,
   X,
+  Network,
+  List,
 } from "lucide-react";
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
@@ -27,6 +29,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { PageHeader } from "@/components/shared/page-header";
 import { StatusBadge } from "@/components/shared/status-badge";
+import { NPCWeb } from "@/components/shared/npc-web";
 import { Separator } from "@/components/ui/separator";
 import { cn } from "@/lib/utils";
 import type { CampaignData, NPCData } from "@/lib/data";
@@ -284,6 +287,7 @@ export function NPCsClient({ campaign }: { campaign: CampaignData }) {
   const [search, setSearch] = useState("");
   const [statusFilter, setStatusFilter] = useState<string>("all");
   const [factionFilter, setFactionFilter] = useState<string>("all");
+  const [viewMode, setViewMode] = useState<"list" | "web">("list");
 
   const factions = useMemo(() => {
     const set = new Set<string>();
@@ -312,12 +316,38 @@ export function NPCsClient({ campaign }: { campaign: CampaignData }) {
 
   return (
     <div>
-      <PageHeader
-        title="NPC Tracker"
-        subtitle={`${campaign.npcs.length} characters in your world`}
-        icon={<Users className="h-5 w-5 text-emerald-600 dark:text-emerald-400" />}
-      />
+      <div className="flex items-center justify-between mb-2">
+        <PageHeader
+          title="NPC Tracker"
+          subtitle={`${campaign.npcs.length} characters in your world`}
+          icon={<Users className="h-5 w-5 text-emerald-600 dark:text-emerald-400" />}
+        />
+        <div className="flex gap-1 p-1 rounded-lg bg-white/[0.03] border border-white/[0.06]">
+          <Button
+            variant={viewMode === "list" ? "gold" : "ghost"}
+            size="sm"
+            onClick={() => setViewMode("list")}
+            className="text-xs gap-1.5"
+          >
+            <List className="h-3.5 w-3.5" />
+            List
+          </Button>
+          <Button
+            variant={viewMode === "web" ? "gold" : "ghost"}
+            size="sm"
+            onClick={() => setViewMode("web")}
+            className="text-xs gap-1.5"
+          >
+            <Network className="h-3.5 w-3.5" />
+            Web
+          </Button>
+        </div>
+      </div>
 
+      {viewMode === "web" ? (
+        <NPCWeb campaign={campaign} />
+      ) : (
+        <>
       {/* Filters */}
       <div className="flex flex-wrap items-center gap-3 mb-6">
         <div className="relative flex-1 max-w-xs">
@@ -449,6 +479,8 @@ export function NPCsClient({ campaign }: { campaign: CampaignData }) {
           )}
         </AnimatePresence>
       </div>
+      </>
+      )}
     </div>
   );
 }
