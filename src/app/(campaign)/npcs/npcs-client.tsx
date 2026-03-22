@@ -24,6 +24,7 @@ import {
   List,
   Plus,
   Trash2,
+  Pencil,
 } from "lucide-react";
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
@@ -58,9 +59,10 @@ const item = {
   show: { opacity: 1, y: 0 },
 };
 
-function NPCDetail({ npc, onClose, onDelete }: { npc: NPCData; onClose: () => void; onDelete: (id: string) => void }) {
+function NPCDetail({ npc, onClose, onDelete, onUpdate, onEdit }: { npc: NPCData; onClose: () => void; onDelete: (id: string) => void; onUpdate: (npc: NPCData) => void; onEdit: (npc: NPCData) => void }) {
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
   const [isDeleting, setIsDeleting] = useState(false);
+  const [isUpdatingPin, setIsUpdatingPin] = useState(false);
 
   const handleDelete = async () => {
     setIsDeleting(true);
@@ -79,6 +81,25 @@ function NPCDetail({ npc, onClose, onDelete }: { npc: NPCData; onClose: () => vo
       setShowDeleteConfirm(false);
     }
   };
+
+  const handleTogglePin = async () => {
+    setIsUpdatingPin(true);
+    try {
+      const res = await fetch("/api/npcs/update", {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ npcId: npc.id, isPinned: !npc.isPinned }),
+      });
+      if (!res.ok) throw new Error("Failed to update pin status");
+      const updated = await res.json();
+      onUpdate(updated);
+    } catch (err) {
+      console.error(err);
+    } finally {
+      setIsUpdatingPin(false);
+    }
+  };
+
   return (
     <motion.div
       initial={{ opacity: 0, x: 20 }}
@@ -120,6 +141,25 @@ function NPCDetail({ npc, onClose, onDelete }: { npc: NPCData; onClose: () => vo
           </div>
         </div>
         <div className="flex items-center gap-1 shrink-0">
+          <Button
+            variant="ghost"
+            size="icon"
+            onClick={() => onEdit(npc)}
+            className="text-zinc-500 hover:text-foreground/80 dark:text-zinc-300 hover:bg-black/[0.06] dark:hover:bg-white/[0.06]"
+            title="Edit NPC"
+          >
+            <Pencil className="h-4 w-4" />
+          </Button>
+          <Button
+            variant="ghost"
+            size="icon"
+            onClick={handleTogglePin}
+            disabled={isUpdatingPin}
+            className={cn("hover:text-amber-400 hover:bg-amber-400/10", npc.isPinned ? "text-amber-500" : "text-zinc-500")}
+            title={npc.isPinned ? "Unpin NPC" : "Pin NPC"}
+          >
+            <Pin className="h-4 w-4" />
+          </Button>
           <Button
             variant="ghost"
             size="icon"
@@ -334,7 +374,8 @@ function NPCDetail({ npc, onClose, onDelete }: { npc: NPCData; onClose: () => vo
   );
 }
 
-interface NewNPCForm {
+interface NPCFormState {
+  id?: string;
   name: string;
   race: string;
   role: string;
@@ -347,7 +388,7 @@ interface NewNPCForm {
   isPlayerKnown: boolean;
 }
 
-const emptyForm = (): NewNPCForm => ({
+const emptyForm = (): NPCFormState => ({
   name: "", race: "", role: "", faction: "", disposition: "neutral",
   status: "alive", location: "", goals: "", dmNotes: "", isPlayerKnown: true,
 });
@@ -359,29 +400,42 @@ export function NPCsClient({ campaign }: { campaign: CampaignData }) {
   const [statusFilter, setStatusFilter] = useState<string>("all");
   const [factionFilter, setFactionFilter] = useState<string>("all");
   const [viewMode, setViewMode] = useState<"list" | "web">("list");
-  const [newNPCOpen, setNewNPCOpen] = useState(false);
-  const [form, setForm] = useState<NewNPCForm>(emptyForm());
-  const [isCreating, setIsCreating] = useState(false);
+  const [formOpen, setFormOpen] = useState(false);
+  const [form, setForm] = useState<NPCFormState>(emptyForm());
+  const [isSaving, setIsSaving] = useState(false);
 
-  const handleCreateNPC = async () => {
+  const handleSaveNPC = async () => {
     if (!form.name.trim()) return;
-    setIsCreating(true);
+    setIsSaving(true);
     try {
-      const res = await fetch("/api/npcs/create", {
-        method: "POST",
+      const isEdit = !!form.id;
+      const url = isEdit ? "/api/npcs/update" : "/api/npcs/create";
+      const method = isEdit ? "PATCH" : "POST";
+      const body = isEdit 
+        ? JSON.stringify({ npcId: form.id, ...form })
+        : JSON.stringify({ campaignId: campaign.id, ...form });
+
+      const res = await fetch(url, {
+        method,
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ campaignId: campaign.id, ...form }),
+        body,
       });
-      if (!res.ok) throw new Error("Failed to create NPC");
-      const newNPC = await res.json();
-      setNpcs((prev) => [...prev, newNPC]);
-      setSelectedNPC(newNPC);
+      if (!res.ok) throw new Error("Failed to save NPC");
+      const savedNPC = await res.json();
+      
+      if (isEdit) {
+        setNpcs((prev) => prev.map((n) => (n.id === savedNPC.id ? savedNPC : n)));
+        if (selectedNPC?.id === savedNPC.id) setSelectedNPC(savedNPC);
+      } else {
+        setNpcs((prev) => [...prev, savedNPC]);
+        setSelectedNPC(savedNPC);
+      }
       setForm(emptyForm());
-      setNewNPCOpen(false);
+      setFormOpen(false);
     } catch (err) {
       console.error(err);
     } finally {
-      setIsCreating(false);
+      setIsSaving(false);
     }
   };
 
@@ -394,7 +448,7 @@ export function NPCsClient({ campaign }: { campaign: CampaignData }) {
   }, [npcs]);
 
   const filtered = useMemo(() => {
-    return npcs.filter((npc) => {
+    const list = npcs.filter((npc) => {
       if (
         search &&
         !npc.name.toLowerCase().includes(search.toLowerCase()) &&
@@ -408,15 +462,21 @@ export function NPCsClient({ campaign }: { campaign: CampaignData }) {
         return false;
       return true;
     });
+
+    return list.sort((a, b) => {
+      if (a.isPinned && !b.isPinned) return -1;
+      if (!a.isPinned && b.isPinned) return 1;
+      return a.name.localeCompare(b.name);
+    });
   }, [npcs, search, statusFilter, factionFilter]);
 
   return (
     <div>
-      {/* New NPC Dialog */}
-      <Dialog open={newNPCOpen} onOpenChange={setNewNPCOpen}>
+      {/* Add/Edit NPC Dialog */}
+      <Dialog open={formOpen} onOpenChange={setFormOpen}>
         <DialogContent className="sm:max-w-lg">
           <DialogHeader>
-            <DialogTitle className="font-heading">Add NPC</DialogTitle>
+            <DialogTitle className="font-heading">{form.id ? "Edit NPC" : "Add NPC"}</DialogTitle>
           </DialogHeader>
           <div className="grid grid-cols-2 gap-3 py-2">
             <div className="col-span-2">
@@ -472,9 +532,9 @@ export function NPCsClient({ campaign }: { campaign: CampaignData }) {
             </div>
           </div>
           <DialogFooter>
-            <Button variant="ghost" size="sm" onClick={() => { setNewNPCOpen(false); setForm(emptyForm()); }}>Cancel</Button>
-            <Button variant="gold" size="sm" onClick={handleCreateNPC} disabled={!form.name.trim() || isCreating}>
-              {isCreating ? "Adding…" : "Add NPC"}
+            <Button variant="ghost" size="sm" onClick={() => { setFormOpen(false); setForm(emptyForm()); }} disabled={isSaving}>Cancel</Button>
+            <Button variant="gold" size="sm" onClick={handleSaveNPC} disabled={!form.name.trim() || isSaving}>
+              {isSaving ? "Saving…" : form.id ? "Save Changes" : "Add NPC"}
             </Button>
           </DialogFooter>
         </DialogContent>
@@ -486,7 +546,7 @@ export function NPCsClient({ campaign }: { campaign: CampaignData }) {
           icon={<Users className="h-5 w-5 text-emerald-600 dark:text-emerald-400" />}
         />
         <div className="flex items-center gap-2">
-        <Button variant="gold" size="sm" onClick={() => setNewNPCOpen(true)} className="gap-1.5 text-xs">
+        <Button variant="gold" size="sm" onClick={() => { setForm(emptyForm()); setFormOpen(true); }} className="gap-1.5 text-xs">
           <Plus className="h-3.5 w-3.5" />Add NPC
         </Button>
         <div className="flex gap-1 p-1 rounded-lg bg-white/[0.03] border border-white/[0.06]">
@@ -644,6 +704,26 @@ export function NPCsClient({ campaign }: { campaign: CampaignData }) {
                   onDelete={(id) => {
                     setNpcs((prev) => prev.filter((n) => n.id !== id));
                     setSelectedNPC(null);
+                  }}
+                  onUpdate={(updated) => {
+                    setNpcs((prev) => prev.map((n) => (n.id === updated.id ? updated : n)));
+                    setSelectedNPC(updated);
+                  }}
+                  onEdit={(n) => {
+                    setForm({
+                      id: n.id,
+                      name: n.name,
+                      race: n.race || "",
+                      role: n.role || "",
+                      faction: n.faction || "",
+                      disposition: n.disposition,
+                      status: n.status,
+                      location: n.location || "",
+                      goals: n.goals || "",
+                      dmNotes: n.dmNotes || "",
+                      isPlayerKnown: n.isPlayerKnown,
+                    });
+                    setFormOpen(true);
                   }}
                 />
               </Card>
