@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState, useMemo, useCallback } from "react";
+import React, { useState, useMemo, useCallback, useRef, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import {
   KeyRound,
@@ -20,6 +20,8 @@ import {
   Crown,
   Plus,
   Trash2,
+  Pencil,
+  Check,
 } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
@@ -143,7 +145,117 @@ function SecretCard({
   );
 }
 
-function SecretDetail({ secret }: { secret: SecretData }) {
+function EditableText({
+  value,
+  onSave,
+  multiline,
+  placeholder,
+  className,
+}: {
+  value: string;
+  onSave: (val: string) => void;
+  multiline?: boolean;
+  placeholder?: string;
+  className?: string;
+}) {
+  const [editing, setEditing] = useState(false);
+  const [draft, setDraft] = useState(value);
+  const inputRef = useRef<HTMLInputElement | HTMLTextAreaElement>(null);
+
+  useEffect(() => {
+    setDraft(value);
+  }, [value]);
+
+  useEffect(() => {
+    if (editing && inputRef.current) {
+      inputRef.current.focus();
+    }
+  }, [editing]);
+
+  const commit = () => {
+    setEditing(false);
+    if (draft.trim() !== value) {
+      onSave(draft.trim());
+    }
+  };
+
+  if (!editing) {
+    return (
+      <span
+        onClick={() => setEditing(true)}
+        className={cn(
+          "cursor-pointer hover:bg-white/[0.04] rounded px-1 -mx-1 transition-colors inline-flex items-center gap-1.5 group/edit",
+          className,
+        )}
+        title="Click to edit"
+      >
+        {value || <span className="text-zinc-500 italic">{placeholder || "Click to add..."}</span>}
+        <Pencil className="h-3 w-3 text-zinc-600 opacity-0 group-hover/edit:opacity-100 transition-opacity shrink-0" />
+      </span>
+    );
+  }
+
+  if (multiline) {
+    return (
+      <div className="flex flex-col gap-1.5">
+        <textarea
+          ref={inputRef as React.RefObject<HTMLTextAreaElement>}
+          value={draft}
+          onChange={(e) => setDraft(e.target.value)}
+          onBlur={commit}
+          onKeyDown={(e) => {
+            if (e.key === "Escape") {
+              setDraft(value);
+              setEditing(false);
+            }
+          }}
+          placeholder={placeholder}
+          className={cn(
+            "w-full bg-white/[0.03] border border-white/[0.08] rounded-md px-3 py-2 text-sm text-zinc-200 focus:outline-none focus:ring-1 focus:ring-purple-500/50 min-h-[80px] resize-y",
+            className,
+          )}
+        />
+        <div className="flex justify-end">
+          <button
+            onClick={commit}
+            className="text-xs text-purple-400 hover:text-purple-300 flex items-center gap-1"
+          >
+            <Check className="h-3 w-3" /> Save
+          </button>
+        </div>
+      </div>
+    );
+  }
+
+  return (
+    <input
+      ref={inputRef as React.RefObject<HTMLInputElement>}
+      value={draft}
+      onChange={(e) => setDraft(e.target.value)}
+      onBlur={commit}
+      onKeyDown={(e) => {
+        if (e.key === "Enter") commit();
+        if (e.key === "Escape") {
+          setDraft(value);
+          setEditing(false);
+        }
+      }}
+      placeholder={placeholder}
+      className={cn(
+        "bg-white/[0.03] border border-white/[0.08] rounded-md px-2 py-1 text-sm text-zinc-200 focus:outline-none focus:ring-1 focus:ring-purple-500/50 w-full",
+        className,
+      )}
+    />
+  );
+}
+
+function SecretDetail({
+  secret,
+  onUpdate,
+}: {
+  secret: SecretData;
+  onUpdate: (field: string, value: string) => void;
+}) {
   return (
     <motion.div
       key={secret.id}
@@ -164,13 +276,22 @@ function SecretDetail({ secret }: { secret: SecretData }) {
           )}
         </div>
         {secret.owner && (
-          <p className="text-sm font-medium text-muted-foreground dark:text-zinc-400 mt-2 mb-1 uppercase tracking-wider">
-            {secret.owner}
-          </p>
+          <div className="mt-2 mb-1">
+            <EditableText
+              value={secret.owner}
+              onSave={(v) => onUpdate("owner", v)}
+              className="text-sm font-medium text-muted-foreground dark:text-zinc-400 uppercase tracking-wider"
+              placeholder="Add owner..."
+            />
+          </div>
         )}
-        <h2 className={cn("text-xl font-heading font-semibold text-foreground dark:text-white", !secret.owner && "mt-2")}>
-          {secret.title}
-        </h2>
+        <div className={cn(!secret.owner && "mt-2")}>
+          <EditableText
+            value={secret.title}
+            onSave={(v) => onUpdate("title", v)}
+            className="text-xl font-heading font-semibold text-foreground dark:text-white"
+          />
+        </div>
       </div>
 
       <div className="flex flex-wrap gap-2">
@@ -195,13 +316,18 @@ function SecretDetail({ secret }: { secret: SecretData }) {
         </Badge>
       </div>
 
-      {secret.description && (
-        <div className="p-4 rounded-lg bg-card hover:bg-muted/50 dark:bg-white/[0.02] border border-border dark:border-white/[0.04]">
-          <p className="text-sm text-foreground/80 dark:text-zinc-300 leading-relaxed">
-            {secret.description}
-          </p>
-        </div>
-      )}
+      <div className="p-4 rounded-lg bg-card hover:bg-muted/50 dark:bg-white/[0.02] border border-border dark:border-white/[0.04]">
+        <h4 className="text-xs font-medium text-muted-foreground dark:text-zinc-400 uppercase tracking-wider mb-2">
+          Description
+        </h4>
+        <EditableText
+          value={secret.description || ""}
+          onSave={(v) => onUpdate("description", v)}
+          multiline
+          placeholder="Add a description..."
+          className="text-sm text-foreground/80 dark:text-zinc-300 leading-relaxed"
+        />
+      </div>
 
       {/* Progress */}
       {secret.progress > 0 && (
@@ -270,16 +396,20 @@ function SecretDetail({ secret }: { secret: SecretData }) {
       )}
 
       {/* Notes */}
-      {secret.notes && (
-        <div>
-          <h4 className="text-xs font-medium text-muted-foreground dark:text-zinc-400 uppercase tracking-wider mb-2">
-            Notes
-          </h4>
-          <p className="text-sm text-muted-foreground dark:text-zinc-400 p-3 rounded-lg bg-card hover:bg-muted/50 dark:bg-white/[0.02] border border-border dark:border-white/[0.04] whitespace-pre-wrap">
-            {secret.notes}
-          </p>
+      <div>
+        <h4 className="text-xs font-medium text-muted-foreground dark:text-zinc-400 uppercase tracking-wider mb-2">
+          Notes
+        </h4>
+        <div className="p-3 rounded-lg bg-card hover:bg-muted/50 dark:bg-white/[0.02] border border-border dark:border-white/[0.04]">
+          <EditableText
+            value={secret.notes || ""}
+            onSave={(v) => onUpdate("notes", v)}
+            multiline
+            placeholder="Add DM notes..."
+            className="text-sm text-muted-foreground dark:text-zinc-400 whitespace-pre-wrap"
+          />
         </div>
-      )}
+      </div>
     </motion.div>
   );
 }
@@ -342,6 +472,22 @@ export function SecretsClient({ campaign }: { campaign: CampaignData }) {
       setCreating(false);
     }
   }, [createForm, campaign.id]);
+
+  const handleUpdate = useCallback(async (secretId: string, field: string, value: string) => {
+    try {
+      const res = await fetch("/api/secrets/update", {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ secretId, [field]: value }),
+      });
+      if (!res.ok) throw new Error("Failed to update");
+      const updated = await res.json();
+      setSecrets((prev) => prev.map((s) => (s.id === secretId ? updated : s)));
+      if (selectedSecret?.id === secretId) setSelectedSecret(updated);
+    } catch (err) {
+      console.error("Failed to update secret:", err);
+    }
+  }, [selectedSecret]);
 
   const handleDelete = useCallback(async () => {
     if (!deleteTarget) return;
@@ -585,7 +731,10 @@ export function SecretsClient({ campaign }: { campaign: CampaignData }) {
                     Delete
                   </Button>
                 </div>
-                <SecretDetail secret={selectedSecret} />
+                <SecretDetail
+                  secret={selectedSecret}
+                  onUpdate={(field, value) => handleUpdate(selectedSecret.id, field, value)}
+                />
               </Card>
             </div>
           )}
