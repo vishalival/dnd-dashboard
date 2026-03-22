@@ -38,7 +38,12 @@
       "WebFetch(domain:developers.deepgram.com)",
       "WebFetch(domain:deepgram.com)",
       "Bash(find \"/Users/eganbisma/Projects/dnd-dashboard/src/app/\\(campaign\\)\" -name \"layout.tsx\")",
-      "Bash(find /Users/eganbisma/Projects/dnd-dashboard -name next.config.* -o -name tsconfig.json -o -name .env*)"
+      "Bash(find /Users/eganbisma/Projects/dnd-dashboard -name next.config.* -o -name tsconfig.json -o -name .env*)",
+      "Bash(find /Users/audreytjokro/Documents/dnd-dashboard -type f -name *npc* -o -name *NPC*)",
+      "Bash(ls -la /Users/audreytjokro/Documents/dnd-dashboard/src/app/\\\\\\(campaign\\\\\\)/)",
+      "Bash(ls -la /Users/audreytjokro/Documents/dnd-dashboard/src/app/\\\\\\(campaign\\\\\\)/npcs/)",
+      "Bash(grep -r \"createNPC\\\\|addNPC\\\\|updateNPC\\\\|deleteNPC\\\\|POST.*npc\\\\|CREATE.*npc\" /Users/audreytjokro/Documents/dnd-dashboard/src --include=*.ts --include=*.tsx)",
+      "Bash(npx dotenv-cli:*)"
     ]
   }
 }

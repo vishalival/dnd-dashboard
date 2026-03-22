@@ -13,11 +13,14 @@ import {
   Star,
   Scroll,
   X,
+  Plus,
 } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
 import { Separator } from "@/components/ui/separator";
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
 import { PageHeader } from "@/components/shared/page-header";
 import { StatusBadge } from "@/components/shared/status-badge";
 import { getRarityColor } from "@/lib/utils";
@@ -327,22 +330,121 @@ function CharacterDetail({ character }: { character: CharacterData }) {
   );
 }
 
+interface NewMemberForm {
+  name: string;
+  playerName: string;
+  className: string;
+  subclass: string;
+  race: string;
+  level: string;
+  background: string;
+  personality: string;
+  backstory: string;
+}
+
+const emptyForm = (): NewMemberForm => ({
+  name: "", playerName: "", className: "", subclass: "",
+  race: "", level: "1", background: "", personality: "", backstory: "",
+});
+
 export function PartyClient({ campaign }: { campaign: CampaignData }) {
+  const [characters, setCharacters] = useState<CharacterData[]>(campaign.characters);
   const [selectedCharacter, setSelectedCharacter] =
     useState<CharacterData | null>(campaign.characters[0] || null);
+  const [newMemberOpen, setNewMemberOpen] = useState(false);
+  const [form, setForm] = useState<NewMemberForm>(emptyForm());
+  const [isCreating, setIsCreating] = useState(false);
 
-  const partyCharacters = campaign.characters.filter(
-    (c) => c.isPlayerCharacter,
-  );
+  const partyCharacters = characters.filter((c) => c.isPlayerCharacter);
+
+  const handleCreateMember = async () => {
+    if (!form.name.trim()) return;
+    setIsCreating(true);
+    try {
+      const res = await fetch("/api/characters/create", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ campaignId: campaign.id, ...form }),
+      });
+      if (!res.ok) throw new Error("Failed to create character");
+      const newChar = await res.json();
+      setCharacters((prev) => [...prev, newChar]);
+      setSelectedCharacter(newChar);
+      setForm(emptyForm());
+      setNewMemberOpen(false);
+    } catch (err) {
+      console.error(err);
+    } finally {
+      setIsCreating(false);
+    }
+  };
 
   return (
     <div>
+      {/* New Party Member Dialog */}
+      <Dialog open={newMemberOpen} onOpenChange={setNewMemberOpen}>
+        <DialogContent className="sm:max-w-lg">
+          <DialogHeader>
+            <DialogTitle className="font-heading">Add Party Member</DialogTitle>
+          </DialogHeader>
+          <div className="grid grid-cols-2 gap-3 py-2">
+            <div className="col-span-2">
+              <label className="text-xs text-zinc-400 mb-1 block">Character Name *</label>
+              <Input placeholder="e.g. Arannis Brightwood" value={form.name} onChange={(e) => setForm((f) => ({ ...f, name: e.target.value }))} autoFocus />
+            </div>
+            <div className="col-span-2">
+              <label className="text-xs text-zinc-400 mb-1 block">Player Name</label>
+              <Input placeholder="Who plays this character?" value={form.playerName} onChange={(e) => setForm((f) => ({ ...f, playerName: e.target.value }))} />
+            </div>
+            <div>
+              <label className="text-xs text-zinc-400 mb-1 block">Class</label>
+              <Input placeholder="e.g. Wizard, Fighter" value={form.className} onChange={(e) => setForm((f) => ({ ...f, className: e.target.value }))} />
+            </div>
+            <div>
+              <label className="text-xs text-zinc-400 mb-1 block">Subclass</label>
+              <Input placeholder="e.g. Evocation" value={form.subclass} onChange={(e) => setForm((f) => ({ ...f, subclass: e.target.value }))} />
+            </div>
+            <div>
+              <label className="text-xs text-zinc-400 mb-1 block">Race</label>
+              <Input placeholder="e.g. Elf, Human" value={form.race} onChange={(e) => setForm((f) => ({ ...f, race: e.target.value }))} />
+            </div>
+            <div>
+              <label className="text-xs text-zinc-400 mb-1 block">Level</label>
+              <Input type="number" min={1} max={20} value={form.level} onChange={(e) => setForm((f) => ({ ...f, level: e.target.value }))} />
+            </div>
+            <div className="col-span-2">
+              <label className="text-xs text-zinc-400 mb-1 block">Background</label>
+              <Input placeholder="e.g. Sage, Criminal" value={form.background} onChange={(e) => setForm((f) => ({ ...f, background: e.target.value }))} />
+            </div>
+            <div className="col-span-2">
+              <label className="text-xs text-zinc-400 mb-1 block">Personality</label>
+              <Input placeholder="Key personality traits" value={form.personality} onChange={(e) => setForm((f) => ({ ...f, personality: e.target.value }))} />
+            </div>
+            <div className="col-span-2">
+              <label className="text-xs text-zinc-400 mb-1 block">Backstory</label>
+              <Input placeholder="Brief backstory" value={form.backstory} onChange={(e) => setForm((f) => ({ ...f, backstory: e.target.value }))} />
+            </div>
+          </div>
+          <DialogFooter>
+            <Button variant="ghost" size="sm" onClick={() => { setNewMemberOpen(false); setForm(emptyForm()); }}>Cancel</Button>
+            <Button variant="gold" size="sm" onClick={handleCreateMember} disabled={!form.name.trim() || isCreating}>
+              {isCreating ? "Adding…" : "Add Member"}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
       <PageHeader
         title="Party Hub"
         subtitle="Player characters, backgrounds, and wishlists"
         icon={<Shield className="h-5 w-5 text-blue-400" />}
         actions={
-          <Badge variant="arcane">{partyCharacters.length} Party Members</Badge>
+          <div className="flex items-center gap-2">
+            <Button variant="gold" size="sm" onClick={() => setNewMemberOpen(true)} className="gap-1.5 text-xs">
+              <Plus className="h-3.5 w-3.5" />Add Member
+            </Button>
+            <Badge variant="arcane">{partyCharacters.length} Party Members</Badge>
+          </div>
         }
       />
 
@@ -362,6 +464,15 @@ export function PartyClient({ campaign }: { campaign: CampaignData }) {
               onClick={() => setSelectedCharacter(character)}
             />
           ))}
+          {partyCharacters.length === 0 && (
+            <div className="text-center py-12 text-zinc-500">
+              <Shield className="h-8 w-8 mx-auto mb-3 text-zinc-600" />
+              <p className="text-sm">No party members yet</p>
+              <Button variant="ghost" size="sm" onClick={() => setNewMemberOpen(true)} className="mt-3 gap-1.5 text-xs text-blue-400">
+                <Plus className="h-3.5 w-3.5" />Add your first member
+              </Button>
+            </div>
+          )}
         </motion.div>
 
         {/* Character Detail */}

@@ -29,9 +29,17 @@ export function AgentLogStrip() {
     prevLen.current = agentLog.length;
   }, [agentLog.length]);
 
+  const scrollRef = useRef<HTMLDivElement>(null);
   const isIdle = phase === "idle" && agentLog.length === 0;
   const latest = agentLog[agentLog.length - 1];
-  const displayed = [...agentLog].reverse().slice(0, 30);
+  const displayed = agentLog.slice(-30); // oldest → newest order
+
+  // Auto-scroll to bottom when new entries arrive
+  useEffect(() => {
+    if (expanded && scrollRef.current) {
+      scrollRef.current.scrollTop = scrollRef.current.scrollHeight;
+    }
+  }, [agentLog.length, expanded]);
 
   return (
     <div className="border-t border-[#1F1F22] shrink-0">
@@ -80,12 +88,12 @@ export function AgentLogStrip() {
         )}
       </button>
 
-      {/* Expanded list */}
+      {/* Expanded list — oldest at top, newest at bottom */}
       {expanded && !isIdle && (
-        <div className="max-h-48 overflow-y-auto scrollbar-thin border-t border-[#1F1F22] bg-black/20">
+        <div ref={scrollRef} className="max-h-48 overflow-y-auto scrollbar-thin border-t border-[#1F1F22] bg-black/20">
           {displayed.map((entry, i) => {
-            // Newest = full brightness, fade older entries toward 50%
-            const opacity = Math.max(0.45, 1 - i * 0.022);
+            // Oldest entries are dimmer, newest (bottom) are brightest
+            const opacity = Math.max(0.45, 0.45 + (i / displayed.length) * 0.55);
             return (
               <div
                 key={i}
