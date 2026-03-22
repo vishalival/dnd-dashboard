@@ -97,7 +97,8 @@ Rules:
 export async function processChunk(
   chunk: string,
   sessionNumber: number,
-  knownNpcs: Array<{ id: string; name: string; disposition: string; status: string }>
+  knownNpcs: Array<{ id: string; name: string; disposition: string; status: string }>,
+  planContext?: string
 ): Promise<ChunkExtraction> {
   if (!chunk.trim() || chunk.trim().split(/\s+/).length < 10) {
     return {
@@ -116,7 +117,11 @@ export async function processChunk(
           .join("\n")}`
       : "";
 
-  const userMessage = `Session ${sessionNumber} — transcript chunk:\n\n${chunk}${npcContext}`;
+  const planSection = planContext
+    ? `\n\nDM's Session Plan (what was intended for this session):\n${planContext}`
+    : "";
+
+  const userMessage = `Session ${sessionNumber} — transcript chunk:\n\n${chunk}${npcContext}${planSection}`;
 
   const response = await client.messages.create({
     model: MODEL,
@@ -182,15 +187,20 @@ Rules:
 - previously_on must start with exactly "Previously on..."
 - session_title should be 3-6 words, evocative, like a TV episode name
 - npc_status_changes: only include NPCs whose status genuinely changed. new_status must be one of: dead, missing, hostile, ally, unknown, alive.
+- key_events_final: IMPORTANT — any NPC death, capture, or major status change MUST appear here as type "death". Any secret revealed must appear as type "revelation". Combat encounters appear as "combat". New discoveries appear as "discovery". Do NOT omit NPC deaths from key_events_final even if they also appear in npc_status_changes.
 - revealed_secrets: include any secret, hidden truth, or concealed fact that was uncovered or stated aloud this session.
 - If the transcript is empty or too short, still return valid JSON with empty arrays and brief strings.
 - Never hallucinate events not in the transcript.`;
 
 export async function synthesizeSession(
   transcript: string,
-  sessionNumber: number
+  sessionNumber: number,
+  planContext?: string
 ): Promise<SessionSynthesis> {
-  const userMessage = `Session ${sessionNumber} — complete transcript:\n\n${transcript || "(No transcript recorded)"}`;
+  const planSection = planContext
+    ? `\n\nDM's Session Plan (what was intended):\n${planContext}`
+    : "";
+  const userMessage = `Session ${sessionNumber} — complete transcript:\n\n${transcript || "(No transcript recorded)"}${planSection}`;
 
   const response = await client.messages.create({
     model: MODEL,

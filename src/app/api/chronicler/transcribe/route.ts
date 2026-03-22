@@ -16,7 +16,10 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ transcript: "" });
     }
 
-    const contentType = req.headers.get("content-type") ?? "audio/webm";
+    // Strip codec parameters (e.g. "audio/webm;codecs=opus" → "audio/webm")
+    // Deepgram rejects content types with semicolons/codec params
+    const rawContentType = req.headers.get("content-type") ?? "audio/webm";
+    const contentType = rawContentType.split(";")[0].trim();
 
     const dgRes = await fetch(
       "https://api.deepgram.com/v1/listen?model=nova-3&smart_format=true&punctuate=true",

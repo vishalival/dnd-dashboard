@@ -24,6 +24,8 @@ export async function POST(req: NextRequest) {
         title: true,
         transcript: true,
         campaignId: true,
+        keyBeats: true,
+        encounters: true,
       },
     });
 
@@ -49,6 +51,19 @@ export async function POST(req: NextRequest) {
 
     const transcript = session.transcript ?? "";
 
+    // Build plan context for synthesis
+    const keyBeats = session.keyBeats ? (JSON.parse(session.keyBeats) as string[]) : [];
+    const encounters = session.encounters ? (JSON.parse(session.encounters) as string[]) : [];
+    let planContext: string | undefined;
+    if (keyBeats.length > 0 || encounters.length > 0) {
+      const parts: string[] = [];
+      if (keyBeats.length > 0)
+        parts.push(`Acts:\n${keyBeats.map((b, i) => `${i + 1}. ${b}`).join("\n")}`);
+      if (encounters.length > 0)
+        parts.push(`Planned Encounters:\n${encounters.map((e) => `- ${e}`).join("\n")}`);
+      planContext = parts.join("\n\n");
+    }
+
     emitAgentEvent(sessionId, {
       agent: "chronicler",
       state: "processing",
@@ -56,7 +71,7 @@ export async function POST(req: NextRequest) {
       data: {},
     });
 
-    const synthesis = await synthesizeSession(transcript, session.sessionNumber);
+    const synthesis = await synthesizeSession(transcript, session.sessionNumber, planContext);
 
     await prisma.$transaction(async (tx) => {
       // Update session record
@@ -146,6 +161,61 @@ export async function POST(req: NextRequest) {
           }),
         },
       });
+    });
+
+    // Emit specific log entries for every world-state change from synthesis
+    for (const change of synthesis.npc_status_changes) {
+      emitAgentEvent(sessionId, {
+        agent: "chronicler",
+        state: "log",
+        message: change.new_status === "dead"
+          ? `marked ${change.name} as dead`
+          : `updated ${change.name} status → ${change.new_status}`,
+        data: {},
+      });
+    }
+
+    for (const title of synthesis.resolved_storylines) {
+      emitAgentEvent(sessionId, {
+        agent: "chronicler",
+        state: "log",
+        message: `resolved storyline — ${title}`,
+        data: {},
+      });
+    }
+
+    for (const secret of synthesis.revealed_secrets) {
+      emitAgentEvent(sessionId, {
+        agent: "chronicler",
+        state: "log",
+        message: `revealed secret — ${secret}`,
+        data: {},
+      });
+    }
+
+    for (const event of synthesis.key_events_final) {
+      emitAgentEvent(sessionId, {
+        agent: "chronicler",
+        state: "log",
+        message: `key event — ${event.type} — ${event.description}`,
+        data: {},
+      });
+    }
+
+    for (const item of synthesis.items_gained) {
+      emitAgentEvent(sessionId, {
+        agent: "chronicler",
+        state: "log",
+        message: `party acquired — ${item}`,
+        data: {},
+      });
+    }
+
+    emitAgentEvent(sessionId, {
+      agent: "chronicler",
+      state: "log",
+      message: `synthesized session — "${synthesis.session_title}"`,
+      data: {},
     });
 
     emitAgentEvent(sessionId, {

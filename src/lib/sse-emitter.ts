@@ -1,6 +1,6 @@
 import { EventEmitter } from "events";
 
-export type ChroniclerState = "processing" | "done" | "error";
+export type ChroniclerState = "processing" | "done" | "error" | "log";
 
 export interface AgentMessage {
   agent: "chronicler";
