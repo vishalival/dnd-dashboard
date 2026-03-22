@@ -309,285 +309,287 @@ Important extraction rules:
 }
 
 async function seedDatabase(data: ExtractedData): Promise<string> {
-  // Clear existing data
-  await prisma.noteDocument.deleteMany();
-  await prisma.noteFolder.deleteMany();
-  await prisma.sessionStoryline.deleteMany();
-  await prisma.sessionNPC.deleteMany();
-  await prisma.sessionSecret.deleteMany();
-  await prisma.storylineNPC.deleteMany();
-  await prisma.storylineSecret.deleteMany();
-  await prisma.nPCSecret.deleteMany();
-  await prisma.storyEvent.deleteMany();
-  await prisma.journalEntry.deleteMany();
-  await prisma.magicItemWishlist.deleteMany();
-  await prisma.characterBackground.deleteMany();
-  await prisma.sessionPlan.deleteMany();
-  await prisma.secretGoal.deleteMany();
-  await prisma.nPC.deleteMany();
-  await prisma.storyline.deleteMany();
-  await prisma.character.deleteMany();
-  await prisma.location.deleteMany();
-  await prisma.faction.deleteMany();
-  await prisma.agentLog.deleteMany();
-  await prisma.campaign.deleteMany();
+  return prisma.$transaction(async (tx) => {
+    // Clear existing data
+    await tx.noteDocument.deleteMany();
+    await tx.noteFolder.deleteMany();
+    await tx.sessionStoryline.deleteMany();
+    await tx.sessionNPC.deleteMany();
+    await tx.sessionSecret.deleteMany();
+    await tx.storylineNPC.deleteMany();
+    await tx.storylineSecret.deleteMany();
+    await tx.nPCSecret.deleteMany();
+    await tx.storyEvent.deleteMany();
+    await tx.journalEntry.deleteMany();
+    await tx.magicItemWishlist.deleteMany();
+    await tx.characterBackground.deleteMany();
+    await tx.sessionPlan.deleteMany();
+    await tx.secretGoal.deleteMany();
+    await tx.nPC.deleteMany();
+    await tx.storyline.deleteMany();
+    await tx.character.deleteMany();
+    await tx.location.deleteMany();
+    await tx.faction.deleteMany();
+    await tx.agentLog.deleteMany();
+    await tx.campaign.deleteMany();
 
-  // Create campaign
-  const campaign = await prisma.campaign.create({
-    data: {
-      name: data.campaign.name,
-      dmName: data.campaign.dmName,
-      description: data.campaign.description,
-      currentArc: data.campaign.currentArc,
-    },
-  });
-
-  // Create factions
-  if (data.factions?.length) {
-    await prisma.faction.createMany({
-      data: data.factions.map((f) => ({
-        campaignId: campaign.id,
-        name: f.name,
-        alignment: f.alignment || null,
-        status: f.status || "active",
-        goals: f.goals || null,
-        description: f.description || null,
-      })),
+    // Create campaign
+    const campaign = await tx.campaign.create({
+      data: {
+        name: data.campaign.name,
+        dmName: data.campaign.dmName,
+        description: data.campaign.description,
+        currentArc: data.campaign.currentArc,
+      },
     });
-  }
 
-  // Create locations
-  if (data.locations?.length) {
-    await prisma.location.createMany({
-      data: data.locations.map((l) => ({
-        campaignId: campaign.id,
-        name: l.name,
-        type: l.type || null,
-        region: l.region || null,
-        description: l.description || null,
-        notes: l.notes || null,
-      })),
-    });
-  }
-
-  // Create storylines with events
-  const storylineMap: Record<string, string> = {};
-  if (data.storylines?.length) {
-    for (const s of data.storylines) {
-      const storyline = await prisma.storyline.create({
-        data: {
+    // Create factions
+    if (data.factions?.length) {
+      await tx.faction.createMany({
+        data: data.factions.map((f) => ({
           campaignId: campaign.id,
-          title: s.title,
-          summary: s.summary || null,
-          status: s.status || "active",
-          urgency: s.urgency || "medium",
-          arcName: s.arcName || null,
-          nextDevelopment: s.nextDevelopment || null,
-          notes: s.notes || null,
-          tags: s.tags ? toJson(s.tags) : null,
-          events: s.events?.length
-            ? {
-                create: s.events.map((e) => ({
-                  title: e.title,
-                  type: e.type || "event",
-                  session: e.session || null,
-                  date: e.date || null,
-                  description: e.description || null,
-                })),
+          name: f.name,
+          alignment: f.alignment || null,
+          status: f.status || "active",
+          goals: f.goals || null,
+          description: f.description || null,
+        })),
+      });
+    }
+
+    // Create locations
+    if (data.locations?.length) {
+      await tx.location.createMany({
+        data: data.locations.map((l) => ({
+          campaignId: campaign.id,
+          name: l.name,
+          type: l.type || null,
+          region: l.region || null,
+          description: l.description || null,
+          notes: l.notes || null,
+        })),
+      });
+    }
+
+    // Create storylines with events
+    const storylineMap: Record<string, string> = {};
+    if (data.storylines?.length) {
+      for (const s of data.storylines) {
+        const storyline = await tx.storyline.create({
+          data: {
+            campaignId: campaign.id,
+            title: s.title,
+            summary: s.summary || null,
+            status: s.status || "active",
+            urgency: s.urgency || "medium",
+            arcName: s.arcName || null,
+            nextDevelopment: s.nextDevelopment || null,
+            notes: s.notes || null,
+            tags: s.tags ? toJson(s.tags) : null,
+            events: s.events?.length
+              ? {
+                  create: s.events.map((e) => ({
+                    title: e.title,
+                    type: e.type || "event",
+                    session: e.session || null,
+                    date: e.date || null,
+                    description: e.description || null,
+                  })),
+                }
+              : undefined,
+          },
+        });
+        storylineMap[s.title.toLowerCase()] = storyline.id;
+      }
+    }
+
+    // Create NPCs
+    const npcMap: Record<string, string> = {};
+    if (data.npcs?.length) {
+      for (const n of data.npcs) {
+        const npc = await tx.nPC.create({
+          data: {
+            campaignId: campaign.id,
+            name: n.name,
+            race: n.race || null,
+            role: n.role || null,
+            faction: n.faction || null,
+            disposition: n.disposition || "neutral",
+            status: n.status || "alive",
+            location: n.location || null,
+            goals: n.goals || null,
+            secrets: n.secrets || null,
+            firstAppearance: n.firstAppearance || null,
+            lastAppearance: n.lastAppearance || null,
+            voiceNotes: n.voiceNotes || null,
+            storyRelevance: n.storyRelevance || null,
+            dmNotes: n.dmNotes || null,
+            isPlayerKnown: n.isPlayerKnown ?? true,
+            isPinned: n.isPinned ?? false,
+          },
+        });
+        npcMap[n.name.toLowerCase()] = npc.id;
+      }
+    }
+
+    // Create secrets
+    const secretMap: Record<string, string> = {};
+    if (data.secrets?.length) {
+      for (const s of data.secrets) {
+        const secret = await tx.secretGoal.create({
+          data: {
+            campaignId: campaign.id,
+            title: s.title,
+            type: s.type || "dm_secret",
+            owner: s.owner || null,
+            description: s.description || null,
+            visibility: s.visibility || "dm_only",
+            urgency: s.urgency || "medium",
+            status: s.status || "active",
+            progress: s.progress || 0,
+            notes: s.notes || null,
+            isPinned: s.isPinned ?? false,
+          },
+        });
+        secretMap[s.title.toLowerCase()] = secret.id;
+      }
+    }
+
+    // Create sessions
+    const sessionMap: Record<number, string> = {};
+    if (data.sessions?.length) {
+      for (const s of data.sessions) {
+        const session = await tx.sessionPlan.create({
+          data: {
+            campaignId: campaign.id,
+            sessionNumber: s.sessionNumber,
+            title: s.title,
+            date: s.date ? new Date(s.date) : null,
+            status: s.status || "draft",
+            summary: s.summary || null,
+            keyBeats: s.keyBeats ? toJson(s.keyBeats) : null,
+            encounters: s.encounters ? toJson(s.encounters) : null,
+            hooks: s.hooks ? toJson(s.hooks) : null,
+            npcAppearances: s.npcAppearances
+              ? toJson(s.npcAppearances)
+              : null,
+            locations: s.locations ? toJson(s.locations) : null,
+            playerNotes: s.playerNotes ? toJson(s.playerNotes) : null,
+            contingencies: s.contingencies ? toJson(s.contingencies) : null,
+            improvPrompts: s.improvPrompts ? toJson(s.improvPrompts) : null,
+            reminders: s.reminders ? toJson(s.reminders) : null,
+            checklist: s.checklist ? toJson(s.checklist) : null,
+            template: s.template || null,
+          },
+        });
+        sessionMap[s.sessionNumber] = session.id;
+
+        // Link NPCs to session
+        if (s.npcAppearances?.length) {
+          for (const npcName of s.npcAppearances) {
+            const npcId = npcMap[npcName.toLowerCase()];
+            if (npcId) {
+              try {
+                await tx.sessionNPC.create({
+                  data: { sessionId: session.id, npcId },
+                });
+              } catch {
+                // ignore duplicate links
               }
-            : undefined,
-        },
-      });
-      storylineMap[s.title.toLowerCase()] = storyline.id;
-    }
-  }
-
-  // Create NPCs
-  const npcMap: Record<string, string> = {};
-  if (data.npcs?.length) {
-    for (const n of data.npcs) {
-      const npc = await prisma.nPC.create({
-        data: {
-          campaignId: campaign.id,
-          name: n.name,
-          race: n.race || null,
-          role: n.role || null,
-          faction: n.faction || null,
-          disposition: n.disposition || "neutral",
-          status: n.status || "alive",
-          location: n.location || null,
-          goals: n.goals || null,
-          secrets: n.secrets || null,
-          firstAppearance: n.firstAppearance || null,
-          lastAppearance: n.lastAppearance || null,
-          voiceNotes: n.voiceNotes || null,
-          storyRelevance: n.storyRelevance || null,
-          dmNotes: n.dmNotes || null,
-          isPlayerKnown: n.isPlayerKnown ?? true,
-          isPinned: n.isPinned ?? false,
-        },
-      });
-      npcMap[n.name.toLowerCase()] = npc.id;
-    }
-  }
-
-  // Create secrets
-  const secretMap: Record<string, string> = {};
-  if (data.secrets?.length) {
-    for (const s of data.secrets) {
-      const secret = await prisma.secretGoal.create({
-        data: {
-          campaignId: campaign.id,
-          title: s.title,
-          type: s.type || "dm_secret",
-          owner: s.owner || null,
-          description: s.description || null,
-          visibility: s.visibility || "dm_only",
-          urgency: s.urgency || "medium",
-          status: s.status || "active",
-          progress: s.progress || 0,
-          notes: s.notes || null,
-          isPinned: s.isPinned ?? false,
-        },
-      });
-      secretMap[s.title.toLowerCase()] = secret.id;
-    }
-  }
-
-  // Create sessions
-  const sessionMap: Record<number, string> = {};
-  if (data.sessions?.length) {
-    for (const s of data.sessions) {
-      const session = await prisma.sessionPlan.create({
-        data: {
-          campaignId: campaign.id,
-          sessionNumber: s.sessionNumber,
-          title: s.title,
-          date: s.date ? new Date(s.date) : null,
-          status: s.status || "draft",
-          summary: s.summary || null,
-          keyBeats: s.keyBeats ? toJson(s.keyBeats) : null,
-          encounters: s.encounters ? toJson(s.encounters) : null,
-          hooks: s.hooks ? toJson(s.hooks) : null,
-          npcAppearances: s.npcAppearances
-            ? toJson(s.npcAppearances)
-            : null,
-          locations: s.locations ? toJson(s.locations) : null,
-          playerNotes: s.playerNotes ? toJson(s.playerNotes) : null,
-          contingencies: s.contingencies ? toJson(s.contingencies) : null,
-          improvPrompts: s.improvPrompts ? toJson(s.improvPrompts) : null,
-          reminders: s.reminders ? toJson(s.reminders) : null,
-          checklist: s.checklist ? toJson(s.checklist) : null,
-          template: s.template || null,
-        },
-      });
-      sessionMap[s.sessionNumber] = session.id;
-
-      // Link NPCs to session
-      if (s.npcAppearances?.length) {
-        for (const npcName of s.npcAppearances) {
-          const npcId = npcMap[npcName.toLowerCase()];
-          if (npcId) {
-            try {
-              await prisma.sessionNPC.create({
-                data: { sessionId: session.id, npcId },
-              });
-            } catch {
-              // ignore duplicate links
             }
           }
         }
       }
     }
-  }
 
-  // Create characters with backgrounds and wishlists
-  if (data.characters?.length) {
-    for (const c of data.characters) {
-      const character = await prisma.character.create({
-        data: {
-          campaignId: campaign.id,
-          name: c.name,
-          playerName: c.playerName || null,
-          className: c.className || null,
-          subclass: c.subclass || null,
-          race: c.race || null,
-          level: c.level || 1,
-          background: c.background || null,
-          backstory: c.backstory || null,
-          personality: c.personality || null,
-          bonds: c.bonds || null,
-          flaws: c.flaws || null,
-          ideals: c.ideals || null,
-          currentGoals: c.currentGoals || null,
-          relationships: c.relationships ? toJson(c.relationships) : null,
-          status: c.status || "active",
-          notes: c.notes || null,
-          isPlayerCharacter: c.isPlayerCharacter ?? true,
-        },
-      });
-
-      // Create background
-      if (c.backgroundDetails) {
-        await prisma.characterBackground.create({
+    // Create characters with backgrounds and wishlists
+    if (data.characters?.length) {
+      for (const c of data.characters) {
+        const character = await tx.character.create({
           data: {
-            characterId: character.id,
-            backgroundText: c.backgroundDetails.backgroundText || null,
-            keyHistory: c.backgroundDetails.keyHistory
-              ? toJson(c.backgroundDetails.keyHistory)
-              : null,
-            plotHooks: c.backgroundDetails.plotHooks
-              ? toJson(c.backgroundDetails.plotHooks)
-              : null,
-            unresolvedThreads: c.backgroundDetails.unresolvedThreads
-              ? toJson(c.backgroundDetails.unresolvedThreads)
-              : null,
-            linkedNPCs: c.backgroundDetails.linkedNPCs
-              ? toJson(c.backgroundDetails.linkedNPCs)
-              : null,
+            campaignId: campaign.id,
+            name: c.name,
+            playerName: c.playerName || null,
+            className: c.className || null,
+            subclass: c.subclass || null,
+            race: c.race || null,
+            level: c.level || 1,
+            background: c.background || null,
+            backstory: c.backstory || null,
+            personality: c.personality || null,
+            bonds: c.bonds || null,
+            flaws: c.flaws || null,
+            ideals: c.ideals || null,
+            currentGoals: c.currentGoals || null,
+            relationships: c.relationships ? toJson(c.relationships) : null,
+            status: c.status || "active",
+            notes: c.notes || null,
+            isPlayerCharacter: c.isPlayerCharacter ?? true,
+          },
+        });
+
+        // Create background
+        if (c.backgroundDetails) {
+          await tx.characterBackground.create({
+            data: {
+              characterId: character.id,
+              backgroundText: c.backgroundDetails.backgroundText || null,
+              keyHistory: c.backgroundDetails.keyHistory
+                ? toJson(c.backgroundDetails.keyHistory)
+                : null,
+              plotHooks: c.backgroundDetails.plotHooks
+                ? toJson(c.backgroundDetails.plotHooks)
+                : null,
+              unresolvedThreads: c.backgroundDetails.unresolvedThreads
+                ? toJson(c.backgroundDetails.unresolvedThreads)
+                : null,
+              linkedNPCs: c.backgroundDetails.linkedNPCs
+                ? toJson(c.backgroundDetails.linkedNPCs)
+                : null,
+            },
+          });
+        }
+
+        // Create wishlists
+        if (c.wishlistItems?.length) {
+          await tx.magicItemWishlist.createMany({
+            data: c.wishlistItems.map((w) => ({
+              campaignId: campaign.id,
+              characterId: character.id,
+              itemName: w.itemName,
+              rarity: w.rarity || "uncommon",
+              status: w.status || "rumored",
+              reason: w.reason || null,
+              storyHook: w.storyHook || null,
+            })),
+          });
+        }
+      }
+    }
+
+    // Create journal entries
+    if (data.journalEntries?.length) {
+      for (const j of data.journalEntries) {
+        const sessionId =
+          j.sessionNumber && sessionMap[j.sessionNumber]
+            ? sessionMap[j.sessionNumber]
+            : null;
+        await tx.journalEntry.create({
+          data: {
+            campaignId: campaign.id,
+            title: j.title,
+            content: j.content,
+            type: j.type || "session_recap",
+            tags: j.tags ? toJson(j.tags) : null,
+            isPinned: j.isPinned ?? false,
+            sessionId,
           },
         });
       }
-
-      // Create wishlists
-      if (c.wishlistItems?.length) {
-        await prisma.magicItemWishlist.createMany({
-          data: c.wishlistItems.map((w) => ({
-            campaignId: campaign.id,
-            characterId: character.id,
-            itemName: w.itemName,
-            rarity: w.rarity || "uncommon",
-            status: w.status || "rumored",
-            reason: w.reason || null,
-            storyHook: w.storyHook || null,
-          })),
-        });
-      }
     }
-  }
 
-  // Create journal entries
-  if (data.journalEntries?.length) {
-    for (const j of data.journalEntries) {
-      const sessionId =
-        j.sessionNumber && sessionMap[j.sessionNumber]
-          ? sessionMap[j.sessionNumber]
-          : null;
-      await prisma.journalEntry.create({
-        data: {
-          campaignId: campaign.id,
-          title: j.title,
-          content: j.content,
-          type: j.type || "session_recap",
-          tags: j.tags ? toJson(j.tags) : null,
-          isPinned: j.isPinned ?? false,
-          sessionId,
-        },
-      });
-    }
-  }
-
-  return campaign.id;
+    return campaign.id;
+  }, { timeout: 60000 });
 }
 
 export async function POST(request: NextRequest) {
