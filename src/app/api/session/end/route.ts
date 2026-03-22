@@ -88,6 +88,16 @@ export async function POST(req: NextRequest) {
         },
       });
 
+      // Mark all prior sessions as completed if they aren't already
+      await tx.sessionPlan.updateMany({
+        where: {
+          campaignId: session.campaignId,
+          sessionNumber: { lt: session.sessionNumber },
+          status: { not: "completed" },
+        },
+        data: { status: "completed" },
+      });
+
       // Apply NPC status changes — match by name across all campaign NPCs
       for (const change of synthesis.npc_status_changes) {
         const match = allNpcs.find(

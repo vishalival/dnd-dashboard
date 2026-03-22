@@ -366,11 +366,6 @@ function SynthesisDisplay({ synthesis, collapsible = false }: { synthesis: Sessi
         <p className="text-[10px] font-mono text-gold/50 uppercase tracking-widest mb-3">Previously on...</p>
         <p className="text-sm text-zinc-200 leading-relaxed italic">{synthesis.previously_on}</p>
       </div>
-      <div className="p-4 rounded-lg bg-white/[0.02] border border-white/[0.05]">
-        <p className="text-[10px] font-mono text-zinc-500 uppercase tracking-wider mb-2">Session Summary</p>
-        <p className="text-sm text-zinc-300 leading-relaxed">{synthesis.session_summary}</p>
-      </div>
-
       {/* Plan vs Reality */}
       {planContent && (collapsible ? (
         <CollapsibleSection
@@ -1234,7 +1229,14 @@ export function SessionsClient({ campaign }: { campaign: CampaignData }) {
   };
 
   const handleSaveSession = (updated: SessionData) => {
-    setSessions((prev) => prev.map((s) => (s.id === updated.id ? updated : s)));
+    setSessions((prev) => prev.map((s) => {
+      if (s.id === updated.id) return updated;
+      // Cascade: mark prior sessions as completed
+      if (updated.status === "completed" && s.sessionNumber < updated.sessionNumber && s.status !== "completed") {
+        return { ...s, status: "completed" };
+      }
+      return s;
+    }));
     setSelectedSession((prev) => (prev?.id === updated.id ? updated : prev));
   };
 
@@ -1253,11 +1255,16 @@ export function SessionsClient({ campaign }: { campaign: CampaignData }) {
 
   const handleSessionEnded = (synthesis: SessionSynthesis) => {
     if (!selectedSession) return;
-    const updated = sessions.map((s) =>
-      s.id === selectedSession.id
-        ? { ...s, status: "completed", summary: synthesis.session_summary, keyEvents: JSON.stringify(synthesis.key_events_final), recapForNext: synthesis.previously_on, title: synthesis.session_title || s.title, synthesis: JSON.stringify(synthesis) }
-        : s
-    );
+    const updated = sessions.map((s) => {
+      if (s.id === selectedSession.id) {
+        return { ...s, status: "completed", summary: synthesis.session_summary, keyEvents: JSON.stringify(synthesis.key_events_final), recapForNext: synthesis.previously_on, title: synthesis.session_title || s.title, synthesis: JSON.stringify(synthesis) };
+      }
+      // Mark all prior sessions as completed
+      if (s.sessionNumber < selectedSession.sessionNumber && s.status !== "completed") {
+        return { ...s, status: "completed" };
+      }
+      return s;
+    });
     setSessions(updated);
     setSelectedSession(updated.find((s) => s.id === selectedSession.id) ?? selectedSession);
   };
