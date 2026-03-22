@@ -63,6 +63,15 @@ export interface ChunkExtraction {
 
 const CHUNK_SYSTEM_PROMPT = `You are the Chronicler, a D&D campaign archivist processing a live session audio transcript.
 
+You will receive the NEW transcript chunk to analyze, along with context:
+- A running summary of the session so far (if available)
+- The current world state from previous extractions (if available)
+- Known NPCs and the DM's session plan
+
+Only analyze the NEW transcript chunk. Do not re-extract events already captured in the running summary or previous extractions.
+
+Speaker tags like [Speaker 0], [Speaker 1] indicate different people at the table. The DM is typically the most frequent speaker. Use speaker tags to better attribute actions and dialogue.
+
 Return ONLY valid JSON matching this exact shape. No markdown. No prose. No explanation.
 
 {
@@ -94,30 +103,38 @@ Return ONLY valid JSON matching this exact shape. No markdown. No prose. No expl
       "item": "item name",
       "action": "gained | lost"
     }
-  ]
+  ],
+  "session_summary_update": "Updated 2-3 sentence summary incorporating what just happened in this chunk. Build on the existing session summary provided in context. Keep it under 100 words. If no session summary was provided, write a fresh one."
 }
 
 Rules:
-- If the transcript chunk is too short or contains no meaningful campaign information, return empty arrays for all fields.
+- If the transcript chunk is too short or contains no meaningful campaign information, return empty arrays for all fields (but still update session_summary_update).
 - Never invent NPC names, items, or events that are not explicitly in the transcript.
 - Only include npc_updates for NPCs whose status or disposition actually changed.
-- Only include session_outline_updates for genuinely new scenes or events.
+- Only include session_outline_updates for genuinely new scenes or events not already in previous extractions.
 - disposition_change and status_change are both optional — only include the field that changed.`;
 
 export async function processChunk(
   chunk: string,
   sessionNumber: number,
   knownNpcs: Array<{ id: string; name: string; disposition: string; status: string }>,
-  planContext?: string
-): Promise<ChunkExtraction> {
-  if (!chunk.trim() || chunk.trim().split(/\s+/).length < 10) {
-    return {
+  planContext?: string,
+  previousExtractions?: ChunkExtraction,
+  runningSummary?: string,
+): Promise<{ extraction: ChunkExtraction; updatedSummary: string }> {
+  const emptyResult = {
+    extraction: {
       session_outline_updates: [],
       npc_updates: [],
       plot_threads: [],
       key_events: [],
       inventory_changes: [],
-    };
+    },
+    updatedSummary: runningSummary ?? "",
+  };
+
+  if (!chunk.trim() || chunk.trim().split(/\s+/).length < 10) {
+    return emptyResult;
   }
 
   const npcContext =
@@ -131,7 +148,20 @@ export async function processChunk(
     ? `\n\nDM's Session Plan (what was intended for this session):\n${planContext}`
     : "";
 
-  const userMessage = `Session ${sessionNumber} — transcript chunk:\n\n${chunk}${npcContext}${planSection}`;
+  const summarySection = runningSummary
+    ? `\n\nSession summary so far:\n${runningSummary}`
+    : "";
+
+  const extractionStateSection = previousExtractions
+    ? `\n\nCurrent world state from previous extractions:\n${JSON.stringify({
+        active_plot_threads: previousExtractions.plot_threads.filter(t => t.status !== "resolved"),
+        recent_key_events: previousExtractions.key_events.slice(-5),
+        known_inventory_changes: previousExtractions.inventory_changes.slice(-10),
+        outline_so_far: previousExtractions.session_outline_updates.slice(-5),
+      }, null, 2)}`
+    : "";
+
+  const userMessage = `Session ${sessionNumber} — NEW transcript chunk (analyze only this):\n\n${chunk}${summarySection}${extractionStateSection}${npcContext}${planSection}`;
 
   const response = await client.messages.create({
     model: MODEL,
@@ -143,16 +173,21 @@ export async function processChunk(
   const raw = response.content[0].type === "text" ? extractJson(response.content[0].text) : "{}";
 
   try {
-    return JSON.parse(raw) as ChunkExtraction;
+    const parsed = JSON.parse(raw);
+    const extraction: ChunkExtraction = {
+      session_outline_updates: parsed.session_outline_updates ?? [],
+      npc_updates: parsed.npc_updates ?? [],
+      plot_threads: parsed.plot_threads ?? [],
+      key_events: parsed.key_events ?? [],
+      inventory_changes: parsed.inventory_changes ?? [],
+    };
+    return {
+      extraction,
+      updatedSummary: parsed.session_summary_update ?? runningSummary ?? "",
+    };
   } catch {
     console.error("[chronicler] Failed to parse chunk extraction:", raw);
-    return {
-      session_outline_updates: [],
-      npc_updates: [],
-      plot_threads: [],
-      key_events: [],
-      inventory_changes: [],
-    };
+    return emptyResult;
   }
 }
 

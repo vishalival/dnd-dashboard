@@ -25,6 +25,7 @@ export async function POST(req: NextRequest) {
         sessionNumber: true,
         transcript: true,
         liveExtractions: true,
+        runningSummary: true,
         keyBeats: true,
         encounters: true,
         campaign: {
@@ -67,10 +68,7 @@ export async function POST(req: NextRequest) {
       planContext = parts.join("\n\n");
     }
 
-    // Run Claude extraction
-    const extraction = await processChunk(chunk, session.sessionNumber, knownNpcs, planContext);
-
-    // Merge into existing liveExtractions
+    // Parse existing extractions for context
     const existing: ChunkExtraction = session.liveExtractions
       ? JSON.parse(session.liveExtractions)
       : {
@@ -80,6 +78,16 @@ export async function POST(req: NextRequest) {
           key_events: [],
           inventory_changes: [],
         };
+
+    // Run Claude extraction with sliding window context
+    const { extraction, updatedSummary } = await processChunk(
+      chunk,
+      session.sessionNumber,
+      knownNpcs,
+      planContext,
+      existing,
+      session.runningSummary ?? undefined,
+    );
 
     const merged: ChunkExtraction = {
       session_outline_updates: [
@@ -132,12 +140,13 @@ export async function POST(req: NextRequest) {
       }
     }
 
-    // Persist transcript + live extractions
+    // Persist transcript + live extractions + running summary
     await prisma.sessionPlan.update({
       where: { id: sessionId },
       data: {
         transcript: updatedTranscript,
         liveExtractions: JSON.stringify(merged),
+        runningSummary: updatedSummary,
       },
     });
 
