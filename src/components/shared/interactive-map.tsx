@@ -1,8 +1,8 @@
 "use client";
 
-import React, { useRef, useState, useEffect } from "react";
+import React, { useRef, useState, useCallback } from "react";
 import { motion, useMotionValue, useSpring } from "framer-motion";
-import { Maximize2, Minimize2, ZoomIn, ZoomOut, Move } from "lucide-react";
+import { Maximize2, ZoomIn, ZoomOut, Move } from "lucide-react";
 import { cn } from "@/lib/utils";
 
 interface InteractiveMapProps {
@@ -13,6 +13,7 @@ interface InteractiveMapProps {
 
 export function InteractiveMap({ src, className, initialScale = 1 }: InteractiveMapProps) {
   const containerRef = useRef<HTMLDivElement>(null);
+  const imgRef = useRef<HTMLImageElement>(null);
   const [scale, setScale] = useState(initialScale);
   const [isDragging, setIsDragging] = useState(false);
   
@@ -23,8 +24,48 @@ export function InteractiveMap({ src, className, initialScale = 1 }: Interactive
   const dx = useSpring(x, springConfig);
   const dy = useSpring(y, springConfig);
 
+  const getDragConstraints = useCallback(() => {
+    const container = containerRef.current;
+    const img = imgRef.current;
+    if (!container || !img) return { top: 0, right: 0, bottom: 0, left: 0 };
+
+    const cw = container.clientWidth;
+    const ch = container.clientHeight;
+    const iw = img.clientWidth * scale;
+    const ih = img.clientHeight * scale;
+
+    // If image is smaller than container at current scale, don't allow dragging
+    const overflowX = Math.max(0, (iw - cw) / 2);
+    const overflowY = Math.max(0, (ih - ch) / 2);
+
+    return {
+      top: -overflowY,
+      bottom: overflowY,
+      left: -overflowX,
+      right: overflowX,
+    };
+  }, [scale]);
+
   const handleZoomIn = () => setScale((s) => Math.min(s + 0.5, 4));
-  const handleZoomOut = () => setScale((s) => Math.max(s - 0.5, 0.5));
+  const handleZoomOut = () => {
+    setScale((s) => {
+      const next = Math.max(s - 0.5, 0.5);
+      // Snap position back within new bounds
+      const container = containerRef.current;
+      const img = imgRef.current;
+      if (container && img) {
+        const cw = container.clientWidth;
+        const ch = container.clientHeight;
+        const iw = img.clientWidth * next;
+        const ih = img.clientHeight * next;
+        const overflowX = Math.max(0, (iw - cw) / 2);
+        const overflowY = Math.max(0, (ih - ch) / 2);
+        x.set(Math.max(-overflowX, Math.min(overflowX, x.get())));
+        y.set(Math.max(-overflowY, Math.min(overflowY, y.get())));
+      }
+      return next;
+    });
+  };
   const handleReset = () => {
     setScale(initialScale);
     x.set(0);
@@ -74,14 +115,15 @@ export function InteractiveMap({ src, className, initialScale = 1 }: Interactive
       >
         <motion.div
           drag
-          dragConstraints={containerRef}
-          dragElastic={0.1}
+          dragConstraints={getDragConstraints()}
+          dragElastic={0.05}
           style={{ x: dx, y: dy, scale }}
           onDragStart={() => setIsDragging(true)}
           onDragEnd={() => setIsDragging(false)}
           className="relative transition-shadow duration-300"
         >
           <img
+            ref={imgRef}
             src={src}
             alt="Campaign Map"
             className="max-w-none shadow-2xl rounded-sm select-none pointer-events-none"
