@@ -13,6 +13,26 @@ export const metadata: Metadata = {
   title: "DM Campaign Dashboard — Dungeon Master Command Center",
   description:
     "A premium Dungeon Master operating system for campaign management, session planning, NPC tracking, and storyline orchestration.",
+  openGraph: {
+    title: "DM Campaign Dashboard — Dungeon Master Command Center",
+    description:
+      "A premium Dungeon Master operating system for campaign management, session planning, NPC tracking, and storyline orchestration.",
+    images: [
+      {
+        url: "/OG%20Image.png",
+        width: 1200,
+        height: 630,
+        alt: "DM Campaign Dashboard",
+      },
+    ],
+  },
+  twitter: {
+    card: "summary_large_image",
+    title: "DM Campaign Dashboard — Dungeon Master Command Center",
+    description:
+      "A premium Dungeon Master operating system for campaign management, session planning, NPC tracking, and storyline orchestration.",
+    images: ["/OG%20Image.png"],
+  },
 };
 
 export default function RootLayout({
