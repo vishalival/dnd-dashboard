@@ -164,13 +164,13 @@ export function NotesChatPanel({
     msg.role === "assistant" && !msg.displayText && isLoading;
 
   return (
-    <div className="w-[400px] shrink-0 border-l border-white/[0.06] flex flex-col h-full overflow-hidden bg-zinc-950/50">
+    <div className="w-[400px] shrink-0 border-l border-border flex flex-col h-full overflow-hidden bg-secondary/50">
       {/* Header */}
-      <div className="flex items-center gap-2 px-4 py-3 border-b border-white/[0.06]">
+      <div className="flex items-center gap-2 px-4 py-3 border-b border-border">
         <div className="p-1 rounded-md bg-orange-500/10">
           <Sparkles className="h-3.5 w-3.5 text-orange-400" />
         </div>
-        <h3 className="text-sm font-heading font-semibold text-zinc-200">
+        <h3 className="text-sm font-heading font-semibold text-foreground">
           The Lorekeep
         </h3>
       </div>
@@ -182,10 +182,10 @@ export function NotesChatPanel({
             <div className="p-3 rounded-xl bg-orange-500/10 border border-orange-500/20 mb-4">
               <BookOpen className="h-6 w-6 text-orange-400" />
             </div>
-            <h4 className="text-sm font-heading font-semibold text-zinc-200 mb-1.5">
+            <h4 className="text-sm font-heading font-semibold text-foreground mb-1.5">
               Consult the Lorekeep
             </h4>
-            <p className="text-xs text-zinc-500 mb-6 max-w-[260px]">
+            <p className="text-xs text-muted-foreground mb-6 max-w-[260px]">
               Seek knowledge from your campaign tomes. The Lorekeep shall
               scour your scrolls and reveal what lies within.
             </p>
@@ -195,8 +195,8 @@ export function NotesChatPanel({
                   key={s.text}
                   onClick={() => handleSuggestionClick(s.text)}
                   className="flex items-center gap-2.5 px-3 py-2.5 rounded-lg text-left
-                    bg-white/[0.03] border border-white/[0.06] text-zinc-400
-                    hover:text-orange-300 hover:border-orange-500/20 hover:bg-orange-500/[0.04]
+                    bg-accent/50 border border-border text-muted-foreground
+                    hover:text-orange-600 dark:hover:text-orange-300 hover:border-orange-500/20 hover:bg-orange-500/[0.06]
                     transition-colors text-xs"
                 >
                   <s.icon className="h-3.5 w-3.5 shrink-0" />
@@ -234,8 +234,8 @@ export function NotesChatPanel({
             <div
               className={`max-w-[85%] rounded-xl px-3 py-2 text-sm ${
                 msg.role === "user"
-                  ? "bg-orange-500/10 border border-orange-500/20 text-zinc-200"
-                  : "bg-white/[0.04] border border-white/[0.06] text-zinc-300"
+                  ? "bg-orange-500/10 border border-orange-500/20 text-foreground"
+                  : "bg-accent/50 border border-border text-foreground/80"
               }`}
             >
               {msg.role === "assistant" ? (
@@ -304,7 +304,7 @@ export function NotesChatPanel({
       </div>
 
       {/* Input */}
-      <div className="px-4 py-3 border-t border-white/[0.06]">
+      <div className="px-4 py-3 border-t border-border">
         <form onSubmit={handleSubmit} className="flex items-end gap-2">
           <textarea
             ref={textareaRef}
@@ -317,7 +317,7 @@ export function NotesChatPanel({
             placeholder="What knowledge do you seek..."
             disabled={isLoading}
             rows={1}
-            className="flex-1 bg-white/[0.04] border border-white/[0.06] rounded-xl px-3 py-2 text-sm text-zinc-200 placeholder:text-zinc-500 focus:outline-none focus:ring-1 focus:ring-orange-500/30 focus:border-orange-500/30 disabled:opacity-50 resize-none min-h-[36px] max-h-[120px] scrollbar-thin"
+            className="flex-1 bg-accent/50 border border-border rounded-xl px-3 py-2 text-sm text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-1 focus:ring-orange-500/30 focus:border-orange-500/30 disabled:opacity-50 resize-none min-h-[36px] max-h-[120px] scrollbar-thin"
           />
           <button
             type="submit"
@@ -331,7 +331,7 @@ export function NotesChatPanel({
             )}
           </button>
         </form>
-        <p className="text-[10px] text-zinc-600 mt-1.5 px-1">
+        <p className="text-[10px] text-muted-foreground mt-1.5 px-1">
           Enter to send · Shift+Enter for new line
         </p>
       </div>
