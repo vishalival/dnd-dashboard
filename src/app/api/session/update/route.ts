@@ -6,15 +6,16 @@ import { prisma } from "@/lib/prisma";
 export async function PATCH(req: NextRequest) {
   try {
     const body = await req.json();
-    const { sessionId, title, status, keyBeats, encounters, reminders, checklist } = body;
+    const { sessionId, title, status, keyBeats, encounters, reminders, checklist, transcript } = body;
 
     if (!sessionId) {
       return NextResponse.json({ error: "sessionId required" }, { status: 400 });
     }
 
-    const data: Record<string, string> = {};
+    const data: Record<string, string | null> = {};
     if (title !== undefined) data.title = title.trim();
     if (status !== undefined) data.status = status;
+    if (transcript !== undefined) data.transcript = transcript;
     if (keyBeats !== undefined) data.keyBeats = JSON.stringify(keyBeats.filter(Boolean));
     if (encounters !== undefined) data.encounters = JSON.stringify(encounters.filter(Boolean));
     if (reminders !== undefined) data.reminders = JSON.stringify(reminders.filter(Boolean));

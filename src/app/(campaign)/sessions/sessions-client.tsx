@@ -1190,6 +1190,12 @@ export function SessionsClient({ campaign }: { campaign: CampaignData }) {
   const [extracting, setExtracting] = useState(false);
   const [extractError, setExtractError] = useState<string | null>(null);
 
+  const [editSessionOpen, setEditSessionOpen] = useState(false);
+  const [editSessionDraft, setEditSessionDraft] = useState({ title: "", status: "", transcript: "" });
+  const [isSavingEdit, setIsSavingEdit] = useState(false);
+  const [isSynthesizingEdit, setIsSynthesizingEdit] = useState(false);
+  const [analyzeTranscript, setAnalyzeTranscript] = useState(false);
+
   const outlineDoc = selectedSession
     ? campaign.noteFolders
         .find((f) => f.slug === "session-outlines")
@@ -1221,6 +1227,50 @@ export function SessionsClient({ campaign }: { campaign: CampaignData }) {
       console.error(err);
     } finally {
       setIsCreating(false);
+    }
+  };
+
+  const handleEditSessionSubmit = async () => {
+    if (!selectedSession) return;
+    setIsSavingEdit(true);
+    try {
+      const res = await fetch("/api/session/update", {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          sessionId: selectedSession.id,
+          title: editSessionDraft.title,
+          status: editSessionDraft.status,
+          transcript: editSessionDraft.transcript || null,
+        }),
+      });
+      if (!res.ok) throw new Error("Failed to update session");
+      const updated = await res.json();
+      
+      if (analyzeTranscript && editSessionDraft.transcript.trim()) {
+        setIsSynthesizingEdit(true);
+        const synthRes = await fetch("/api/session/end", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ sessionId: selectedSession.id }),
+        });
+        if (!synthRes.ok) {
+          const synthData = await synthRes.json();
+          throw new Error(synthData.error || "Failed to synthesize transcript");
+        }
+        const { synthesis } = await synthRes.json();
+        handleSessionEnded(synthesis);
+      } else {
+        handleSaveSession(updated);
+      }
+      
+      setEditSessionOpen(false);
+      setAnalyzeTranscript(false);
+    } catch (err) {
+      console.error(err);
+    } finally {
+      setIsSavingEdit(false);
+      setIsSynthesizingEdit(false);
     }
   };
 
@@ -1355,6 +1405,67 @@ export function SessionsClient({ campaign }: { campaign: CampaignData }) {
         </DialogContent>
       </Dialog>
 
+      {/* Edit Session Dialog */}
+      <Dialog open={editSessionOpen} onOpenChange={setEditSessionOpen}>
+        <DialogContent className="sm:max-w-xl">
+          <DialogHeader>
+            <DialogTitle className="font-heading">Edit Session</DialogTitle>
+          </DialogHeader>
+          <div className="space-y-4 py-2">
+            <div>
+              <label className="text-xs text-zinc-400 mb-1 block">Title</label>
+              <Input
+                value={editSessionDraft.title}
+                onChange={(e) => setEditSessionDraft((d) => ({ ...d, title: e.target.value }))}
+              />
+            </div>
+            <div>
+              <label className="text-xs text-zinc-400 mb-1 block">Status</label>
+              <select
+                value={editSessionDraft.status}
+                onChange={(e) => setEditSessionDraft((d) => ({ ...d, status: e.target.value }))}
+                className="w-full text-sm bg-[#141416] border border-white/[0.08] rounded-md px-3 py-2 text-zinc-300 focus:outline-none"
+              >
+                <option value="draft">Draft</option>
+                <option value="planning">Planning</option>
+                <option value="ready">Ready</option>
+                <option value="in_progress">In Progress</option>
+                <option value="completed">Completed</option>
+              </select>
+            </div>
+            <div>
+              <label className="text-xs text-zinc-400 mb-1 block">Session Transcript (optional)</label>
+              <textarea
+                value={editSessionDraft.transcript}
+                onChange={(e) => setEditSessionDraft((d) => ({ ...d, transcript: e.target.value }))}
+                placeholder="Paste session transcript here..."
+                className="w-full min-h-[150px] text-sm bg-[#141416] border border-white/[0.08] rounded-md px-3 py-2 text-zinc-300 focus:outline-none resize-y"
+              />
+              {editSessionDraft.transcript.trim() && (
+                <label className="flex items-center gap-2 mt-3 text-sm text-foreground/80 dark:text-zinc-300 cursor-pointer group">
+                  <input
+                    type="checkbox"
+                    checked={analyzeTranscript}
+                    onChange={(e) => setAnalyzeTranscript(e.target.checked)}
+                    className="h-3.5 w-3.5 rounded border-gray-500 text-gold focus:ring-gold bg-transparent"
+                  />
+                  <span className="group-hover:text-foreground flex items-center gap-1.5 transition-colors">
+                    <Wand2 className="h-3.5 w-3.5 text-gold" />
+                    Analyze Transcript & Update World State
+                  </span>
+                </label>
+              )}
+            </div>
+          </div>
+          <DialogFooter>
+            <Button variant="ghost" size="sm" onClick={() => setEditSessionOpen(false)}>Cancel</Button>
+            <Button variant="gold" size="sm" onClick={handleEditSessionSubmit} disabled={!editSessionDraft.title.trim() || isSavingEdit || isSynthesizingEdit}>
+              {isSynthesizingEdit ? "Chronicler Analyzing..." : isSavingEdit ? "Saving…" : "Save Changes"}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
       {/* Delete Confirm Dialog */}
       <Dialog open={!!deleteConfirmId} onOpenChange={() => setDeleteConfirmId(null)}>
         <DialogContent className="sm:max-w-sm">
@@ -1471,6 +1582,22 @@ export function SessionsClient({ campaign }: { campaign: CampaignData }) {
                   </div>
                 </div>
                 <div className="flex items-center gap-2 shrink-0">
+                  <Button
+                    variant="ghost"
+                    size="icon"
+                    onClick={() => {
+                      setEditSessionDraft({
+                        title: selectedSession.title,
+                        status: selectedSession.status,
+                        transcript: selectedSession.transcript || "",
+                      });
+                      setEditSessionOpen(true);
+                    }}
+                    className="text-zinc-500 hover:text-foreground/80 dark:text-zinc-300 hover:bg-black/[0.06] dark:hover:bg-white/[0.06]"
+                    title="Edit Session Metadata"
+                  >
+                    <Pencil className="h-4 w-4" />
+                  </Button>
                   {["ready", "planning", "draft"].includes(selectedSession.status) && (
                     <Button variant="gold" size="sm" onClick={handleStartSession} className="gap-1.5">
                       <Play className="h-3.5 w-3.5" />Start Session
